@@ -60,6 +60,8 @@ interface IIntentReceiptHub {
     error NotAuthorizedChallenger();
     error DisputeNotFound();
     error DisputeAlreadyResolved();
+    error InsufficientChallengerBond();
+    error ChallengerBondTransferFailed();
 
     // ============ External Functions ============
 

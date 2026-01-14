@@ -63,11 +63,19 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @notice Total amount slashed
     uint256 public totalSlashed;
 
+    /// @notice Challenger bonds by receipt ID
+    mapping(bytes32 => uint256) private _challengerBonds;
+
+    /// @notice Minimum challenger bond (10% of minimum solver bond)
+    uint256 public challengerBondMin;
+
     // ============ Constructor ============
 
     constructor(address _solverRegistry) Ownable(msg.sender) {
         solverRegistry = ISolverRegistry(_solverRegistry);
         challengeWindow = DEFAULT_CHALLENGE_WINDOW;
+        // Default challenger bond: 10% of minimum solver bond
+        challengerBondMin = (solverRegistry.getMinimumBond() * Types.CHALLENGER_BOND_BPS) / Types.BPS;
     }
 
     // ============ Modifiers ============
@@ -135,10 +143,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         bytes32 receiptId,
         Types.DisputeReason reason,
         bytes32 evidenceHash
-    ) external payable receiptExists(receiptId) whenNotPaused {
+    ) external payable receiptExists(receiptId) whenNotPaused nonReentrant {
         Types.ReceiptStatus status = _receiptStatus[receiptId];
         if (status != Types.ReceiptStatus.Pending) revert ReceiptNotPending();
         if (reason == Types.DisputeReason.None) revert InvalidDisputeReason();
+
+        // Require challenger bond (anti-griefing protection)
+        if (msg.value < challengerBondMin) revert InsufficientChallengerBond();
 
         Types.IntentReceipt storage receipt = _receipts[receiptId];
 
@@ -146,6 +157,9 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         if (block.timestamp > receipt.createdAt + challengeWindow) {
             revert ChallengeWindowExpired();
         }
+
+        // Store challenger bond
+        _challengerBonds[receiptId] = msg.value;
 
         // Lock solver bond
         uint256 lockAmount = solverRegistry.getMinimumBond();
@@ -216,14 +230,17 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         // Those are handled by DisputeModule in v0.2
 
         dispute.resolved = true;
+        uint256 challengerBond = _challengerBonds[receiptId];
 
         if (shouldSlash) {
             _receiptStatus[receiptId] = Types.ReceiptStatus.Slashed;
-            
-            // Slash: 80% to user, 20% to protocol treasury
-            uint256 userShare = (slashAmount * 80) / 100;
-            uint256 protocolShare = slashAmount - userShare;
 
+            // Slash distribution: 80% to user, 15% to challenger, 5% to treasury
+            uint256 userShare = (slashAmount * Types.SLASH_USER_BPS) / Types.BPS;
+            uint256 challengerShare = (slashAmount * Types.SLASH_CHALLENGER_BPS) / Types.BPS;
+            uint256 treasuryShare = slashAmount - userShare - challengerShare;
+
+            // Slash solver and pay user (TODO: should be original intent user, not challenger)
             solverRegistry.slash(
                 receipt.solverId,
                 userShare,
@@ -232,11 +249,27 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
                 dispute.challenger
             );
 
-            // Protocol share stays in registry or sent to treasury
-            if (protocolShare > 0) {
+            // Slash solver for challenger's reward share - sent directly to challenger
+            if (challengerShare > 0) {
                 solverRegistry.slash(
                     receipt.solverId,
-                    protocolShare,
+                    challengerShare,
+                    receiptId,
+                    dispute.reason,
+                    dispute.challenger
+                );
+            }
+
+            // Return challenger's bond separately
+            _challengerBonds[receiptId] = 0;
+            (bool sent, ) = dispute.challenger.call{value: challengerBond}("");
+            if (!sent) revert ChallengerBondTransferFailed();
+
+            // Treasury share
+            if (treasuryShare > 0) {
+                solverRegistry.slash(
+                    receipt.solverId,
+                    treasuryShare,
                     receiptId,
                     dispute.reason,
                     owner()
@@ -247,9 +280,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
             emit DisputeResolved(receiptId, receipt.solverId, true, slashAmount);
         } else {
-            // Dispute rejected, unlock bond
+            // Dispute rejected: unlock solver bond, forfeit challenger bond to treasury
             solverRegistry.unlockBond(receipt.solverId, slashAmount);
             _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
+
+            // Challenger loses their bond (griefing protection)
+            _challengerBonds[receiptId] = 0;
+            // Bond stays in contract, can be swept to treasury
 
             emit DisputeResolved(receiptId, receipt.solverId, false, 0);
         }
@@ -413,4 +450,30 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     function unpause() external onlyOwner {
         _unpause();
     }
+
+    /// @notice Update minimum challenger bond
+    /// @param _challengerBondMin New minimum bond in wei
+    function setChallengerBondMin(uint256 _challengerBondMin) external onlyOwner {
+        require(_challengerBondMin > 0, "Bond must be > 0");
+        challengerBondMin = _challengerBondMin;
+    }
+
+    /// @notice Sweep forfeited challenger bonds to treasury
+    /// @param treasury Address to receive funds
+    function sweepForfeitedBonds(address treasury) external onlyOwner nonReentrant {
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to sweep");
+        (bool sent, ) = treasury.call{value: balance}("");
+        require(sent, "Transfer failed");
+    }
+
+    /// @notice Get challenger bond amount for a receipt
+    /// @param receiptId Receipt to query
+    /// @return bond Bond amount in wei
+    function getChallengerBond(bytes32 receiptId) external view returns (uint256 bond) {
+        return _challengerBonds[receiptId];
+    }
+
+    /// @notice Receive ETH (for challenger bonds)
+    receive() external payable {}
 }
