@@ -1,0 +1,410 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
+
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {ISolverRegistry} from "./interfaces/ISolverRegistry.sol";
+import {Types} from "./libraries/Types.sol";
+
+/// @title SolverRegistry
+/// @notice Manages solver registration, bonds, and lifecycle
+/// @dev Core component of IRSB protocol
+contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
+    // ============ Constants ============
+
+    /// @notice Minimum bond required to activate solver
+    uint256 public constant MINIMUM_BOND = 0.1 ether;
+
+    /// @notice Cooldown period for withdrawals
+    uint64 public constant WITHDRAWAL_COOLDOWN = 7 days;
+
+    /// @notice Maximum jails before permanent ban
+    uint8 public constant MAX_JAILS = 3;
+
+    // ============ State ============
+
+    /// @notice Solver data by ID
+    mapping(bytes32 => Types.Solver) private _solvers;
+
+    /// @notice Operator address to solver ID mapping
+    mapping(address => bytes32) private _operatorToSolver;
+
+    /// @notice Jail count per solver
+    mapping(bytes32 => uint8) private _jailCount;
+
+    /// @notice Last withdrawal request timestamp
+    mapping(bytes32 => uint64) private _withdrawalRequest;
+
+    /// @notice Authorized contracts that can call restricted functions
+    mapping(address => bool) public authorizedCallers;
+
+    /// @notice Total registered solvers
+    uint256 public totalSolvers;
+
+    /// @notice Total value bonded
+    uint256 public totalBonded;
+
+    // ============ Constructor ============
+
+    constructor() Ownable(msg.sender) {}
+
+    // ============ Modifiers ============
+
+    modifier onlyOperator(bytes32 solverId) {
+        if (_solvers[solverId].operator != msg.sender) {
+            revert NotSolverOperator();
+        }
+        _;
+    }
+
+    modifier onlyAuthorized() {
+        require(authorizedCallers[msg.sender] || msg.sender == owner(), "Not authorized");
+        _;
+    }
+
+    modifier solverExists(bytes32 solverId) {
+        if (_solvers[solverId].registeredAt == 0) {
+            revert SolverNotFound();
+        }
+        _;
+    }
+
+    modifier solverActive(bytes32 solverId) {
+        Types.SolverStatus status = _solvers[solverId].status;
+        if (status == Types.SolverStatus.Inactive) revert SolverNotActive();
+        if (status == Types.SolverStatus.Jailed) revert SolverJailed();
+        if (status == Types.SolverStatus.Banned) revert SolverBanned();
+        _;
+    }
+
+    // ============ External Functions ============
+
+    /// @inheritdoc ISolverRegistry
+    function registerSolver(
+        string calldata metadataURI,
+        address operator
+    ) external whenNotPaused returns (bytes32 solverId) {
+        if (operator == address(0)) revert InvalidOperatorAddress();
+        if (_operatorToSolver[operator] != bytes32(0)) revert SolverAlreadyRegistered();
+
+        // Generate unique solver ID
+        solverId = keccak256(abi.encodePacked(operator, block.timestamp, totalSolvers));
+
+        // Initialize solver
+        _solvers[solverId] = Types.Solver({
+            operator: operator,
+            metadataURI: metadataURI,
+            bondBalance: 0,
+            lockedBalance: 0,
+            status: Types.SolverStatus.Inactive,
+            score: Types.IntentScore({
+                totalFills: 0,
+                successfulFills: 0,
+                disputesOpened: 0,
+                disputesLost: 0,
+                volumeProcessed: 0,
+                totalSlashed: 0
+            }),
+            registeredAt: uint64(block.timestamp),
+            lastActivityAt: uint64(block.timestamp)
+        });
+
+        _operatorToSolver[operator] = solverId;
+        totalSolvers++;
+
+        emit SolverRegistered(solverId, operator, metadataURI);
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function depositBond(bytes32 solverId) external payable 
+        whenNotPaused 
+        solverExists(solverId) 
+        nonReentrant 
+    {
+        require(msg.value > 0, "Zero deposit");
+
+        Types.Solver storage solver = _solvers[solverId];
+        
+        // Only operator or owner can deposit
+        require(
+            msg.sender == solver.operator || msg.sender == owner(),
+            "Not authorized to deposit"
+        );
+
+        solver.bondBalance += msg.value;
+        totalBonded += msg.value;
+
+        // Activate solver if minimum bond met and currently inactive
+        if (solver.status == Types.SolverStatus.Inactive && 
+            solver.bondBalance >= MINIMUM_BOND) {
+            solver.status = Types.SolverStatus.Active;
+            emit SolverStatusChanged(solverId, Types.SolverStatus.Inactive, Types.SolverStatus.Active);
+        }
+
+        emit BondDeposited(solverId, msg.value, solver.bondBalance);
+    }
+
+    /// @notice Initiate withdrawal cooldown
+    /// @param solverId Solver to initiate withdrawal for
+    function initiateWithdrawal(bytes32 solverId) external
+        whenNotPaused
+        solverExists(solverId)
+        onlyOperator(solverId)
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        if (solver.lockedBalance > 0) revert BondLocked();
+        if (_withdrawalRequest[solverId] != 0) revert WithdrawalCooldownActive();
+
+        _withdrawalRequest[solverId] = uint64(block.timestamp);
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function withdrawBond(bytes32 solverId, uint256 amount) external
+        whenNotPaused
+        solverExists(solverId)
+        onlyOperator(solverId)
+        nonReentrant
+    {
+        Types.Solver storage solver = _solvers[solverId];
+
+        // Cannot withdraw if bond is locked
+        if (solver.lockedBalance > 0) revert BondLocked();
+
+        // Check available balance
+        uint256 available = solver.bondBalance;
+        if (amount > available) revert InsufficientBond();
+
+        // Check cooldown - must have been initiated
+        uint64 requestTime = _withdrawalRequest[solverId];
+        if (requestTime == 0) {
+            revert WithdrawalCooldownActive();
+        }
+        if (block.timestamp < requestTime + WITHDRAWAL_COOLDOWN) {
+            revert WithdrawalCooldownActive();
+        }
+
+        // Reset cooldown
+        _withdrawalRequest[solverId] = 0;
+
+        // Update balances
+        solver.bondBalance -= amount;
+        totalBonded -= amount;
+
+        // Deactivate if below minimum
+        if (solver.bondBalance < MINIMUM_BOND &&
+            solver.status == Types.SolverStatus.Active) {
+            solver.status = Types.SolverStatus.Inactive;
+            emit SolverStatusChanged(solverId, Types.SolverStatus.Active, Types.SolverStatus.Inactive);
+        }
+
+        // Transfer
+        (bool success, ) = payable(solver.operator).call{value: amount}("");
+        require(success, "Transfer failed");
+
+        emit BondWithdrawn(solverId, amount, solver.bondBalance);
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function setSolverKey(bytes32 solverId, address newOperator) external 
+        solverExists(solverId) 
+        onlyOperator(solverId) 
+    {
+        if (newOperator == address(0)) revert InvalidOperatorAddress();
+        if (_operatorToSolver[newOperator] != bytes32(0)) revert SolverAlreadyRegistered();
+
+        Types.Solver storage solver = _solvers[solverId];
+        address oldOperator = solver.operator;
+
+        // Update mappings
+        delete _operatorToSolver[oldOperator];
+        _operatorToSolver[newOperator] = solverId;
+        solver.operator = newOperator;
+
+        emit OperatorKeyRotated(solverId, oldOperator, newOperator);
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function lockBond(bytes32 solverId, uint256 amount) external 
+        onlyAuthorized 
+        solverExists(solverId) 
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        require(solver.bondBalance >= amount, "Insufficient bond");
+
+        solver.bondBalance -= amount;
+        solver.lockedBalance += amount;
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function unlockBond(bytes32 solverId, uint256 amount) external 
+        onlyAuthorized 
+        solverExists(solverId) 
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        require(solver.lockedBalance >= amount, "Insufficient locked");
+
+        solver.lockedBalance -= amount;
+        solver.bondBalance += amount;
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function slash(
+        bytes32 solverId,
+        uint256 amount,
+        bytes32 receiptId,
+        Types.DisputeReason reason,
+        address recipient
+    ) external onlyAuthorized solverExists(solverId) nonReentrant {
+        Types.Solver storage solver = _solvers[solverId];
+
+        // Slash from locked balance first, then available
+        uint256 slashAmount = amount;
+        if (solver.lockedBalance >= slashAmount) {
+            solver.lockedBalance -= slashAmount;
+        } else {
+            slashAmount -= solver.lockedBalance;
+            solver.lockedBalance = 0;
+            require(solver.bondBalance >= slashAmount, "Insufficient total bond");
+            solver.bondBalance -= slashAmount;
+        }
+
+        totalBonded -= amount;
+
+        // Update score
+        solver.score.disputesLost++;
+        solver.score.totalSlashed += amount;
+
+        // Transfer slashed amount to recipient
+        (bool success, ) = payable(recipient).call{value: amount}("");
+        require(success, "Slash transfer failed");
+
+        emit SolverSlashed(solverId, amount, receiptId, reason);
+
+        // Check if should be deactivated or jailed
+        if (solver.bondBalance < MINIMUM_BOND && 
+            solver.status == Types.SolverStatus.Active) {
+            solver.status = Types.SolverStatus.Inactive;
+            emit SolverStatusChanged(solverId, Types.SolverStatus.Active, Types.SolverStatus.Inactive);
+        }
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function jailSolver(bytes32 solverId) external 
+        onlyAuthorized 
+        solverExists(solverId) 
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        Types.SolverStatus oldStatus = solver.status;
+
+        _jailCount[solverId]++;
+
+        // Permanent ban after max jails
+        if (_jailCount[solverId] >= MAX_JAILS) {
+            solver.status = Types.SolverStatus.Banned;
+            emit SolverStatusChanged(solverId, oldStatus, Types.SolverStatus.Banned);
+        } else {
+            solver.status = Types.SolverStatus.Jailed;
+            emit SolverStatusChanged(solverId, oldStatus, Types.SolverStatus.Jailed);
+        }
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function unjailSolver(bytes32 solverId) external 
+        onlyOwner 
+        solverExists(solverId) 
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        require(solver.status == Types.SolverStatus.Jailed, "Not jailed");
+
+        Types.SolverStatus newStatus = solver.bondBalance >= MINIMUM_BOND 
+            ? Types.SolverStatus.Active 
+            : Types.SolverStatus.Inactive;
+
+        solver.status = newStatus;
+        emit SolverStatusChanged(solverId, Types.SolverStatus.Jailed, newStatus);
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function banSolver(bytes32 solverId) external 
+        onlyOwner 
+        solverExists(solverId) 
+    {
+        Types.Solver storage solver = _solvers[solverId];
+        Types.SolverStatus oldStatus = solver.status;
+
+        solver.status = Types.SolverStatus.Banned;
+        emit SolverStatusChanged(solverId, oldStatus, Types.SolverStatus.Banned);
+    }
+
+    // ============ View Functions ============
+
+    /// @inheritdoc ISolverRegistry
+    function getSolver(bytes32 solverId) external view returns (Types.Solver memory) {
+        return _solvers[solverId];
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function getSolverStatus(bytes32 solverId) external view returns (Types.SolverStatus) {
+        return _solvers[solverId].status;
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function isValidSolver(bytes32 solverId, uint256 requiredBond) external view returns (bool) {
+        Types.Solver storage solver = _solvers[solverId];
+        return solver.status == Types.SolverStatus.Active && 
+               solver.bondBalance >= requiredBond;
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function getIntentScore(bytes32 solverId) external view returns (Types.IntentScore memory) {
+        return _solvers[solverId].score;
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function getSolverByOperator(address operator) external view returns (bytes32) {
+        return _operatorToSolver[operator];
+    }
+
+    /// @inheritdoc ISolverRegistry
+    function getMinimumBond() external pure returns (uint256) {
+        return MINIMUM_BOND;
+    }
+
+    // ============ Admin Functions ============
+
+    /// @notice Set authorized caller (IntentReceiptHub, DisputeModule)
+    function setAuthorizedCaller(address caller, bool authorized) external onlyOwner {
+        authorizedCallers[caller] = authorized;
+    }
+
+    /// @notice Update solver score (called by IntentReceiptHub)
+    function updateScore(
+        bytes32 solverId,
+        bool success,
+        uint256 volume
+    ) external onlyAuthorized solverExists(solverId) {
+        Types.Solver storage solver = _solvers[solverId];
+        solver.score.totalFills++;
+        if (success) {
+            solver.score.successfulFills++;
+        }
+        solver.score.volumeProcessed += volume;
+        solver.lastActivityAt = uint64(block.timestamp);
+    }
+
+    /// @notice Increment disputes opened counter
+    function incrementDisputes(bytes32 solverId) external onlyAuthorized solverExists(solverId) {
+        _solvers[solverId].score.disputesOpened++;
+    }
+
+    /// @notice Emergency pause
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    /// @notice Unpause
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+}
