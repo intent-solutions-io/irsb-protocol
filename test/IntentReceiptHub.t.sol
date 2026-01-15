@@ -21,6 +21,7 @@ contract IntentReceiptHubTest is Test {
     address public challenger = address(0x2);
 
     uint256 public constant MINIMUM_BOND = 0.1 ether;
+    uint256 public constant CHALLENGER_BOND = 0.01 ether; // 10% of solver minimum bond
 
     bytes32 public solverId;
 
@@ -35,6 +36,8 @@ contract IntentReceiptHubTest is Test {
 
         // Fund test contract
         vm.deal(address(this), 10 ether);
+        // Fund challenger for bond payments
+        vm.deal(challenger, 10 ether);
 
         // Deploy contracts
         registry = new SolverRegistry();
@@ -190,7 +193,7 @@ contract IntentReceiptHubTest is Test {
         bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
 
         vm.prank(challenger);
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         (, Types.ReceiptStatus status) = hub.getReceipt(receiptId);
         assertEq(uint256(status), uint256(Types.ReceiptStatus.Disputed));
@@ -201,6 +204,7 @@ contract IntentReceiptHubTest is Test {
         assertFalse(dispute.resolved);
 
         assertEq(hub.totalDisputes(), 1);
+        assertEq(hub.getChallengerBond(receiptId), CHALLENGER_BOND);
     }
 
     function test_OpenDispute_RevertNotPending() public {
@@ -208,12 +212,12 @@ contract IntentReceiptHubTest is Test {
 
         // Open first dispute
         vm.prank(challenger);
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Try to open second dispute
         vm.prank(challenger);
         vm.expectRevert(abi.encodeWithSignature("ReceiptNotPending()"));
-        hub.openDispute(receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2"));
     }
 
     function test_OpenDispute_RevertChallengeWindowExpired() public {
@@ -224,7 +228,7 @@ contract IntentReceiptHubTest is Test {
 
         vm.prank(challenger);
         vm.expectRevert(abi.encodeWithSignature("ChallengeWindowExpired()"));
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
     }
 
     function test_OpenDispute_RevertInvalidReason() public {
@@ -243,14 +247,14 @@ contract IntentReceiptHubTest is Test {
 
         bytes32 receiptId = _postReceipt(intentHash, expiry);
 
-        // Open timeout dispute
+        uint256 challengerBalanceBefore = challenger.balance;
+
+        // Open timeout dispute with challenger bond
         vm.prank(challenger);
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Fast forward past expiry
         vm.warp(expiry + 1);
-
-        uint256 challengerBalanceBefore = challenger.balance;
 
         // Resolve - should slash since no settlement proof and past expiry
         hub.resolveDeterministic(receiptId);
@@ -260,7 +264,8 @@ contract IntentReceiptHubTest is Test {
 
         assertTrue(hub.totalSlashed() > 0);
 
-        // Challenger should receive slashed funds
+        // Challenger should receive their bond back + 15% of slash (reward)
+        // Bond: 0.01 ETH back + 0.015 ETH (15% of 0.1 ETH) = 0.025 ETH profit
         assertTrue(challenger.balance > challengerBalanceBefore);
     }
 
@@ -274,9 +279,11 @@ contract IntentReceiptHubTest is Test {
         vm.prank(operator);
         hub.submitSettlementProof(receiptId, keccak256("proof"));
 
-        // Open timeout dispute
+        uint256 challengerBalanceBefore = challenger.balance;
+
+        // Open timeout dispute with challenger bond
         vm.prank(challenger);
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Fast forward past expiry
         vm.warp(expiry + 1);
@@ -286,13 +293,16 @@ contract IntentReceiptHubTest is Test {
 
         (, Types.ReceiptStatus status) = hub.getReceipt(receiptId);
         assertEq(uint256(status), uint256(Types.ReceiptStatus.Pending));
+
+        // Challenger loses their bond (frivolous dispute)
+        assertEq(challenger.balance, challengerBalanceBefore - CHALLENGER_BOND);
     }
 
     function test_ResolveDeterministic_RevertAlreadyResolved() public {
         bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
 
         vm.prank(challenger);
-        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         vm.warp(block.timestamp + 31 minutes);
 
@@ -497,5 +507,142 @@ contract IntentReceiptHubTest is Test {
 
         vm.prank(operator);
         hub.postReceipt(receipt);
+    }
+
+    // ============ Challenger Bond Tests ============
+
+    function test_OpenDispute_RevertInsufficientBond() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
+
+        // Try to open dispute with insufficient bond
+        vm.prank(challenger);
+        vm.expectRevert(abi.encodeWithSignature("InsufficientChallengerBond()"));
+        hub.openDispute{value: CHALLENGER_BOND - 1}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+    }
+
+    function test_OpenDispute_RevertNoBond() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
+
+        // Try to open dispute with no bond
+        vm.prank(challenger);
+        vm.expectRevert(abi.encodeWithSignature("InsufficientChallengerBond()"));
+        hub.openDispute(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+    }
+
+    function test_ChallengerBondReturned_OnSuccessfulDispute() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
+
+        uint256 challengerBalanceBefore = challenger.balance;
+
+        // Open dispute with exact minimum bond
+        vm.prank(challenger);
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+
+        // Verify bond is held
+        assertEq(hub.getChallengerBond(receiptId), CHALLENGER_BOND);
+        assertEq(challenger.balance, challengerBalanceBefore - CHALLENGER_BOND);
+
+        // Fast forward past expiry and resolve
+        vm.warp(block.timestamp + 31 minutes);
+        hub.resolveDeterministic(receiptId);
+
+        // Challenger should receive:
+        // - Original bond back (0.01 ETH)
+        // - 80% of slash (0.08 ETH) as userShare (going to challenger for now)
+        // - 15% of slash (0.015 ETH) as challengerShare
+        // Total received from registry: 0.095 ETH
+        // Total received from hub: 0.01 ETH (bond return)
+        // Net gain: 0.095 ETH (from slash shares)
+        assertTrue(challenger.balance > challengerBalanceBefore);
+    }
+
+    function test_ChallengerBondForfeited_OnFailedDispute() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
+
+        // Submit settlement proof (makes dispute invalid)
+        vm.prank(operator);
+        hub.submitSettlementProof(receiptId, keccak256("proof"));
+
+        uint256 challengerBalanceBefore = challenger.balance;
+
+        // Open frivolous dispute
+        vm.prank(challenger);
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+
+        // Verify bond is held
+        assertEq(hub.getChallengerBond(receiptId), CHALLENGER_BOND);
+
+        // Fast forward and resolve - dispute should fail
+        vm.warp(block.timestamp + 31 minutes);
+        hub.resolveDeterministic(receiptId);
+
+        // Challenger should lose their bond entirely
+        assertEq(challenger.balance, challengerBalanceBefore - CHALLENGER_BOND);
+
+        // Bond should be zeroed out (forfeited to contract)
+        assertEq(hub.getChallengerBond(receiptId), 0);
+    }
+
+    function test_SetChallengerBondMin() public {
+        uint256 newBondMin = 0.05 ether;
+        hub.setChallengerBondMin(newBondMin);
+        assertEq(hub.challengerBondMin(), newBondMin);
+    }
+
+    function test_SetChallengerBondMin_RevertZero() public {
+        vm.expectRevert("Bond must be > 0");
+        hub.setChallengerBondMin(0);
+    }
+
+    function test_SetChallengerBondMin_RevertNonOwner() public {
+        vm.prank(challenger);
+        vm.expectRevert();
+        hub.setChallengerBondMin(0.05 ether);
+    }
+
+    function test_SweepForfeitedBonds() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
+
+        // Submit proof to make dispute fail
+        vm.prank(operator);
+        hub.submitSettlementProof(receiptId, keccak256("proof"));
+
+        // Open and lose dispute
+        vm.prank(challenger);
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+
+        vm.warp(block.timestamp + 31 minutes);
+        hub.resolveDeterministic(receiptId);
+
+        // Hub should now have the forfeited bond
+        assertEq(address(hub).balance, CHALLENGER_BOND);
+
+        // Sweep to treasury
+        address treasury = address(0x999);
+        hub.sweepForfeitedBonds(treasury);
+
+        assertEq(treasury.balance, CHALLENGER_BOND);
+        assertEq(address(hub).balance, 0);
+    }
+
+    function test_SweepForfeitedBonds_RevertNoFunds() public {
+        vm.expectRevert("No funds to sweep");
+        hub.sweepForfeitedBonds(address(0x999));
+    }
+
+    function test_SweepForfeitedBonds_RevertNonOwner() public {
+        // First create some forfeited funds
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
+        vm.prank(operator);
+        hub.submitSettlementProof(receiptId, keccak256("proof"));
+        vm.prank(challenger);
+        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        vm.warp(block.timestamp + 31 minutes);
+        hub.resolveDeterministic(receiptId);
+
+        // Try to sweep as non-owner
+        vm.prank(challenger);
+        vm.expectRevert();
+        hub.sweepForfeitedBonds(challenger);
     }
 }
