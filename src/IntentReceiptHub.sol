@@ -474,6 +474,31 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         return _challengerBonds[receiptId];
     }
 
+    /// @notice Resolve an escalated dispute (DisputeModule only)
+    /// @param receiptId Receipt under dispute
+    /// @param solverFault Whether solver was at fault
+    function resolveEscalatedDispute(
+        bytes32 receiptId,
+        bool solverFault
+    ) external onlyDisputeModule receiptExists(receiptId) {
+        Types.ReceiptStatus status = _receiptStatus[receiptId];
+        if (status != Types.ReceiptStatus.Disputed) revert ReceiptNotPending();
+
+        Types.Dispute storage dispute = _disputes[receiptId];
+        if (dispute.resolved) revert DisputeAlreadyResolved();
+
+        dispute.resolved = true;
+
+        if (solverFault) {
+            _receiptStatus[receiptId] = Types.ReceiptStatus.Slashed;
+        } else {
+            _receiptStatus[receiptId] = Types.ReceiptStatus.Finalized;
+        }
+
+        Types.IntentReceipt storage receipt = _receipts[receiptId];
+        emit DisputeResolved(receiptId, receipt.solverId, solverFault, 0);
+    }
+
     /// @notice Receive ETH (for challenger bonds)
     receive() external payable {}
 }

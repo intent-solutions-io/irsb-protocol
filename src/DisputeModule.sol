@@ -20,6 +20,9 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     /// @notice Default arbitration fee
     uint256 public constant DEFAULT_ARBITRATION_FEE = 0.01 ether;
 
+    /// @notice Arbitration timeout (7 days) - after which default resolution applies
+    uint64 public constant ARBITRATION_TIMEOUT = 7 days;
+
     // ============ State ============
 
     /// @notice Reference to IntentReceiptHub
@@ -44,6 +47,12 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
 
     /// @notice Escalation status by dispute ID
     mapping(bytes32 => bool) private _escalated;
+
+    /// @notice Escalator address by dispute ID (who paid the fee)
+    mapping(bytes32 => address) private _escalators;
+
+    /// @notice Escalation timestamp by dispute ID
+    mapping(bytes32 => uint64) private _escalatedAt;
 
     /// @notice Arbitration fees collected by dispute ID
     mapping(bytes32 => uint256) private _arbitrationFees;
@@ -111,10 +120,15 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
         // Check if already escalated
         if (_escalated[disputeId]) revert AlreadyEscalated();
 
+        // Check if dispute is not already resolved
+        if (dispute.resolved) revert DisputeAlreadyResolved();
+
         // Check fee
         if (msg.value < arbitrationFee) revert ArbitrationFeeTooLow();
 
         _escalated[disputeId] = true;
+        _escalators[disputeId] = msg.sender;
+        _escalatedAt[disputeId] = uint64(block.timestamp);
         _arbitrationFees[disputeId] = msg.value;
 
         emit DisputeEscalated(disputeId, arbitrator);
@@ -133,6 +147,9 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
 
         // Must be escalated
         require(_escalated[disputeId], "Not escalated");
+
+        // Must not already be resolved
+        if (dispute.resolved) revert DisputeAlreadyResolved();
 
         uint256 slashAmount = 0;
 
@@ -176,20 +193,58 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
                     arbitrator
                 );
             }
+
+            // Refund arbitration fee to escalator (they were right)
+            _refundArbitrationFee(disputeId);
         } else {
             // Solver not at fault, unlock bond
             Types.Solver memory solver = solverRegistry.getSolver(dispute.solverId);
             solverRegistry.unlockBond(dispute.solverId, solver.lockedBalance);
 
-            // Return arbitration fee to challenger (minus gas stipend)
-            uint256 fee = _arbitrationFees[disputeId];
-            if (fee > 0) {
-                (bool success, ) = payable(dispute.challenger).call{value: fee}("");
-                require(success, "Fee refund failed");
-            }
+            // Escalator loses fee (sent to treasury)
+            _arbitrationFees[disputeId] = 0;
         }
 
+        // Update receipt status in IntentReceiptHub
+        receiptHub.resolveEscalatedDispute(dispute.receiptId, solverFault);
+
         emit ArbitrationResolved(disputeId, solverFault, slashAmount, reason);
+    }
+
+    /// @notice Resolve dispute after arbitration timeout (default: solver not at fault)
+    /// @param disputeId Dispute to resolve via timeout
+    function resolveByTimeout(bytes32 disputeId) external nonReentrant {
+        require(_escalated[disputeId], "Not escalated");
+
+        uint64 escalatedAt = _escalatedAt[disputeId];
+        require(block.timestamp >= escalatedAt + ARBITRATION_TIMEOUT, "Timeout not reached");
+
+        Types.Dispute memory dispute = receiptHub.getDispute(disputeId);
+        if (dispute.resolved) revert DisputeAlreadyResolved();
+
+        // Default resolution: solver not at fault (arbitrator failed to act)
+        Types.Solver memory solver = solverRegistry.getSolver(dispute.solverId);
+        solverRegistry.unlockBond(dispute.solverId, solver.lockedBalance);
+
+        // Refund arbitration fee to escalator (arbitrator failed to resolve)
+        _refundArbitrationFee(disputeId);
+
+        // Update receipt status
+        receiptHub.resolveEscalatedDispute(dispute.receiptId, false);
+
+        emit ArbitrationResolved(disputeId, false, 0, "Arbitration timeout - default resolution");
+    }
+
+    /// @dev Internal function to refund arbitration fee to escalator
+    function _refundArbitrationFee(bytes32 disputeId) internal {
+        uint256 fee = _arbitrationFees[disputeId];
+        address escalator = _escalators[disputeId];
+        _arbitrationFees[disputeId] = 0;
+
+        if (fee > 0 && escalator != address(0)) {
+            (bool success, ) = payable(escalator).call{value: fee}("");
+            require(success, "Fee refund failed");
+        }
     }
 
     // ============ View Functions ============
@@ -232,6 +287,35 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     /// @inheritdoc IDisputeModule
     function getArbitrator() external view returns (address) {
         return arbitrator;
+    }
+
+    /// @inheritdoc IDisputeModule
+    function isEscalated(bytes32 disputeId) external view returns (bool) {
+        return _escalated[disputeId];
+    }
+
+    /// @notice Get escalator address for a dispute
+    /// @param disputeId Dispute to query
+    /// @return escalator Address that paid the arbitration fee
+    function getEscalator(bytes32 disputeId) external view returns (address) {
+        return _escalators[disputeId];
+    }
+
+    /// @notice Get escalation timestamp for a dispute
+    /// @param disputeId Dispute to query
+    /// @return timestamp When the dispute was escalated
+    function getEscalatedAt(bytes32 disputeId) external view returns (uint64) {
+        return _escalatedAt[disputeId];
+    }
+
+    /// @notice Check if dispute can be resolved by timeout
+    /// @param disputeId Dispute to check
+    /// @return canResolve Whether timeout resolution is available
+    function canResolveByTimeout(bytes32 disputeId) external view returns (bool) {
+        if (!_escalated[disputeId]) return false;
+        Types.Dispute memory dispute = receiptHub.getDispute(disputeId);
+        if (dispute.resolved) return false;
+        return block.timestamp >= _escalatedAt[disputeId] + ARBITRATION_TIMEOUT;
     }
 
     // ============ Admin Functions ============
