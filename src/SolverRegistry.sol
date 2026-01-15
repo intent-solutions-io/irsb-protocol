@@ -22,6 +22,17 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @notice Maximum jails before permanent ban
     uint8 public constant MAX_JAILS = 3;
 
+    /// @notice Reputation decay half-life (30 days)
+    /// @dev Score decays by 50% for every half-life period of inactivity
+    uint64 public constant DECAY_HALF_LIFE = 30 days;
+
+    /// @notice Minimum decay multiplier in basis points (10%)
+    /// @dev Score never decays below this percentage of original
+    uint16 public constant MIN_DECAY_MULTIPLIER_BPS = 1000;
+
+    /// @notice Basis points denominator
+    uint16 public constant BPS = 10000;
+
     // ============ State ============
 
     /// @notice Solver data by ID
@@ -359,6 +370,53 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @inheritdoc ISolverRegistry
     function getIntentScore(bytes32 solverId) external view returns (Types.IntentScore memory) {
         return _solvers[solverId].score;
+    }
+
+    /// @notice Get solver's reputation score with time-based decay applied
+    /// @param solverId Solver to query
+    /// @return decayedSuccessfulFills Decayed successful fills count
+    /// @return decayedVolumeProcessed Decayed volume processed
+    /// @return decayMultiplierBps Current decay multiplier in basis points
+    function getDecayedScore(bytes32 solverId) external view returns (
+        uint64 decayedSuccessfulFills,
+        uint256 decayedVolumeProcessed,
+        uint16 decayMultiplierBps
+    ) {
+        Types.Solver storage solver = _solvers[solverId];
+        decayMultiplierBps = getDecayMultiplier(solver.lastActivityAt);
+
+        // Apply decay to positive reputation metrics
+        decayedSuccessfulFills = uint64((uint256(solver.score.successfulFills) * decayMultiplierBps) / BPS);
+        decayedVolumeProcessed = (solver.score.volumeProcessed * decayMultiplierBps) / BPS;
+    }
+
+    /// @notice Calculate decay multiplier based on time since last activity
+    /// @param lastActivityAt Timestamp of last activity
+    /// @return multiplierBps Decay multiplier in basis points (10000 = 100%)
+    function getDecayMultiplier(uint64 lastActivityAt) public view returns (uint16) {
+        if (lastActivityAt == 0) return MIN_DECAY_MULTIPLIER_BPS;
+        if (block.timestamp <= lastActivityAt) return BPS;
+
+        uint256 elapsed = block.timestamp - lastActivityAt;
+        uint256 halfLives = elapsed / DECAY_HALF_LIFE;
+
+        // After 13+ half-lives, return minimum
+        if (halfLives >= 13) return MIN_DECAY_MULTIPLIER_BPS;
+
+        // Calculate 2^(-halfLives) by repeated division
+        uint256 result = BPS;
+        for (uint256 i = 0; i < halfLives; i++) {
+            result = result / 2;
+        }
+
+        // Apply fractional decay (linear approximation)
+        uint256 remainder = elapsed % DECAY_HALF_LIFE;
+        if (remainder > 0) {
+            result = result - (result * remainder) / (DECAY_HALF_LIFE * 2);
+        }
+
+        // Enforce minimum floor
+        return result < MIN_DECAY_MULTIPLIER_BPS ? MIN_DECAY_MULTIPLIER_BPS : uint16(result);
     }
 
     /// @inheritdoc ISolverRegistry
