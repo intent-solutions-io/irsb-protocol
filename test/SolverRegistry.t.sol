@@ -455,4 +455,131 @@ contract SolverRegistryTest is Test {
 
         registry.registerSolver("ipfs://metadata2", operator2);
     }
+
+    // ============ Reputation Decay Tests ============
+
+    function test_GetDecayMultiplier_NoDecay_WhenRecentlyActive() public {
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+
+        // Just registered, should have full score (10000 bps = 100%)
+        uint16 multiplier = registry.getDecayMultiplier(uint64(block.timestamp));
+        assertEq(multiplier, 10000);
+    }
+
+    function test_GetDecayMultiplier_HalfDecay_After30Days() public {
+        // Set a concrete starting timestamp
+        uint64 startTime = 1000000;
+        vm.warp(startTime);
+
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+
+        // Fast forward 30 days (1 half-life)
+        vm.warp(startTime + 30 days);
+
+        // Pass the OLD timestamp (when activity happened)
+        uint16 multiplier = registry.getDecayMultiplier(startTime);
+        // Should be approximately 50% (5000 bps)
+        assertGe(multiplier, 4500); // Allow some tolerance
+        assertLe(multiplier, 5500);
+    }
+
+    function test_GetDecayMultiplier_QuarterDecay_After60Days() public {
+        // Set a concrete starting timestamp
+        uint64 startTime = 1000000;
+        vm.warp(startTime);
+
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+
+        // Fast forward 60 days (2 half-lives)
+        vm.warp(startTime + 60 days);
+
+        uint16 multiplier = registry.getDecayMultiplier(startTime);
+        // Should be approximately 25% (2500 bps)
+        assertGe(multiplier, 2000);
+        assertLe(multiplier, 3000);
+    }
+
+    function test_GetDecayMultiplier_MinimumFloor_After1Year() public {
+        // Set a concrete starting timestamp
+        uint64 startTime = 1000000;
+        vm.warp(startTime);
+
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+
+        // Fast forward 1 year (12+ half-lives)
+        vm.warp(startTime + 365 days);
+
+        uint16 multiplier = registry.getDecayMultiplier(startTime);
+        // Should hit minimum floor (1000 bps = 10%)
+        assertEq(multiplier, 1000);
+    }
+
+    function test_GetDecayedScore_AppliesDecay() public {
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+
+        // Add some score activity
+        registry.setAuthorizedCaller(address(this), true);
+        registry.updateScore(solverId, true, 1000 ether); // 1000 volume
+        registry.updateScore(solverId, true, 1000 ether); // 2000 total
+
+        // Get raw score
+        Types.IntentScore memory rawScore = registry.getIntentScore(solverId);
+        assertEq(rawScore.successfulFills, 2);
+        assertEq(rawScore.volumeProcessed, 2000 ether);
+
+        // Fast forward 30 days (1 half-life)
+        vm.warp(block.timestamp + 30 days);
+
+        // Get decayed score
+        (uint64 decayedFills, uint256 decayedVolume, uint16 multiplier) = registry.getDecayedScore(solverId);
+
+        // Multiplier should be ~50%
+        assertGe(multiplier, 4500);
+        assertLe(multiplier, 5500);
+
+        // successfulFills should be decayed (2 * ~50% = ~1)
+        assertLe(decayedFills, 2);
+        assertGe(decayedFills, 0);
+
+        // volumeProcessed should be decayed (2000 * ~50% = ~1000)
+        assertLe(decayedVolume, 2000 ether);
+        assertGe(decayedVolume, 500 ether);
+    }
+
+    function test_DecayResetsOnActivity() public {
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.setAuthorizedCaller(address(this), true);
+
+        // Build some score
+        registry.updateScore(solverId, true, 1000 ether);
+
+        // Fast forward 60 days (decay to ~25%)
+        vm.warp(block.timestamp + 60 days);
+
+        uint16 multiplierBefore = registry.getDecayMultiplier(
+            registry.getSolver(solverId).lastActivityAt
+        );
+        assertLe(multiplierBefore, 3000);
+
+        // New activity resets the clock
+        registry.updateScore(solverId, true, 500 ether);
+
+        // Should be back to 100%
+        uint16 multiplierAfter = registry.getDecayMultiplier(
+            registry.getSolver(solverId).lastActivityAt
+        );
+        assertEq(multiplierAfter, 10000);
+    }
+
+    function test_GetDecayMultiplier_ZeroTimestamp_ReturnsMinimum() public {
+        // Zero timestamp means never active
+        uint16 multiplier = registry.getDecayMultiplier(0);
+        assertEq(multiplier, 1000); // Minimum 10%
+    }
 }
