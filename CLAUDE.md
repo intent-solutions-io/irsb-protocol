@@ -2,7 +2,9 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+---
+
+## Project Overview: IRSB Protocol
 
 **IRSB (Intent Receipts & Solver Bonds)** - An Ethereum protocol providing accountability for intent-based transactions. Complements ERC-7683 cross-chain intents with:
 - **Intent Receipts**: On-chain records proving solver execution
