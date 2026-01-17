@@ -1,0 +1,17 @@
+Phase,#,Skill Name,Description,Type
+1,1,Lit Action Pipeline Runner,Chain multiple Lit Actions into autonomous workflows,Agentic
+1,2,PKP Agent Orchestrator,Coordinate multiple PKPs for complex operations,Agentic
+1,3,Smart Session Manager,Autonomous session refresh optimization and lifecycle,Agentic
+1,4,Capacity Credit Optimizer,Auto-allocate Chronicle credits across operations,Agentic
+1,5,Cross-Chain Coordinator,Orchestrate multi-chain transactions as single operations,Agentic
+2,6,Autonomous Trading Agent,Execute swaps with MEV protection and best-route finding,Agentic
+2,7,Yield Farming Agent,Monitor and rebalance yield positions automatically,Agentic
+2,8,Limit Order Agent,Autonomous conditional order execution across DEXs,Agentic
+2,9,Arbitrage Detection Agent,Identify and execute cross-chain arb opportunities,Agentic
+2,10,Portfolio Rebalancer,Autonomous portfolio management across chains,Agentic
+2,11,Gas Optimizer Agent,Predict and execute at optimal gas windows,Agentic
+3,12,Security Posture Agent,Continuous monitoring and autonomous threat response,Agentic
+3,13,Key Lifecycle Manager,Autonomous rotation scheduling and migration,Agentic
+3,14,Access Control Agent,Dynamic permission management based on conditions,Agentic
+3,15,Compliance Monitor,Track and enforce policy across PKP operations,Agentic
+3,16,Incident Response Agent,Autonomous lockdown and recovery procedures,Agentic
