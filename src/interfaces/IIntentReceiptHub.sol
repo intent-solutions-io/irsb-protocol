@@ -154,4 +154,12 @@ interface IIntentReceiptHub {
     function computeReceiptId(
         Types.IntentReceipt calldata receipt
     ) external pure returns (bytes32 receiptId);
+
+    /// @notice Resolve an escalated dispute (DisputeModule only)
+    /// @param receiptId Receipt under dispute
+    /// @param solverFault Whether solver was at fault
+    function resolveEscalatedDispute(
+        bytes32 receiptId,
+        bool solverFault
+    ) external;
 }

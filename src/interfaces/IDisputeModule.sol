@@ -38,6 +38,8 @@ interface IDisputeModule {
     error NotAuthorizedArbitrator();
     error InvalidResolution();
     error ArbitrationFeeTooLow();
+    error DisputeAlreadyResolved();
+    error ArbitrationTimeout();
 
     // ============ External Functions ============
 
@@ -89,4 +91,9 @@ interface IDisputeModule {
     /// @notice Get authorized arbitrator address
     /// @return arbitrator Arbitrator address
     function getArbitrator() external view returns (address arbitrator);
+
+    /// @notice Check if dispute has been escalated
+    /// @param disputeId Dispute to check
+    /// @return escalated Whether dispute is escalated
+    function isEscalated(bytes32 disputeId) external view returns (bool escalated);
 }
