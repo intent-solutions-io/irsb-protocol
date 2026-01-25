@@ -1,5 +1,7 @@
 # IRSB Solver Dashboard
 
+**Live**: https://irsb-protocol.web.app
+
 Public dashboard showing solver reputation and performance metrics.
 
 ## Features
