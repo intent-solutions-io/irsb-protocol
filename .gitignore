@@ -15,3 +15,6 @@ docs/
 
 # Lit Protocol partnership materials (private)
 lit-protocol/
+
+# Firebase
+.firebase/
