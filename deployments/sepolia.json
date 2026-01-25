@@ -1,0 +1,23 @@
+{
+  "network": "sepolia",
+  "chainId": 11155111,
+  "deployedAt": "2026-01-25T20:50:00Z",
+  "deployer": "0x83A5F432f02B1503765bB61a9B358942d87c9dc0",
+  "contracts": {
+    "SolverRegistry": "0xB6ab964832808E49635fF82D1996D6a888ecB745",
+    "IntentReceiptHub": "0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c",
+    "DisputeModule": "0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D"
+  },
+  "etherscan": {
+    "SolverRegistry": "https://sepolia.etherscan.io/address/0xB6ab964832808E49635fF82D1996D6a888ecB745",
+    "IntentReceiptHub": "https://sepolia.etherscan.io/address/0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c",
+    "DisputeModule": "https://sepolia.etherscan.io/address/0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D"
+  },
+  "configuration": {
+    "arbitrator": "0x83A5F432f02B1503765bB61a9B358942d87c9dc0",
+    "authorizedCallers": [
+      "0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c",
+      "0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D"
+    ]
+  }
+}

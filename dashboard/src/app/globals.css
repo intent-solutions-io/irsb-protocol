@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 250, 250, 250;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-rgb: 15, 15, 15;
+  }
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: rgb(var(--background-rgb));
+}
+
+.score-badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.score-excellent {
+  @apply bg-green-100 text-green-800;
+}
+
+.score-good {
+  @apply bg-blue-100 text-blue-800;
+}
+
+.score-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.score-danger {
+  @apply bg-red-100 text-red-800;
+}
