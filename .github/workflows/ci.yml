@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  FOUNDRY_PROFILE: ci
+
+jobs:
+  # ===========================================
+  # SMART CONTRACT TESTS
+  # ===========================================
+  contracts:
+    name: Foundry Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Run Forge build
+        run: forge build --sizes
+        id: build
+
+      - name: Run Forge tests
+        run: forge test -vvv
+        id: test
+
+      - name: Run Forge coverage
+        run: forge coverage --report summary
+        id: coverage
+
+      - name: Run Forge gas report
+        run: forge test --gas-report
+        id: gas
+
+  # ===========================================
+  # SOLIDITY LINTING & FORMATTING
+  # ===========================================
+  lint:
+    name: Solidity Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Check formatting
+        run: forge fmt --check
+
+  # ===========================================
+  # SDK BUILD & TYPE CHECK
+  # ===========================================
+  sdk:
+    name: SDK Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: sdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build SDK
+        run: npm run build
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+  # ===========================================
+  # SUBGRAPH BUILD
+  # ===========================================
+  subgraph:
+    name: Subgraph Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: subgraph
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: subgraph/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate types
+        run: npm run codegen
+
+      - name: Build subgraph
+        run: npm run build
+
+  # ===========================================
+  # SECURITY CHECKS
+  # ===========================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+        with:
+          version: nightly
+
+      - name: Install Slither
+        run: pip3 install slither-analyzer
+
+      - name: Run Slither
+        run: slither . --config-file slither.config.json || true
+        continue-on-error: true
+
+  # ===========================================
+  # SUMMARY
+  # ===========================================
+  summary:
+    name: CI Summary
+    runs-on: ubuntu-latest
+    needs: [contracts, lint, sdk, subgraph]
+    if: always()
+    steps:
+      - name: Check results
+        run: |
+          echo "## CI Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Contracts | ${{ needs.contracts.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SDK | ${{ needs.sdk.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Subgraph | ${{ needs.subgraph.result }} |" >> $GITHUB_STEP_SUMMARY

@@ -1,12 +1,23 @@
-# @irsb/sdk
+# irsb-sdk
 
 TypeScript SDK for the IRSB Protocol (Intent Receipts & Solver Bonds).
+
+[![npm version](https://badge.fury.io/js/irsb-sdk.svg)](https://www.npmjs.com/package/irsb-sdk)
+[![CI](https://github.com/intent-solutions-io/irsb-protocol/actions/workflows/ci.yml/badge.svg)](https://github.com/intent-solutions-io/irsb-protocol/actions/workflows/ci.yml)
 
 ## Installation
 
 ```bash
-npm install @irsb/sdk ethers
+npm install irsb-sdk ethers
 ```
+
+## Examples
+
+See the [`examples/`](./examples) directory for complete integration examples:
+
+- **[solver-integration.ts](./examples/solver-integration.ts)** - Full solver workflow: register, bond, post receipts, handle disputes
+- **[challenger-integration.ts](./examples/challenger-integration.ts)** - Monitor and challenge invalid receipts
+- **[query-subgraph.ts](./examples/query-subgraph.ts)** - Query protocol data from The Graph
 
 ## Quick Start
 
