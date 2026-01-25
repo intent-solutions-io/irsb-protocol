@@ -1,5 +1,5 @@
 {
-  "name": "@irsb/sdk",
+  "name": "irsb-sdk",
   "version": "0.1.0",
   "description": "SDK for IRSB Protocol - Intent Receipts & Solver Bonds",
   "main": "dist/index.js",

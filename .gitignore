@@ -18,3 +18,15 @@ lit-protocol/
 
 # Firebase
 .firebase/
+
+# npm auth tokens (never commit!)
+.npmrc
+
+# Node modules (in subprojects)
+**/node_modules/
+
+# Build outputs
+sdk/dist/
+subgraph/build/
+subgraph/generated/
+dashboard/.next/

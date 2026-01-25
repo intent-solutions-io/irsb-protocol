@@ -1,0 +1,142 @@
+# Solver entity - tracks solver registration and status
+type Solver @entity {
+  id: Bytes! # bytes32 solverId
+  operator: Bytes! # address
+  metadataURI: String!
+  bondBalance: BigInt!
+  lockedBalance: BigInt!
+  registrationTime: BigInt!
+  lastActiveTime: BigInt!
+
+  # IntentScore fields
+  totalFills: BigInt!
+  successfulFills: BigInt!
+  disputesOpened: BigInt!
+  disputesLost: BigInt!
+  volumeProcessed: BigInt!
+  totalSlashed: BigInt!
+
+  status: SolverStatus!
+
+  # Calculated fields
+  fillRate: BigDecimal!
+  intentScore: Int!
+
+  # Relations
+  receipts: [Receipt!]! @derivedFrom(field: "solver")
+  slashEvents: [SlashEvent!]! @derivedFrom(field: "solver")
+  bondEvents: [BondEvent!]! @derivedFrom(field: "solver")
+}
+
+enum SolverStatus {
+  Unregistered
+  Active
+  Jailed
+  Banned
+  Withdrawing
+}
+
+# Receipt entity - tracks intent receipts
+type Receipt @entity {
+  id: Bytes! # receiptId (bytes32)
+  solver: Solver!
+  intentHash: Bytes!
+  solverId: Bytes!
+  expiry: BigInt!
+  postedAt: BigInt!
+  status: ReceiptStatus!
+
+  # Dispute info (if disputed)
+  challenger: Bytes
+  disputeReason: Int
+  disputeOpenedAt: BigInt
+
+  # Resolution
+  slashed: Boolean
+  slashAmount: BigInt
+  resolvedAt: BigInt
+}
+
+enum ReceiptStatus {
+  Pending
+  Disputed
+  Finalized
+  Slashed
+}
+
+# Dispute entity - tracks disputes from IntentReceiptHub
+type Dispute @entity {
+  id: Bytes! # receiptId (bytes32)
+  receipt: Receipt!
+  solverId: Bytes!
+  challenger: Bytes!
+  reason: Int!
+  openedAt: BigInt!
+  resolved: Boolean!
+  slashed: Boolean
+  slashAmount: BigInt
+  resolvedAt: BigInt
+
+  # Escalation info (from DisputeModule)
+  escalated: Boolean!
+  escalatedAt: BigInt
+  arbitrator: Bytes
+  evidenceHashes: [Bytes!]!
+  arbitrationResolved: Boolean!
+  solverFault: Boolean
+  arbitrationReason: String
+}
+
+# Slash event tracking
+type SlashEvent @entity {
+  id: ID! # txHash-logIndex
+  solver: Solver!
+  amount: BigInt!
+  receiptId: Bytes!
+  reason: Int!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+# Bond event tracking (deposits, withdrawals)
+type BondEvent @entity {
+  id: ID! # txHash-logIndex
+  solver: Solver!
+  eventType: BondEventType!
+  amount: BigInt!
+  newBalance: BigInt!
+  timestamp: BigInt!
+  txHash: Bytes!
+}
+
+enum BondEventType {
+  Deposit
+  Withdrawal
+}
+
+# Protocol-level statistics
+type ProtocolStats @entity {
+  id: ID! # "stats"
+  totalSolvers: Int!
+  activeSolvers: Int!
+  jailedSolvers: Int!
+  bannedSolvers: Int!
+  totalBonded: BigInt!
+  totalSlashed: BigInt!
+  totalReceipts: BigInt!
+  totalDisputes: BigInt!
+  lastUpdated: BigInt!
+}
+
+# Daily statistics for analytics
+type DailyStats @entity {
+  id: ID! # date as timestamp / 86400
+  date: BigInt!
+  newSolvers: Int!
+  receiptsPosted: Int!
+  disputesOpened: Int!
+  slashEvents: Int!
+  slashAmount: BigInt!
+  bondDeposited: BigInt!
+  bondWithdrawn: BigInt!
+}
