@@ -22,7 +22,29 @@
         ]
       }
     ],
+    "cleanUrls": true,
+    "trailingSlash": false,
     "rewrites": [
+      {
+        "source": "/dashboard",
+        "destination": "/dashboard.html"
+      },
+      {
+        "source": "/request-docs",
+        "destination": "/request-docs.html"
+      },
+      {
+        "source": "/go/book",
+        "destination": "/go/book.html"
+      },
+      {
+        "source": "/go/request-docs",
+        "destination": "/go/request-docs.html"
+      },
+      {
+        "source": "/operator/**",
+        "destination": "/operator/[solverId].html"
+      },
       {
         "source": "**",
         "destination": "/index.html"
