@@ -1,5 +1,6 @@
 import { ReceiptEntry } from '@/components/ReceiptHistory'
 import { SlashEvent } from '@/components/SlashHistory'
+import { graphqlClient, SOLVER_DETAIL_QUERY } from './graphql'
 
 export interface OperatorData {
   // Identity
@@ -42,7 +43,164 @@ export interface OperatorData {
   slashEvents: SlashEvent[]
 }
 
-// Demo data - in production, this would query The Graph
+interface SubgraphSolverDetail {
+  id: string
+  operator: string
+  metadataURI: string
+  bondBalance: string
+  lockedBalance: string
+  status: number
+  intentScore: number
+  riskScore: number
+  fillRate: number
+  disputeRate: number
+  avgSettlementTime: number
+  totalFills: number
+  successfulFills: number
+  lastActiveTime: string
+  registrationTime: string
+  receipts: Array<{
+    id: string
+    intentHash: string
+    status: number
+    postedAt: string
+    finalizedAt: string | null
+    settlementTime: number | null
+  }>
+  slashEvents: Array<{
+    id: string
+    receiptId: string
+    amount: string
+    reason: number
+    timestamp: string
+    txHash: string
+  }>
+  bondEvents: Array<{
+    id: string
+    eventType: string
+    amount: string
+    timestamp: string
+  }>
+}
+
+interface SubgraphDetailResponse {
+  solver: SubgraphSolverDetail | null
+}
+
+// Map status number to string
+function mapStatus(status: number): 'Active' | 'Jailed' | 'Inactive' | 'Banned' {
+  switch (status) {
+    case 1: return 'Active'
+    case 2: return 'Jailed'
+    case 3: return 'Banned'
+    default: return 'Inactive'
+  }
+}
+
+// Map receipt status number to string
+function mapReceiptStatus(status: number): 'Pending' | 'Disputed' | 'Finalized' | 'Slashed' {
+  switch (status) {
+    case 0: return 'Pending'
+    case 1: return 'Disputed'
+    case 2: return 'Finalized'
+    case 3: return 'Slashed'
+    default: return 'Pending'
+  }
+}
+
+// Dispute reason codes
+const REASON_LABELS: Record<number, string> = {
+  1: 'Timeout',
+  2: 'Min Output Violation',
+  3: 'Wrong Token',
+  4: 'Wrong Chain',
+  5: 'Wrong Recipient',
+  6: 'Receipt Mismatch',
+  7: 'Invalid Signature',
+  8: 'Subjective',
+}
+
+// Fetch solver name from metadata
+async function fetchSolverName(metadataURI: string, fallback: string): Promise<string> {
+  if (!metadataURI) return fallback
+  try {
+    const url = metadataURI.startsWith('ipfs://')
+      ? `https://ipfs.io/ipfs/${metadataURI.slice(7)}`
+      : metadataURI
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) })
+    const data = await res.json()
+    return data.name || fallback
+  } catch {
+    return fallback
+  }
+}
+
+// Transform subgraph data to OperatorData
+async function transformOperatorData(s: SubgraphSolverDetail): Promise<OperatorData> {
+  const bondBalance = parseFloat(s.bondBalance || '0') / 1e18
+  const lockedBalance = parseFloat(s.lockedBalance || '0') / 1e18
+  const availableBond = bondBalance - lockedBalance
+  const name = await fetchSolverName(s.metadataURI, `Solver ${s.id.slice(0, 8)}`)
+
+  // Calculate score components (simplified)
+  const fillRate = s.fillRate || 0
+  const speedScore = Math.max(0, Math.min(100, ((60 - (s.avgSettlementTime || 30)) / 48) * 100))
+  const volumeScore = Math.min(100, Math.log10((s.totalFills || 1) + 1) * 25)
+  const disputeScore = Math.max(0, 100 - (s.disputeRate || 0) * 10)
+
+  return {
+    solverId: s.id,
+    name,
+    operatorAddress: s.operator,
+    metadataURI: s.metadataURI,
+    status: mapStatus(s.status),
+
+    bondBalance: bondBalance.toFixed(2),
+    availableBond: availableBond.toFixed(2),
+    lockedBond: lockedBalance.toFixed(2),
+    isAboveMinimum: bondBalance >= 0.1,
+    recentBondEvents: (s.bondEvents || []).map(e => ({
+      type: e.eventType === 'deposit' ? 'Deposit' as const : 'Withdrawal' as const,
+      amount: (parseFloat(e.amount) / 1e18).toFixed(2),
+      timestamp: new Date(parseInt(e.timestamp) * 1000),
+    })),
+
+    intentScore: s.intentScore || 0,
+    fillRate,
+    speedScore,
+    volumeScore,
+    disputeScore,
+
+    timeoutRate: s.disputeRate || 0, // Simplified - in reality would be separate
+    disputeRate: s.disputeRate || 0,
+    avgSettlementTime: s.avgSettlementTime || 0,
+    totalFills: s.totalFills || 0,
+
+    lastActive: new Date(parseInt(s.lastActiveTime || '0') * 1000),
+    registeredAt: new Date(parseInt(s.registrationTime || '0') * 1000),
+
+    recentReceipts: (s.receipts || []).map(r => ({
+      id: r.id,
+      intentHash: r.intentHash,
+      status: mapReceiptStatus(r.status),
+      postedAt: new Date(parseInt(r.postedAt) * 1000),
+      finalizedAt: r.finalizedAt ? new Date(parseInt(r.finalizedAt) * 1000) : null,
+      settlementTime: r.settlementTime,
+    })),
+
+    slashEvents: (s.slashEvents || []).map(e => ({
+      id: e.id,
+      receiptId: e.receiptId,
+      amount: (parseFloat(e.amount) / 1e18).toFixed(3),
+      reason: REASON_LABELS[e.reason] || 'Unknown',
+      reasonCode: e.reason,
+      timestamp: new Date(parseInt(e.timestamp) * 1000),
+      txHash: e.txHash,
+    })),
+  }
+}
+
+// Demo data - fallback when subgraph unavailable
 const DEMO_OPERATORS: Record<string, OperatorData> = {
   '0x1234567890123456789012345678901234567890': {
     solverId: '0x1234567890123456789012345678901234567890',
@@ -100,22 +258,6 @@ const DEMO_OPERATORS: Record<string, OperatorData> = {
         finalizedAt: null,
         settlementTime: null,
       },
-      {
-        id: '0xdef4567890123456789012345678901234567def',
-        intentHash: '0x67890123456789012345678901234567def12345',
-        status: 'Finalized',
-        postedAt: new Date(Date.now() - 900000),
-        finalizedAt: new Date(Date.now() - 840000),
-        settlementTime: 10,
-      },
-      {
-        id: '0xefg567890123456789012345678901234567890e',
-        intentHash: '0x890123456789012345678901234567890efg1234',
-        status: 'Finalized',
-        postedAt: new Date(Date.now() - 1200000),
-        finalizedAt: new Date(Date.now() - 1140000),
-        settlementTime: 18,
-      },
     ],
 
     slashEvents: [],
@@ -167,14 +309,6 @@ const DEMO_OPERATORS: Record<string, OperatorData> = {
         finalizedAt: new Date(Date.now() - 86400000 * 8 + 30000),
         settlementTime: 30,
       },
-      {
-        id: '0xccc333444555666777888999000111222333444',
-        intentHash: '0x333444555666777888999000111222333444555',
-        status: 'Disputed',
-        postedAt: new Date(Date.now() - 86400000 * 9),
-        finalizedAt: null,
-        settlementTime: null,
-      },
     ],
 
     slashEvents: [
@@ -196,20 +330,11 @@ const DEMO_OPERATORS: Record<string, OperatorData> = {
         timestamp: new Date(Date.now() - 86400000 * 14),
         txHash: '0xtx234567890',
       },
-      {
-        id: '0xslash3',
-        receiptId: '0xprev234567890',
-        amount: '0.1',
-        reason: 'Timeout',
-        reasonCode: 1,
-        timestamp: new Date(Date.now() - 86400000 * 21),
-        txHash: '0xtx345678901',
-      },
     ],
   },
 }
 
-// Add default for any unknown solver ID
+// Default for unknown solvers
 const DEFAULT_OPERATOR: OperatorData = {
   solverId: '0x0000000000000000000000000000000000000000',
   name: 'Unknown Operator',
@@ -237,69 +362,26 @@ const DEFAULT_OPERATOR: OperatorData = {
 }
 
 export async function fetchOperatorData(solverId: string): Promise<OperatorData> {
-  // Simulate API delay
+  try {
+    const data = await graphqlClient.request<SubgraphDetailResponse>(SOLVER_DETAIL_QUERY, {
+      id: solverId.toLowerCase(),
+    })
+
+    if (data.solver) {
+      return await transformOperatorData(data.solver)
+    }
+  } catch (error) {
+    console.warn('Subgraph unavailable, using demo data:', error)
+  }
+
+  // Fallback to demo data
   await new Promise(resolve => setTimeout(resolve, 300))
+  const demoData = DEMO_OPERATORS[solverId.toLowerCase()]
+  if (demoData) return demoData
 
-  // In production, this would:
-  // 1. Query The Graph subgraph for solver data
-  // 2. Fetch receipts and slash events
-  // 3. Calculate real-time scores
-
-  // For demo, return mock data or default
-  const data = DEMO_OPERATORS[solverId.toLowerCase()] || {
+  return {
     ...DEFAULT_OPERATOR,
     solverId: solverId,
     operatorAddress: solverId,
   }
-
-  return data
 }
-
-// Query example for production:
-/*
-const OPERATOR_QUERY = `
-  query OperatorData($solverId: Bytes!) {
-    solver(id: $solverId) {
-      id
-      operator
-      metadataURI
-      bondBalance
-      lockedBalance
-      status
-      riskScore
-      intentScore
-      fillRate
-      disputeRate
-      avgSettlementTime
-      totalFills
-      successfulFills
-      lastActiveTime
-      registrationTime
-
-      receipts(first: 20, orderBy: postedAt, orderDirection: desc) {
-        id
-        intentHash
-        status
-        postedAt
-        finalizedAt
-        settlementTime
-      }
-
-      slashEvents(first: 20, orderBy: timestamp, orderDirection: desc) {
-        id
-        receiptId
-        amount
-        reason
-        timestamp
-        txHash
-      }
-
-      bondEvents(first: 10, orderBy: timestamp, orderDirection: desc) {
-        eventType
-        amount
-        timestamp
-      }
-    }
-  }
-`
-*/

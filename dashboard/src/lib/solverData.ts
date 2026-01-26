@@ -1,3 +1,5 @@
+import { graphqlClient, SOLVERS_QUERY, PROTOCOL_STATS_QUERY } from './graphql'
+
 export interface Solver {
   address: string
   name: string
@@ -11,33 +13,67 @@ export interface Solver {
   lastActive: Date
 }
 
-// Calculate IntentScore based on metrics
-// Formula: (SuccessRate × 0.4) + (SpeedScore × 0.2) + (VolumeScore × 0.2) + (DisputeScore × 0.2)
-export function calculateIntentScore(solver: {
+interface SubgraphSolver {
+  id: string
+  operator: string
+  metadataURI: string
+  bondBalance: string
+  status: number
+  intentScore: number
   fillRate: number
-  avgSpeed: number
-  totalIntents: number
-  slashingEvents: number
-}): number {
-  // Success rate component (0-40)
-  const successScore = solver.fillRate * 0.4
-
-  // Speed score: faster = better, normalize to 0-100 (12s = 100, 60s = 0)
-  const speedNormalized = Math.max(0, Math.min(100, ((60 - solver.avgSpeed) / 48) * 100))
-  const speedScore = speedNormalized * 0.002 // 0-20
-
-  // Volume score: logarithmic scale
-  const volumeNormalized = Math.min(100, Math.log10(solver.totalIntents + 1) * 25)
-  const volumeScore = volumeNormalized * 0.002 // 0-20
-
-  // Dispute score: fewer slashing events = better
-  const disputeNormalized = Math.max(0, 100 - solver.slashingEvents * 20)
-  const disputeScore = disputeNormalized * 0.002 // 0-20
-
-  return Math.round(successScore + speedScore + volumeScore + disputeScore)
+  avgSettlementTime: number
+  totalFills: number
+  lastActiveTime: string
+  slashEvents: Array<{ id: string }>
 }
 
-// Demo data - in production this would come from The Graph or contract reads
+interface SubgraphResponse {
+  solvers: SubgraphSolver[]
+}
+
+// Map subgraph status enum to our status
+function mapStatus(status: number): 'active' | 'jailed' | 'inactive' {
+  switch (status) {
+    case 1: return 'active'
+    case 2: return 'jailed'
+    default: return 'inactive'
+  }
+}
+
+// Try to fetch solver name from metadata URI (IPFS/HTTP)
+async function fetchSolverName(metadataURI: string, fallback: string): Promise<string> {
+  if (!metadataURI) return fallback
+  try {
+    // Convert IPFS URI to HTTP gateway
+    const url = metadataURI.startsWith('ipfs://')
+      ? `https://ipfs.io/ipfs/${metadataURI.slice(7)}`
+      : metadataURI
+    const res = await fetch(url, { signal: AbortSignal.timeout(2000) })
+    const data = await res.json()
+    return data.name || fallback
+  } catch {
+    return fallback
+  }
+}
+
+// Transform subgraph data to our Solver interface
+async function transformSolver(s: SubgraphSolver): Promise<Solver> {
+  const name = await fetchSolverName(s.metadataURI, `Solver ${s.id.slice(0, 8)}`)
+  return {
+    address: s.id,
+    name,
+    intentScore: s.intentScore || 0,
+    fillRate: s.fillRate || 0,
+    avgSpeed: s.avgSettlementTime || 0,
+    totalIntents: s.totalFills || 0,
+    slashingEvents: s.slashEvents?.length || 0,
+    bondAmount: (parseFloat(s.bondBalance || '0') / 1e18).toFixed(2),
+    status: mapStatus(s.status),
+    lastActive: new Date(parseInt(s.lastActiveTime || '0') * 1000),
+  }
+}
+
+// Demo data fallback when subgraph unavailable
 const DEMO_SOLVERS: Solver[] = [
   {
     address: '0x1234567890123456789012345678901234567890',
@@ -126,14 +162,23 @@ const DEMO_SOLVERS: Solver[] = [
 ]
 
 export async function fetchSolverData(): Promise<Solver[]> {
-  // Simulate API delay
-  await new Promise(resolve => setTimeout(resolve, 500))
+  try {
+    const data = await graphqlClient.request<SubgraphResponse>(SOLVERS_QUERY, {
+      first: 100,
+      orderBy: 'intentScore',
+      orderDirection: 'desc',
+    })
 
-  // In production, this would:
-  // 1. Query The Graph for CoWSwap settlement events
-  // 2. Read IRSB SolverRegistry for bond/status info
-  // 3. Calculate IntentScores from on-chain data
+    if (data.solvers && data.solvers.length > 0) {
+      const solvers = await Promise.all(data.solvers.map(transformSolver))
+      return solvers.sort((a, b) => b.intentScore - a.intentScore)
+    }
+  } catch (error) {
+    console.warn('Subgraph unavailable, using demo data:', error)
+  }
 
+  // Fallback to demo data
+  await new Promise(resolve => setTimeout(resolve, 300)) // Simulate delay
   return DEMO_SOLVERS.sort((a, b) => b.intentScore - a.intentScore)
 }
 
