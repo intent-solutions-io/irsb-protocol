@@ -37,3 +37,14 @@ export {
   INTENT_RECEIPT_HUB_ABI,
   DISPUTE_MODULE_ABI,
 } from './contracts/abis';
+
+// Wallet API
+export {
+  WalletApi,
+  createWalletApi,
+  SUBGRAPH_URLS,
+  type RiskScore,
+  type Receipt,
+  type RecentReceiptsResponse,
+  type BondStatus,
+} from './api/walletApi';

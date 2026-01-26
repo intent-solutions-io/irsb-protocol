@@ -18,9 +18,16 @@ type Solver @entity {
 
   status: SolverStatus!
 
-  # Calculated fields
+  # Calculated fields for wallet API
   fillRate: BigDecimal!
   intentScore: Int!
+  riskScore: Int! # 0-100 (higher = safer)
+  disputeRate: BigDecimal! # disputesLost / totalFills
+  avgSettlementTime: BigInt! # Average time to finalization
+
+  # Bond status for wallet API
+  isAboveMinimum: Boolean!
+  coverageRatio: BigDecimal! # bondBalance / volumeProcessed (30 day avg)
 
   # Relations
   receipts: [Receipt!]! @derivedFrom(field: "solver")
@@ -46,6 +53,12 @@ type Receipt @entity {
   postedAt: BigInt!
   status: ReceiptStatus!
 
+  # Hash fields for verification
+  constraintsHash: Bytes
+  routeHash: Bytes
+  outcomeHash: Bytes
+  evidenceHash: Bytes
+
   # Dispute info (if disputed)
   challenger: Bytes
   disputeReason: Int
@@ -55,6 +68,10 @@ type Receipt @entity {
   slashed: Boolean
   slashAmount: BigInt
   resolvedAt: BigInt
+  finalizedAt: BigInt
+
+  # Settlement timing for metrics
+  settlementTime: BigInt # finalizedAt - postedAt
 }
 
 enum ReceiptStatus {
@@ -85,6 +102,9 @@ type Dispute @entity {
   arbitrationResolved: Boolean!
   solverFault: Boolean
   arbitrationReason: String
+
+  # Resolution timing
+  resolutionTime: BigInt # resolvedAt - openedAt
 }
 
 # Slash event tracking
@@ -125,6 +145,9 @@ type ProtocolStats @entity {
   totalSlashed: BigInt!
   totalReceipts: BigInt!
   totalDisputes: BigInt!
+  totalFinalized: BigInt!
+  avgSettlementTime: BigInt!
+  avgDisputeRate: BigDecimal!
   lastUpdated: BigInt!
 }
 
@@ -134,9 +157,37 @@ type DailyStats @entity {
   date: BigInt!
   newSolvers: Int!
   receiptsPosted: Int!
+  receiptsFinalized: Int!
   disputesOpened: Int!
+  disputesResolved: Int!
   slashEvents: Int!
   slashAmount: BigInt!
   bondDeposited: BigInt!
   bondWithdrawn: BigInt!
+  avgSettlementTime: BigInt!
+}
+
+# Across-specific tracking (for AcrossAdapter integration)
+type AcrossReceipt @entity {
+  id: Bytes! # receiptId
+  depositId: Bytes!
+  originChainId: BigInt!
+  destinationChainId: BigInt!
+  receipt: Receipt!
+  solver: Solver!
+  registeredAt: BigInt!
+}
+
+# Solver metrics snapshot for trend analysis
+type SolverDailyMetrics @entity {
+  id: ID! # solverId-date
+  solver: Solver!
+  date: BigInt!
+  receiptsPosted: Int!
+  receiptsFinalized: Int!
+  disputesOpened: Int!
+  disputesLost: Int!
+  volumeProcessed: BigInt!
+  bondBalance: BigInt!
+  riskScore: Int!
 }

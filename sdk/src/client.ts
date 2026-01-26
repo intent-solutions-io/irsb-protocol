@@ -16,6 +16,13 @@ import {
   INTENT_RECEIPT_HUB_ABI,
   DISPUTE_MODULE_ABI,
 } from './contracts/abis';
+import {
+  WalletApi,
+  RiskScore,
+  RecentReceiptsResponse,
+  BondStatus,
+  SUBGRAPH_URLS,
+} from './api/walletApi';
 
 export interface IRSBClientConfig {
   /** Chain name ('sepolia') or custom config */
@@ -382,6 +389,62 @@ export class IRSBClient {
       intentReceiptHub: this.config.intentReceiptHub,
       disputeModule: this.config.disputeModule,
     };
+  }
+
+  // ============ Wallet API Methods ============
+
+  /**
+   * Get wallet API instance for subgraph queries
+   * @param subgraphUrl - Optional custom subgraph URL
+   */
+  getWalletApi(subgraphUrl?: string): WalletApi {
+    const url = subgraphUrl || SUBGRAPH_URLS[this.config.chainId === 11155111 ? 'sepolia' : 'mainnet'];
+    return new WalletApi(url);
+  }
+
+  /**
+   * Get risk score for a solver (wallet-grade API)
+   * @param executor - Solver address or ID
+   * @param subgraphUrl - Optional custom subgraph URL
+   */
+  async getRiskScore(executor: string, subgraphUrl?: string): Promise<RiskScore> {
+    const api = this.getWalletApi(subgraphUrl);
+    return api.getRiskScore(executor);
+  }
+
+  /**
+   * Get recent receipts for a solver (wallet-grade API)
+   * @param executor - Solver address or ID
+   * @param limit - Maximum receipts to return
+   * @param subgraphUrl - Optional custom subgraph URL
+   */
+  async getRecentReceipts(
+    executor: string,
+    limit: number = 10,
+    subgraphUrl?: string
+  ): Promise<RecentReceiptsResponse> {
+    const api = this.getWalletApi(subgraphUrl);
+    return api.getRecentReceipts(executor, limit);
+  }
+
+  /**
+   * Get active bond status for a solver (wallet-grade API)
+   * @param executor - Solver address or ID
+   * @param subgraphUrl - Optional custom subgraph URL
+   */
+  async getActiveBond(executor: string, subgraphUrl?: string): Promise<BondStatus> {
+    const api = this.getWalletApi(subgraphUrl);
+    return api.getActiveBond(executor);
+  }
+
+  /**
+   * Check if solver is safe to use (combined metrics check)
+   * @param executor - Solver address or ID
+   * @param subgraphUrl - Optional custom subgraph URL
+   */
+  async isSolverSafe(executor: string, subgraphUrl?: string): Promise<boolean> {
+    const api = this.getWalletApi(subgraphUrl);
+    return api.isSolverSafe(executor);
   }
 
   private requireSigner(): void {

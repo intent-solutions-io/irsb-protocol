@@ -142,4 +142,43 @@ export const CONSTANTS = {
   CHALLENGER_BOND_BPS: 1000, // 10%
   EVIDENCE_WINDOW: BigInt(24 * 60 * 60), // 24 hours
   ARBITRATION_TIMEOUT: BigInt(7 * 24 * 60 * 60), // 7 days
+  // Bond thresholds for wallet API
+  BOND_THRESHOLD_MEDIUM: BigInt('500000000000000000'), // 0.5 ETH
+  BOND_THRESHOLD_HIGH: BigInt('1000000000000000000'), // 1.0 ETH
 } as const;
+
+// ============ Across Adapter Types ============
+
+export interface AcrossDeposit {
+  originChainId: bigint;
+  destinationChainId: bigint;
+  originToken: string;
+  destinationToken: string;
+  inputAmount: bigint;
+  outputAmount: bigint;
+  depositor: string;
+  recipient: string;
+  fillDeadline: bigint;
+  depositId: string;
+  exclusivityDeadline: bigint;
+  exclusiveRelayer: string;
+  message: string;
+}
+
+export interface AcrossFillData {
+  fillChainId: bigint;
+  tokenFilled: string;
+  amountFilled: bigint;
+  recipientFilled: string;
+  fillTxHash: string;
+  filledAt: bigint;
+}
+
+export interface AcrossReceipt {
+  receiptId: string;
+  depositId: string;
+  intentHash: string;
+  solverId: string;
+  postedAt: bigint;
+  expiry: bigint;
+}

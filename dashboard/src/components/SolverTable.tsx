@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Solver, getScoreClass, getStatusColor, formatAddress, formatTimeSince } from '@/lib/solverData'
 
 interface SolverTableProps {
@@ -60,6 +61,9 @@ export default function SolverTable({ solvers, loading }: SolverTableProps) {
             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
               Last Active
             </th>
+            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -69,16 +73,16 @@ export default function SolverTable({ solvers, loading }: SolverTableProps) {
                 #{index + 1}
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
-                <div className="flex items-center">
+                <Link href={`/operator/${solver.address}`} className="flex items-center group">
                   <div>
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                       {solver.name}
                     </div>
-                    <div className="text-xs text-gray-500 font-mono">
+                    <div className="text-xs text-gray-500 font-mono group-hover:text-indigo-500">
                       {formatAddress(solver.address)}
                     </div>
                   </div>
-                </div>
+                </Link>
               </td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span className={`score-badge ${getScoreClass(solver.intentScore)}`}>
@@ -115,6 +119,14 @@ export default function SolverTable({ solvers, loading }: SolverTableProps) {
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                 {formatTimeSince(solver.lastActive)}
+              </td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                <Link
+                  href={`/operator/${solver.address}`}
+                  className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                >
+                  View Details →
+                </Link>
               </td>
             </tr>
           ))}
