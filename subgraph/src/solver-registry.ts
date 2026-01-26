@@ -44,6 +44,9 @@ function getOrCreateProtocolStats(): ProtocolStats {
     stats.totalSlashed = BigInt.zero();
     stats.totalReceipts = BigInt.zero();
     stats.totalDisputes = BigInt.zero();
+    stats.totalFinalized = BigInt.zero();
+    stats.avgSettlementTime = BigInt.zero();
+    stats.avgDisputeRate = BigDecimal.zero();
     stats.lastUpdated = BigInt.zero();
   }
   return stats;
@@ -58,11 +61,14 @@ function getOrCreateDailyStats(timestamp: BigInt): DailyStats {
     stats.date = timestamp.div(BigInt.fromI32(86400)).times(BigInt.fromI32(86400));
     stats.newSolvers = 0;
     stats.receiptsPosted = 0;
+    stats.receiptsFinalized = 0;
     stats.disputesOpened = 0;
+    stats.disputesResolved = 0;
     stats.slashEvents = 0;
     stats.slashAmount = BigInt.zero();
     stats.bondDeposited = BigInt.zero();
     stats.bondWithdrawn = BigInt.zero();
+    stats.avgSettlementTime = BigInt.zero();
   }
   return stats;
 }
@@ -101,6 +107,11 @@ export function handleSolverRegistered(event: SolverRegistered): void {
   solver.status = "Active";
   solver.fillRate = BigDecimal.zero();
   solver.intentScore = 50; // Starting score
+  solver.riskScore = 50; // Starting risk score (50 = neutral)
+  solver.disputeRate = BigDecimal.zero();
+  solver.avgSettlementTime = BigInt.zero();
+  solver.isAboveMinimum = false; // Will be true after bond deposit
+  solver.coverageRatio = BigDecimal.zero();
   solver.save();
 
   // Update protocol stats
@@ -116,6 +127,9 @@ export function handleSolverRegistered(event: SolverRegistered): void {
   daily.save();
 }
 
+// Minimum bond: 0.1 ETH = 100000000000000000 wei
+let MINIMUM_BOND = BigInt.fromString("100000000000000000");
+
 export function handleBondDeposited(event: BondDeposited): void {
   let solver = Solver.load(event.params.solverId);
   if (!solver) return;
@@ -123,6 +137,7 @@ export function handleBondDeposited(event: BondDeposited): void {
   let previousBalance = solver.bondBalance;
   solver.bondBalance = event.params.newBalance;
   solver.lastActiveTime = event.block.timestamp;
+  solver.isAboveMinimum = solver.bondBalance.ge(MINIMUM_BOND);
   solver.save();
 
   // Update protocol stats

@@ -3,7 +3,7 @@ import { GraphQLClient } from 'graphql-request'
 // Subgraph endpoints
 const SUBGRAPH_URLS = {
   // The Graph Studio (decentralized)
-  studio: 'https://api.studio.thegraph.com/query/1724171/isrb/v0.1.0',
+  studio: 'https://api.studio.thegraph.com/query/1724171/isrb/v0.1.1',
   // Local development
   local: 'http://localhost:8000/subgraphs/name/irsb-protocol',
 }
