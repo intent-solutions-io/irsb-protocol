@@ -1,7 +1,10 @@
 {
-  "name": "irsb-sdk",
+  "name": "@intentsolutionsio/irsb-sdk",
   "version": "0.1.0",
   "description": "SDK for IRSB Protocol - Intent Receipts & Solver Bonds",
+  "publishConfig": {
+    "access": "public"
+  },
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
