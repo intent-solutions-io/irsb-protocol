@@ -3,15 +3,13 @@ import { GraphQLClient } from 'graphql-request'
 // Subgraph endpoints
 const SUBGRAPH_URLS = {
   // The Graph Studio (decentralized)
-  studio: 'https://api.studio.thegraph.com/query/YOUR_ID/irsb-protocol/version/latest',
-  // The Graph Hosted Service
-  hosted: 'https://api.thegraph.com/subgraphs/name/intentsolutionsio/irsb-protocol',
+  studio: 'https://api.studio.thegraph.com/query/1724171/isrb/v0.1.0',
   // Local development
   local: 'http://localhost:8000/subgraphs/name/irsb-protocol',
 }
 
-// Use environment variable or default to hosted
-const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || SUBGRAPH_URLS.hosted
+// Use environment variable or default to studio
+const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || SUBGRAPH_URLS.studio
 
 export const graphqlClient = new GraphQLClient(SUBGRAPH_URL)
 
