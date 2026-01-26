@@ -141,11 +141,13 @@ Jeremy
 
 | Date | Firm | Contacted | Response | Quote | Status |
 |------|------|-----------|----------|-------|--------|
-| | OpenZeppelin | | | | |
-| | Trail of Bits | | | | |
-| | Spearbit | | | | |
-| | Cyfrin | | | | |
-| | Sherlock | | | | |
+| 2026-01-25 | OpenZeppelin | ✅ | | | Awaiting response |
+| 2026-01-25 | Trail of Bits | ✅ | | | Awaiting response |
+| 2026-01-25 | Spearbit | ✅ | | | Awaiting response |
+| 2026-01-25 | Cyfrin | ✅ | | | Awaiting response |
+| 2026-01-25 | Consensys Diligence | ✅ | | | Awaiting response |
+| 2026-01-25 | Sherlock | ✅ | | | Awaiting response |
+| 2026-01-25 | Code4rena | ✅ | | | Awaiting response |
 
 ---
 
