@@ -120,12 +120,62 @@ const REASON_LABELS: Record<number, string> = {
   8: 'Subjective',
 }
 
+// Allowed IPFS gateways for metadata fetching
+const ALLOWED_IPFS_GATEWAYS = [
+  'https://ipfs.io',
+  'https://gateway.pinata.cloud',
+  'https://cloudflare-ipfs.com',
+  'https://dweb.link',
+]
+
+// Validate URL to prevent SSRF attacks
+function isValidMetadataUrl(uri: string): boolean {
+  // Only allow IPFS URIs (we convert them to safe gateways)
+  if (uri.startsWith('ipfs://')) return true
+
+  try {
+    const url = new URL(uri)
+
+    // Only allow HTTPS
+    if (url.protocol !== 'https:') return false
+
+    // Block private/internal IP ranges
+    const hostname = url.hostname.toLowerCase()
+
+    // Block localhost and common internal hostnames
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') return false
+    if (hostname.endsWith('.local') || hostname.endsWith('.internal')) return false
+
+    // Block cloud metadata endpoints
+    if (hostname === '169.254.169.254' || hostname === 'metadata.google.internal') return false
+
+    // Block private IP ranges (10.x.x.x, 172.16-31.x.x, 192.168.x.x)
+    const ipMatch = hostname.match(/^(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+    if (ipMatch) {
+      const [, a, b] = ipMatch.map(Number)
+      if (a === 10) return false
+      if (a === 172 && b >= 16 && b <= 31) return false
+      if (a === 192 && b === 168) return false
+      if (a === 127) return false
+      if (a === 169 && b === 254) return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
 // Fetch solver name from metadata
 async function fetchSolverName(metadataURI: string, fallback: string): Promise<string> {
   if (!metadataURI) return fallback
+
+  // Validate URL before fetching (SSRF prevention)
+  if (!isValidMetadataUrl(metadataURI)) return fallback
+
   try {
     const url = metadataURI.startsWith('ipfs://')
-      ? `https://ipfs.io/ipfs/${metadataURI.slice(7)}`
+      ? `${ALLOWED_IPFS_GATEWAYS[0]}/ipfs/${metadataURI.slice(7)}`
       : metadataURI
     const res = await fetch(url, { signal: AbortSignal.timeout(2000) })
     const data = await res.json()
@@ -361,7 +411,22 @@ const DEFAULT_OPERATOR: OperatorData = {
   slashEvents: [],
 }
 
+// Validate bytes32 hex string (solver IDs are bytes32)
+function isValidSolverId(id: string): boolean {
+  // Must be 0x followed by 64 hex characters (32 bytes)
+  return /^0x[a-fA-F0-9]{64}$/.test(id)
+}
+
 export async function fetchOperatorData(solverId: string): Promise<OperatorData> {
+  // Validate solverId format before querying (injection prevention)
+  if (!isValidSolverId(solverId)) {
+    return {
+      ...DEFAULT_OPERATOR,
+      solverId: solverId,
+      operatorAddress: solverId,
+    }
+  }
+
   try {
     const data = await graphqlClient.request<SubgraphDetailResponse>(SOLVER_DETAIL_QUERY, {
       id: solverId.toLowerCase(),

@@ -7,6 +7,28 @@ import ReceiptHistory from '@/components/ReceiptHistory'
 import SlashHistory from '@/components/SlashHistory'
 import { fetchOperatorData, OperatorData } from '@/lib/operatorData'
 
+// Validate and sanitize metadata URI for safe rendering
+function getSafeMetadataUrl(uri: string): string | null {
+  if (!uri) return null
+
+  // IPFS URIs are safe - convert to gateway
+  if (uri.startsWith('ipfs://')) {
+    return `https://ipfs.io/ipfs/${uri.slice(7)}`
+  }
+
+  try {
+    const url = new URL(uri)
+    // Only allow HTTPS
+    if (url.protocol !== 'https:') return null
+    // Block dangerous protocols that made it through
+    if (uri.toLowerCase().startsWith('javascript:')) return null
+    if (uri.toLowerCase().startsWith('data:')) return null
+    return uri
+  } catch {
+    return null
+  }
+}
+
 interface OperatorPageClientProps {
   solverId: string
 }
@@ -174,14 +196,16 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
             >
               View on Etherscan ↗
             </a>
-            <a
-              href={data.metadataURI}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm"
-            >
-              View Metadata ↗
-            </a>
+            {getSafeMetadataUrl(data.metadataURI) && (
+              <a
+                href={getSafeMetadataUrl(data.metadataURI)!}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm"
+              >
+                View Metadata ↗
+              </a>
+            )}
           </div>
         </div>
       </div>
