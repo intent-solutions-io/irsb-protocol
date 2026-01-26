@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {IIntentReceiptHub} from "./IIntentReceiptHub.sol";
-import {ISolverRegistry} from "./ISolverRegistry.sol";
+import { IIntentReceiptHub } from "./IIntentReceiptHub.sol";
+import { ISolverRegistry } from "./ISolverRegistry.sol";
 
 /// @title IAcrossAdapter
 /// @notice Interface for Across Protocol integration with IRSB
@@ -60,11 +60,7 @@ interface IAcrossAdapter {
     );
 
     /// @notice Emitted when a fill is validated
-    event FillValidated(
-        bytes32 indexed receiptId,
-        bool valid,
-        string reason
-    );
+    event FillValidated(bytes32 indexed receiptId, bool valid, string reason);
 
     // ============ Errors ============
 
@@ -86,42 +82,34 @@ interface IAcrossAdapter {
     /// @param fill Fill execution data
     /// @param relayerSig Relayer signature over fill commitment
     /// @return receiptId The unique IRSB receipt ID
-    function postAcrossReceipt(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill,
-        bytes calldata relayerSig
-    ) external returns (bytes32 receiptId);
+    function postAcrossReceipt(AcrossDeposit calldata deposit, FillData calldata fill, bytes calldata relayerSig)
+        external
+        returns (bytes32 receiptId);
 
     /// @notice Validate a fill against its deposit constraints
     /// @param receiptId Receipt to validate
     /// @param fill Fill data to verify
     /// @return valid Whether fill satisfies constraints
     /// @return reason Validation failure reason (empty if valid)
-    function validateFill(
-        bytes32 receiptId,
-        FillData calldata fill
-    ) external view returns (bool valid, string memory reason);
+    function validateFill(bytes32 receiptId, FillData calldata fill)
+        external
+        view
+        returns (bool valid, string memory reason);
 
     /// @notice Compute intent hash from Across deposit
     /// @param deposit Across deposit data
     /// @return intentHash Hash uniquely identifying the intent
-    function computeIntentHash(
-        AcrossDeposit calldata deposit
-    ) external pure returns (bytes32 intentHash);
+    function computeIntentHash(AcrossDeposit calldata deposit) external pure returns (bytes32 intentHash);
 
     /// @notice Compute constraints hash from Across deposit
     /// @param deposit Across deposit data
     /// @return constraintsHash Hash of execution constraints
-    function computeConstraintsHash(
-        AcrossDeposit calldata deposit
-    ) external pure returns (bytes32 constraintsHash);
+    function computeConstraintsHash(AcrossDeposit calldata deposit) external pure returns (bytes32 constraintsHash);
 
     /// @notice Get receipt by deposit ID
     /// @param depositId Across deposit identifier
     /// @return receipt Associated IRSB receipt
-    function getReceiptByDepositId(
-        bytes32 depositId
-    ) external view returns (AcrossReceipt memory receipt);
+    function getReceiptByDepositId(bytes32 depositId) external view returns (AcrossReceipt memory receipt);
 
     /// @notice Check if deposit already has a receipt
     /// @param depositId Across deposit identifier

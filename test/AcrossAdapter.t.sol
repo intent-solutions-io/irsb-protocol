@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test, console} from "forge-std/Test.sol";
-import {AcrossAdapter} from "../src/adapters/AcrossAdapter.sol";
-import {IAcrossAdapter} from "../src/interfaces/IAcrossAdapter.sol";
-import {IntentReceiptHub} from "../src/IntentReceiptHub.sol";
-import {SolverRegistry} from "../src/SolverRegistry.sol";
-import {Types} from "../src/libraries/Types.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { AcrossAdapter } from "../src/adapters/AcrossAdapter.sol";
+import { IAcrossAdapter } from "../src/interfaces/IAcrossAdapter.sol";
+import { IntentReceiptHub } from "../src/IntentReceiptHub.sol";
+import { SolverRegistry } from "../src/SolverRegistry.sol";
+import { Types } from "../src/libraries/Types.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract AcrossAdapterTest is Test {
     using ECDSA for bytes32;
@@ -55,11 +55,11 @@ contract AcrossAdapterTest is Test {
         // Register relayer as solver
         vm.prank(relayer);
         solverId = registry.registerSolver("ipfs://relayer-metadata", relayer);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
     }
 
     // Allow test contract to receive ETH
-    receive() external payable {}
+    receive() external payable { }
 
     // ============ Helper Functions ============
 
@@ -81,9 +81,11 @@ contract AcrossAdapterTest is Test {
         });
     }
 
-    function _createFillData(
-        IAcrossAdapter.AcrossDeposit memory deposit
-    ) internal view returns (IAcrossAdapter.FillData memory) {
+    function _createFillData(IAcrossAdapter.AcrossDeposit memory deposit)
+        internal
+        view
+        returns (IAcrossAdapter.FillData memory)
+    {
         return IAcrossAdapter.FillData({
             fillChainId: deposit.destinationChainId,
             tokenFilled: deposit.destinationToken,
@@ -94,24 +96,27 @@ contract AcrossAdapterTest is Test {
         });
     }
 
-    function _prepareAndSignReceipt(
-        IAcrossAdapter.AcrossDeposit memory deposit,
-        IAcrossAdapter.FillData memory fill
-    ) internal view returns (Types.IntentReceipt memory receipt, bytes memory sig) {
+    function _prepareAndSignReceipt(IAcrossAdapter.AcrossDeposit memory deposit, IAcrossAdapter.FillData memory fill)
+        internal
+        view
+        returns (Types.IntentReceipt memory receipt, bytes memory sig)
+    {
         // Get the receipt structure
         receipt = adapter.prepareReceipt(deposit, fill, solverId);
 
         // Compute message hash and sign
-        bytes32 messageHash = keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(relayerPrivateKey, ethSignedHash);
         sig = abi.encodePacked(r, s, v);
@@ -120,10 +125,10 @@ contract AcrossAdapterTest is Test {
         receipt.solverSig = sig;
     }
 
-    function _postReceiptToHub(
-        IAcrossAdapter.AcrossDeposit memory deposit,
-        IAcrossAdapter.FillData memory fill
-    ) internal returns (bytes32 receiptId, Types.IntentReceipt memory receipt) {
+    function _postReceiptToHub(IAcrossAdapter.AcrossDeposit memory deposit, IAcrossAdapter.FillData memory fill)
+        internal
+        returns (bytes32 receiptId, Types.IntentReceipt memory receipt)
+    {
         bytes memory sig;
         (receipt, sig) = _prepareAndSignReceipt(deposit, fill);
 
@@ -139,7 +144,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
         // Post to hub first
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // Register with adapter
         vm.prank(relayer);
@@ -158,15 +163,11 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.expectEmit(true, true, true, true);
         emit AcrossReceiptPosted(
-            receiptId,
-            deposit.depositId,
-            solverId,
-            deposit.originChainId,
-            deposit.destinationChainId
+            receiptId, deposit.depositId, solverId, deposit.originChainId, deposit.destinationChainId
         );
 
         vm.prank(relayer);
@@ -177,7 +178,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // First registration succeeds
         vm.prank(relayer);
@@ -201,7 +202,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // Try to register as non-operator
         vm.expectRevert(IAcrossAdapter.UnauthorizedRelayer.selector);
@@ -213,7 +214,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // Modify deposit to create mismatched intent
         IAcrossAdapter.AcrossDeposit memory wrongDeposit = deposit;
@@ -230,7 +231,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -244,7 +245,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -261,7 +262,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -278,7 +279,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -295,7 +296,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -312,7 +313,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -410,7 +411,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         vm.prank(relayer);
         adapter.registerAcrossReceipt(deposit, receiptId);
@@ -444,7 +445,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // Should fail when paused
         vm.expectRevert();
@@ -472,7 +473,7 @@ contract AcrossAdapterTest is Test {
         IAcrossAdapter.AcrossDeposit memory deposit = _createDeposit();
         IAcrossAdapter.FillData memory fill = _createFillData(deposit);
 
-        (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+        (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
         // 2. Register with adapter
         vm.prank(relayer);
@@ -502,7 +503,7 @@ contract AcrossAdapterTest is Test {
             deposit.inputAmount = (i + 1) * 1 ether;
 
             IAcrossAdapter.FillData memory fill = _createFillData(deposit);
-            (bytes32 receiptId, ) = _postReceiptToHub(deposit, fill);
+            (bytes32 receiptId,) = _postReceiptToHub(deposit, fill);
 
             vm.prank(relayer);
             adapter.registerAcrossReceipt(deposit, receiptId);

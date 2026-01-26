@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Script, console} from "forge-std/Script.sol";
-import {SolverRegistry} from "../src/SolverRegistry.sol";
-import {IntentReceiptHub} from "../src/IntentReceiptHub.sol";
-import {DisputeModule} from "../src/DisputeModule.sol";
+import { Script, console } from "forge-std/Script.sol";
+import { SolverRegistry } from "../src/SolverRegistry.sol";
+import { IntentReceiptHub } from "../src/IntentReceiptHub.sol";
+import { DisputeModule } from "../src/DisputeModule.sol";
 
 /// @title IRSB Deployment Script
 /// @notice Deploys the complete IRSB protocol stack
@@ -62,11 +62,8 @@ contract DeployLocal is Script {
         // Deploy all contracts
         SolverRegistry solverRegistry = new SolverRegistry();
         IntentReceiptHub receiptHub = new IntentReceiptHub(address(solverRegistry));
-        DisputeModule disputeModule = new DisputeModule(
-            address(receiptHub),
-            address(solverRegistry),
-            vm.addr(deployerPrivateKey)
-        );
+        DisputeModule disputeModule =
+            new DisputeModule(address(receiptHub), address(solverRegistry), vm.addr(deployerPrivateKey));
 
         // Configure
         solverRegistry.setAuthorizedCaller(address(receiptHub), true);
@@ -189,11 +186,7 @@ contract DeploySepoliaVerified is Script {
         // Deploy
         SolverRegistry solverRegistry = new SolverRegistry();
         IntentReceiptHub receiptHub = new IntentReceiptHub(address(solverRegistry));
-        DisputeModule disputeModule = new DisputeModule(
-            address(receiptHub),
-            address(solverRegistry),
-            deployer
-        );
+        DisputeModule disputeModule = new DisputeModule(address(receiptHub), address(solverRegistry), deployer);
 
         // Configure
         solverRegistry.setAuthorizedCaller(address(receiptHub), true);

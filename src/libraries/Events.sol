@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Types} from "./Types.sol";
+import { Types } from "./Types.sol";
 
 /// @title IRSB Events Library
 /// @notice Consolidated events for indexing

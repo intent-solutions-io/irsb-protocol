@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Types} from "../libraries/Types.sol";
+import { Types } from "../libraries/Types.sol";
 
 /// @title IDisputeModule
 /// @notice Interface for dispute resolution (v0.2 - pluggable arbitration)
@@ -9,25 +9,13 @@ interface IDisputeModule {
     // ============ Events ============
 
     /// @notice Emitted when evidence is submitted
-    event EvidenceSubmitted(
-        bytes32 indexed disputeId,
-        address indexed submitter,
-        bytes32 evidenceHash
-    );
+    event EvidenceSubmitted(bytes32 indexed disputeId, address indexed submitter, bytes32 evidenceHash);
 
     /// @notice Emitted when dispute is escalated to arbitration
-    event DisputeEscalated(
-        bytes32 indexed disputeId,
-        address indexed arbitrator
-    );
+    event DisputeEscalated(bytes32 indexed disputeId, address indexed arbitrator);
 
     /// @notice Emitted when arbitrator resolves dispute
-    event ArbitrationResolved(
-        bytes32 indexed disputeId,
-        bool solverFault,
-        uint256 slashAmount,
-        string reason
-    );
+    event ArbitrationResolved(bytes32 indexed disputeId, bool solverFault, uint256 slashAmount, string reason);
 
     // ============ Errors ============
 
@@ -57,12 +45,7 @@ interface IDisputeModule {
     /// @param solverFault Whether solver is at fault
     /// @param slashPercentage Percentage of bond to slash (0-100)
     /// @param reason Arbitration rationale
-    function resolve(
-        bytes32 disputeId,
-        bool solverFault,
-        uint8 slashPercentage,
-        string calldata reason
-    ) external;
+    function resolve(bytes32 disputeId, bool solverFault, uint8 slashPercentage, string calldata reason) external;
 
     // ============ View Functions ============
 
@@ -71,13 +54,10 @@ interface IDisputeModule {
     /// @return evidenceHashes Array of evidence hashes
     /// @return submitters Array of submitter addresses
     /// @return timestamps Array of submission timestamps
-    function getEvidenceHistory(
-        bytes32 disputeId
-    ) external view returns (
-        bytes32[] memory evidenceHashes,
-        address[] memory submitters,
-        uint64[] memory timestamps
-    );
+    function getEvidenceHistory(bytes32 disputeId)
+        external
+        view
+        returns (bytes32[] memory evidenceHashes, address[] memory submitters, uint64[] memory timestamps);
 
     /// @notice Check if dispute can be escalated
     /// @param disputeId Dispute to check

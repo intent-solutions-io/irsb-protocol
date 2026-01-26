@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test, console} from "forge-std/Test.sol";
-import {SolverRegistry} from "../src/SolverRegistry.sol";
-import {Types} from "../src/libraries/Types.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { SolverRegistry } from "../src/SolverRegistry.sol";
+import { Types } from "../src/libraries/Types.sol";
 
 contract SolverRegistryTest is Test {
     SolverRegistry public registry;
@@ -20,7 +20,9 @@ contract SolverRegistryTest is Test {
     event BondWithdrawn(bytes32 indexed solverId, uint256 amount, uint256 newBalance);
     event SolverStatusChanged(bytes32 indexed solverId, Types.SolverStatus oldStatus, Types.SolverStatus newStatus);
     event OperatorKeyRotated(bytes32 indexed solverId, address indexed oldOperator, address indexed newOperator);
-    event SolverSlashed(bytes32 indexed solverId, uint256 amount, bytes32 indexed receiptId, Types.DisputeReason reason);
+    event SolverSlashed(
+        bytes32 indexed solverId, uint256 amount, bytes32 indexed receiptId, Types.DisputeReason reason
+    );
 
     function setUp() public {
         registry = new SolverRegistry();
@@ -71,7 +73,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.05 ether}(solverId);
+        registry.depositBond{ value: 0.05 ether }(solverId);
 
         Types.Solver memory solver = registry.getSolver(solverId);
         assertEq(solver.bondBalance, 0.05 ether);
@@ -87,7 +89,7 @@ contract SolverRegistryTest is Test {
         vm.expectEmit(true, false, false, true);
         emit SolverStatusChanged(solverId, Types.SolverStatus.Inactive, Types.SolverStatus.Active);
 
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.Solver memory solver = registry.getSolver(solverId);
         assertEq(solver.bondBalance, MINIMUM_BOND);
@@ -97,7 +99,7 @@ contract SolverRegistryTest is Test {
     function test_DepositBond_OwnerCanDeposit() public {
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
 
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.Solver memory solver = registry.getSolver(solverId);
         assertEq(solver.bondBalance, MINIMUM_BOND);
@@ -108,12 +110,12 @@ contract SolverRegistryTest is Test {
 
         vm.prank(operator1);
         vm.expectRevert("Zero deposit");
-        registry.depositBond{value: 0}(solverId);
+        registry.depositBond{ value: 0 }(solverId);
     }
 
     function test_DepositBond_RevertNonexistentSolver() public {
         vm.expectRevert(abi.encodeWithSignature("SolverNotFound()"));
-        registry.depositBond{value: MINIMUM_BOND}(bytes32(uint256(999)));
+        registry.depositBond{ value: MINIMUM_BOND }(bytes32(uint256(999)));
     }
 
     // ============ Bond Withdrawal Tests ============
@@ -123,7 +125,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         vm.prank(operator1);
         registry.initiateWithdrawal(solverId);
@@ -139,7 +141,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         vm.prank(operator1);
         vm.expectRevert(abi.encodeWithSignature("WithdrawalCooldownActive()"));
@@ -151,7 +153,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.startPrank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         // Initiate cooldown
         registry.initiateWithdrawal(solverId);
@@ -176,7 +178,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.startPrank(operator1);
-        registry.depositBond{value: 0.15 ether}(solverId);
+        registry.depositBond{ value: 0.15 ether }(solverId);
 
         // Initiate cooldown
         registry.initiateWithdrawal(solverId);
@@ -198,7 +200,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         // Lock some bond
         vm.prank(authorizedCaller);
@@ -244,7 +246,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         vm.prank(authorizedCaller);
         registry.lockBond(solverId, 0.1 ether);
@@ -259,7 +261,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         vm.startPrank(authorizedCaller);
         registry.lockBond(solverId, 0.1 ether);
@@ -276,7 +278,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         vm.prank(operator2);
         vm.expectRevert("Not authorized");
@@ -290,7 +292,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: 0.2 ether}(solverId);
+        registry.depositBond{ value: 0.2 ether }(solverId);
 
         // Lock bond first (simulating dispute)
         vm.prank(authorizedCaller);
@@ -318,7 +320,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         vm.prank(authorizedCaller);
         registry.lockBond(solverId, MINIMUM_BOND);
@@ -340,7 +342,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         vm.prank(authorizedCaller);
         registry.jailSolver(solverId);
@@ -354,7 +356,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Jail 3 times (MAX_JAILS)
         vm.startPrank(authorizedCaller);
@@ -379,7 +381,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         vm.prank(authorizedCaller);
         registry.jailSolver(solverId);
@@ -408,7 +410,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         assertTrue(registry.isValidSolver(solverId, MINIMUM_BOND));
         assertFalse(registry.isValidSolver(solverId, 0.2 ether));
@@ -419,7 +421,7 @@ contract SolverRegistryTest is Test {
 
         vm.deal(operator1, 1 ether);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Update score
         vm.prank(authorizedCaller);
@@ -460,7 +462,7 @@ contract SolverRegistryTest is Test {
 
     function test_GetDecayMultiplier_NoDecay_WhenRecentlyActive() public {
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Just registered, should have full score (10000 bps = 100%)
         uint16 multiplier = registry.getDecayMultiplier(uint64(block.timestamp));
@@ -473,7 +475,7 @@ contract SolverRegistryTest is Test {
         vm.warp(startTime);
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Fast forward 30 days (1 half-life)
         vm.warp(startTime + 30 days);
@@ -491,7 +493,7 @@ contract SolverRegistryTest is Test {
         vm.warp(startTime);
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Fast forward 60 days (2 half-lives)
         vm.warp(startTime + 60 days);
@@ -508,7 +510,7 @@ contract SolverRegistryTest is Test {
         vm.warp(startTime);
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Fast forward 1 year (12+ half-lives)
         vm.warp(startTime + 365 days);
@@ -520,7 +522,7 @@ contract SolverRegistryTest is Test {
 
     function test_GetDecayedScore_AppliesDecay() public {
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         // Add some score activity
         registry.setAuthorizedCaller(address(this), true);
@@ -553,7 +555,7 @@ contract SolverRegistryTest is Test {
 
     function test_DecayResetsOnActivity() public {
         bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
         registry.setAuthorizedCaller(address(this), true);
 
         // Build some score
@@ -562,18 +564,14 @@ contract SolverRegistryTest is Test {
         // Fast forward 60 days (decay to ~25%)
         vm.warp(block.timestamp + 60 days);
 
-        uint16 multiplierBefore = registry.getDecayMultiplier(
-            registry.getSolver(solverId).lastActivityAt
-        );
+        uint16 multiplierBefore = registry.getDecayMultiplier(registry.getSolver(solverId).lastActivityAt);
         assertLe(multiplierBefore, 3000);
 
         // New activity resets the clock
         registry.updateScore(solverId, true, 500 ether);
 
         // Should be back to 100%
-        uint16 multiplierAfter = registry.getDecayMultiplier(
-            registry.getSolver(solverId).lastActivityAt
-        );
+        uint16 multiplierAfter = registry.getDecayMultiplier(registry.getSolver(solverId).lastActivityAt);
         assertEq(multiplierAfter, 10000);
     }
 

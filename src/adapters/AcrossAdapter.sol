@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {IAcrossAdapter} from "../interfaces/IAcrossAdapter.sol";
-import {IIntentReceiptHub} from "../interfaces/IIntentReceiptHub.sol";
-import {ISolverRegistry} from "../interfaces/ISolverRegistry.sol";
-import {Types} from "../libraries/Types.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { IAcrossAdapter } from "../interfaces/IAcrossAdapter.sol";
+import { IIntentReceiptHub } from "../interfaces/IIntentReceiptHub.sol";
+import { ISolverRegistry } from "../interfaces/ISolverRegistry.sol";
+import { Types } from "../libraries/Types.sol";
 
 /// @title AcrossAdapter
 /// @notice Helper contract for posting Across Protocol fills as IRSB receipts
@@ -53,10 +53,7 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
 
     // ============ Constructor ============
 
-    constructor(
-        address _intentReceiptHub,
-        address _solverRegistry
-    ) Ownable(msg.sender) {
+    constructor(address _intentReceiptHub, address _solverRegistry) Ownable(msg.sender) {
         require(_intentReceiptHub != address(0), "Invalid hub address");
         require(_solverRegistry != address(0), "Invalid registry address");
 
@@ -69,11 +66,11 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
     /// @inheritdoc IAcrossAdapter
     /// @dev This is a convenience function that combines prepareAndPost + register
     /// For gas optimization, relayers can call hub.postReceipt directly
-    function postAcrossReceipt(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill,
-        bytes calldata relayerSig
-    ) external whenNotPaused returns (bytes32 receiptId) {
+    function postAcrossReceipt(AcrossDeposit calldata deposit, FillData calldata fill, bytes calldata relayerSig)
+        external
+        whenNotPaused
+        returns (bytes32 receiptId)
+    {
         // Validate inputs
         if (block.timestamp > deposit.fillDeadline) {
             revert DepositExpired();
@@ -108,11 +105,7 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
         totalAcrossReceipts++;
 
         emit AcrossReceiptPosted(
-            receiptId,
-            deposit.depositId,
-            solverId,
-            deposit.originChainId,
-            deposit.destinationChainId
+            receiptId, deposit.depositId, solverId, deposit.originChainId, deposit.destinationChainId
         );
 
         // Note: Caller must also call hub.postReceipt(receipt) with the returned receipt
@@ -124,10 +117,7 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
     /// @dev Called by relayer after hub.postReceipt() succeeds
     /// @param deposit Original Across deposit data
     /// @param receiptId Receipt ID from hub.postReceipt()
-    function registerAcrossReceipt(
-        AcrossDeposit calldata deposit,
-        bytes32 receiptId
-    ) external whenNotPaused {
+    function registerAcrossReceipt(AcrossDeposit calldata deposit, bytes32 receiptId) external whenNotPaused {
         // Validate not already registered
         if (_depositToReceipt[deposit.depositId] != bytes32(0)) {
             revert ReceiptAlreadyPosted();
@@ -165,11 +155,7 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
         totalAcrossReceipts++;
 
         emit AcrossReceiptPosted(
-            receiptId,
-            deposit.depositId,
-            receipt.solverId,
-            deposit.originChainId,
-            deposit.destinationChainId
+            receiptId, deposit.depositId, receipt.solverId, deposit.originChainId, deposit.destinationChainId
         );
     }
 
@@ -178,39 +164,42 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
     ///      1. Call this to get the receipt
     ///      2. Sign getReceiptMessageHash() result
     ///      3. Post to hub with the signature
-    function prepareReceipt(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill,
-        bytes32 solverId
-    ) external view returns (Types.IntentReceipt memory receipt) {
+    function prepareReceipt(AcrossDeposit calldata deposit, FillData calldata fill, bytes32 solverId)
+        external
+        view
+        returns (Types.IntentReceipt memory receipt)
+    {
         return _buildReceipt(deposit, fill, solverId, "");
     }
 
     /// @notice Get the message hash that needs to be signed for a receipt
     /// @dev Relayers sign this hash, then call hub.postReceipt with signature
-    function getReceiptMessageHash(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill,
-        bytes32 solverId
-    ) external view returns (bytes32 messageHash) {
+    function getReceiptMessageHash(AcrossDeposit calldata deposit, FillData calldata fill, bytes32 solverId)
+        external
+        view
+        returns (bytes32 messageHash)
+    {
         Types.IntentReceipt memory receipt = _buildReceipt(deposit, fill, solverId, "");
-        return keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        return keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
     }
 
     /// @inheritdoc IAcrossAdapter
-    function validateFill(
-        bytes32 receiptId,
-        FillData calldata fill
-    ) external view returns (bool valid, string memory reason) {
+    function validateFill(bytes32 receiptId, FillData calldata fill)
+        external
+        view
+        returns (bool valid, string memory reason)
+    {
         AcrossReceipt storage acrossReceipt = _acrossReceipts[receiptId];
         if (acrossReceipt.receiptId == bytes32(0)) {
             return (false, "Receipt not found");
@@ -240,78 +229,62 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
     // ============ Hash Computation Functions ============
 
     /// @inheritdoc IAcrossAdapter
-    function computeIntentHash(
-        AcrossDeposit calldata deposit
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            "ACROSS_INTENT_V1",
-            deposit.originChainId,
-            deposit.originToken,
-            deposit.inputAmount,
-            deposit.destinationChainId,
-            deposit.recipient,
-            deposit.depositId
-        ));
+    function computeIntentHash(AcrossDeposit calldata deposit) public pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "ACROSS_INTENT_V1",
+                deposit.originChainId,
+                deposit.originToken,
+                deposit.inputAmount,
+                deposit.destinationChainId,
+                deposit.recipient,
+                deposit.depositId
+            )
+        );
     }
 
     /// @inheritdoc IAcrossAdapter
-    function computeConstraintsHash(
-        AcrossDeposit calldata deposit
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            deposit.outputAmount,
-            deposit.fillDeadline,
-            deposit.destinationChainId,
-            deposit.exclusivityDeadline,
-            deposit.exclusiveRelayer
-        ));
+    function computeConstraintsHash(AcrossDeposit calldata deposit) public pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                deposit.outputAmount,
+                deposit.fillDeadline,
+                deposit.destinationChainId,
+                deposit.exclusivityDeadline,
+                deposit.exclusiveRelayer
+            )
+        );
     }
 
     /// @notice Compute route hash from Across deposit
-    function computeRouteHash(
-        AcrossDeposit calldata deposit
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            "ACROSS_ROUTE_V1",
-            deposit.originChainId,
-            deposit.destinationChainId,
-            deposit.originToken,
-            deposit.destinationToken
-        ));
+    function computeRouteHash(AcrossDeposit calldata deposit) public pure returns (bytes32) {
+        return keccak256(
+            abi.encode(
+                "ACROSS_ROUTE_V1",
+                deposit.originChainId,
+                deposit.destinationChainId,
+                deposit.originToken,
+                deposit.destinationToken
+            )
+        );
     }
 
     /// @notice Compute outcome hash from fill data
-    function computeOutcomeHash(
-        FillData calldata fill
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            fill.fillChainId,
-            fill.tokenFilled,
-            fill.amountFilled,
-            fill.recipientFilled,
-            fill.fillTxHash
-        ));
+    function computeOutcomeHash(FillData calldata fill) public pure returns (bytes32) {
+        return keccak256(
+            abi.encode(fill.fillChainId, fill.tokenFilled, fill.amountFilled, fill.recipientFilled, fill.fillTxHash)
+        );
     }
 
     /// @notice Compute evidence hash from deposit and fill
-    function computeEvidenceHash(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill
-    ) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            "ACROSS_EVIDENCE_V1",
-            deposit.depositId,
-            fill.fillTxHash,
-            fill.filledAt
-        ));
+    function computeEvidenceHash(AcrossDeposit calldata deposit, FillData calldata fill) public pure returns (bytes32) {
+        return keccak256(abi.encode("ACROSS_EVIDENCE_V1", deposit.depositId, fill.fillTxHash, fill.filledAt));
     }
 
     // ============ View Functions ============
 
     /// @inheritdoc IAcrossAdapter
-    function getReceiptByDepositId(
-        bytes32 depositId
-    ) external view returns (AcrossReceipt memory) {
+    function getReceiptByDepositId(bytes32 depositId) external view returns (AcrossReceipt memory) {
         bytes32 receiptId = _depositToReceipt[depositId];
         return _acrossReceipts[receiptId];
     }
@@ -333,12 +306,11 @@ contract AcrossAdapter is IAcrossAdapter, Ownable, Pausable {
 
     // ============ Internal Functions ============
 
-    function _buildReceipt(
-        AcrossDeposit calldata deposit,
-        FillData calldata fill,
-        bytes32 solverId,
-        bytes memory sig
-    ) internal view returns (Types.IntentReceipt memory) {
+    function _buildReceipt(AcrossDeposit calldata deposit, FillData calldata fill, bytes32 solverId, bytes memory sig)
+        internal
+        view
+        returns (Types.IntentReceipt memory)
+    {
         return Types.IntentReceipt({
             intentHash: computeIntentHash(deposit),
             constraintsHash: computeConstraintsHash(deposit),

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Types} from "../libraries/Types.sol";
+import { Types } from "../libraries/Types.sol";
 
 /// @title ISolverRegistry
 /// @notice Interface for solver registration and bond management
@@ -9,46 +9,23 @@ interface ISolverRegistry {
     // ============ Events ============
 
     /// @notice Emitted when a new solver is registered
-    event SolverRegistered(
-        bytes32 indexed solverId,
-        address indexed operator,
-        string metadataURI
-    );
+    event SolverRegistered(bytes32 indexed solverId, address indexed operator, string metadataURI);
 
     /// @notice Emitted when bond is deposited
-    event BondDeposited(
-        bytes32 indexed solverId,
-        uint256 amount,
-        uint256 newBalance
-    );
+    event BondDeposited(bytes32 indexed solverId, uint256 amount, uint256 newBalance);
 
     /// @notice Emitted when bond is withdrawn
-    event BondWithdrawn(
-        bytes32 indexed solverId,
-        uint256 amount,
-        uint256 newBalance
-    );
+    event BondWithdrawn(bytes32 indexed solverId, uint256 amount, uint256 newBalance);
 
     /// @notice Emitted when solver status changes
-    event SolverStatusChanged(
-        bytes32 indexed solverId,
-        Types.SolverStatus oldStatus,
-        Types.SolverStatus newStatus
-    );
+    event SolverStatusChanged(bytes32 indexed solverId, Types.SolverStatus oldStatus, Types.SolverStatus newStatus);
 
     /// @notice Emitted when operator key is rotated
-    event OperatorKeyRotated(
-        bytes32 indexed solverId,
-        address indexed oldOperator,
-        address indexed newOperator
-    );
+    event OperatorKeyRotated(bytes32 indexed solverId, address indexed oldOperator, address indexed newOperator);
 
     /// @notice Emitted when solver is slashed
     event SolverSlashed(
-        bytes32 indexed solverId,
-        uint256 amount,
-        bytes32 indexed receiptId,
-        Types.DisputeReason reason
+        bytes32 indexed solverId, uint256 amount, bytes32 indexed receiptId, Types.DisputeReason reason
     );
 
     // ============ Errors ============
@@ -71,10 +48,7 @@ interface ISolverRegistry {
     /// @param metadataURI IPFS URI containing solver metadata
     /// @param operator Address authorized to sign receipts
     /// @return solverId Unique identifier for the solver
-    function registerSolver(
-        string calldata metadataURI,
-        address operator
-    ) external returns (bytes32 solverId);
+    function registerSolver(string calldata metadataURI, address operator) external returns (bytes32 solverId);
 
     /// @notice Deposit bond for a solver
     /// @param solverId Solver to deposit for
@@ -106,13 +80,8 @@ interface ISolverRegistry {
     /// @param receiptId Associated receipt
     /// @param reason Slash reason code
     /// @param recipient Slash recipient (user/treasury)
-    function slash(
-        bytes32 solverId,
-        uint256 amount,
-        bytes32 receiptId,
-        Types.DisputeReason reason,
-        address recipient
-    ) external;
+    function slash(bytes32 solverId, uint256 amount, bytes32 receiptId, Types.DisputeReason reason, address recipient)
+        external;
 
     /// @notice Jail a solver temporarily
     /// @param solverId Solver to jail

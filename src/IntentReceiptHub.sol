@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {IIntentReceiptHub} from "./interfaces/IIntentReceiptHub.sol";
-import {ISolverRegistry} from "./interfaces/ISolverRegistry.sol";
-import {Types} from "./libraries/Types.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { IIntentReceiptHub } from "./interfaces/IIntentReceiptHub.sol";
+import { ISolverRegistry } from "./interfaces/ISolverRegistry.sol";
+import { Types } from "./libraries/Types.sol";
 
 /// @title IntentReceiptHub
 /// @notice Core contract for posting and managing intent receipts
@@ -81,8 +81,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     // ============ Modifiers ============
 
     modifier receiptExists(bytes32 receiptId) {
-        if (_receiptStatus[receiptId] == Types.ReceiptStatus.Pending && 
-            _receipts[receiptId].createdAt == 0) {
+        if (_receiptStatus[receiptId] == Types.ReceiptStatus.Pending && _receipts[receiptId].createdAt == 0) {
             revert ReceiptNotFound();
         }
         _;
@@ -96,9 +95,12 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     // ============ External Functions ============
 
     /// @inheritdoc IIntentReceiptHub
-    function postReceipt(
-        Types.IntentReceipt calldata receipt
-    ) external whenNotPaused nonReentrant returns (bytes32 receiptId) {
+    function postReceipt(Types.IntentReceipt calldata receipt)
+        external
+        whenNotPaused
+        nonReentrant
+        returns (bytes32 receiptId)
+    {
         // Validate solver
         Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
         if (solver.status != Types.SolverStatus.Active) revert InvalidSolver();
@@ -111,16 +113,18 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         if (_receipts[receiptId].createdAt != 0) revert ReceiptAlreadyExists();
 
         // Verify signature
-        bytes32 messageHash = keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         address signer = ethSignedHash.recover(receipt.solverSig);
         if (signer != solver.operator) revert InvalidReceiptSignature();
@@ -139,11 +143,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
-    function openDispute(
-        bytes32 receiptId,
-        Types.DisputeReason reason,
-        bytes32 evidenceHash
-    ) external payable receiptExists(receiptId) whenNotPaused nonReentrant {
+    function openDispute(bytes32 receiptId, Types.DisputeReason reason, bytes32 evidenceHash)
+        external
+        payable
+        receiptExists(receiptId)
+        whenNotPaused
+        nonReentrant
+    {
         Types.ReceiptStatus status = _receiptStatus[receiptId];
         if (status != Types.ReceiptStatus.Pending) revert ReceiptNotPending();
         if (reason == Types.DisputeReason.None) revert InvalidDisputeReason();
@@ -187,10 +193,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
-    function resolveDeterministic(bytes32 receiptId) external 
-        receiptExists(receiptId) 
-        nonReentrant 
-    {
+    function resolveDeterministic(bytes32 receiptId) external receiptExists(receiptId) nonReentrant {
         Types.ReceiptStatus status = _receiptStatus[receiptId];
         if (status != Types.ReceiptStatus.Disputed) revert ReceiptNotPending();
 
@@ -209,16 +212,18 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             }
         } else if (dispute.reason == Types.DisputeReason.InvalidSignature) {
             // Re-verify signature
-            bytes32 messageHash = keccak256(abi.encode(
-                receipt.intentHash,
-                receipt.constraintsHash,
-                receipt.routeHash,
-                receipt.outcomeHash,
-                receipt.evidenceHash,
-                receipt.createdAt,
-                receipt.expiry,
-                receipt.solverId
-            ));
+            bytes32 messageHash = keccak256(
+                abi.encode(
+                    receipt.intentHash,
+                    receipt.constraintsHash,
+                    receipt.routeHash,
+                    receipt.outcomeHash,
+                    receipt.evidenceHash,
+                    receipt.createdAt,
+                    receipt.expiry,
+                    receipt.solverId
+                )
+            );
             bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
             address signer = ethSignedHash.recover(receipt.solverSig);
             Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
@@ -241,39 +246,21 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             uint256 treasuryShare = slashAmount - userShare - challengerShare;
 
             // Slash solver and pay user (TODO: should be original intent user, not challenger)
-            solverRegistry.slash(
-                receipt.solverId,
-                userShare,
-                receiptId,
-                dispute.reason,
-                dispute.challenger
-            );
+            solverRegistry.slash(receipt.solverId, userShare, receiptId, dispute.reason, dispute.challenger);
 
             // Slash solver for challenger's reward share - sent directly to challenger
             if (challengerShare > 0) {
-                solverRegistry.slash(
-                    receipt.solverId,
-                    challengerShare,
-                    receiptId,
-                    dispute.reason,
-                    dispute.challenger
-                );
+                solverRegistry.slash(receipt.solverId, challengerShare, receiptId, dispute.reason, dispute.challenger);
             }
 
             // Return challenger's bond separately
             _challengerBonds[receiptId] = 0;
-            (bool sent, ) = dispute.challenger.call{value: challengerBond}("");
+            (bool sent,) = dispute.challenger.call{ value: challengerBond }("");
             if (!sent) revert ChallengerBondTransferFailed();
 
             // Treasury share
             if (treasuryShare > 0) {
-                solverRegistry.slash(
-                    receipt.solverId,
-                    treasuryShare,
-                    receiptId,
-                    dispute.reason,
-                    owner()
-                );
+                solverRegistry.slash(receipt.solverId, treasuryShare, receiptId, dispute.reason, owner());
             }
 
             totalSlashed += slashAmount;
@@ -313,10 +300,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
-    function submitSettlementProof(
-        bytes32 receiptId,
-        bytes32 proofHash
-    ) external receiptExists(receiptId) {
+    function submitSettlementProof(bytes32 receiptId, bytes32 proofHash) external receiptExists(receiptId) {
         Types.IntentReceipt storage receipt = _receipts[receiptId];
         Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
 
@@ -329,9 +313,12 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
-    function batchPostReceipts(
-        Types.IntentReceipt[] calldata receipts
-    ) external whenNotPaused nonReentrant returns (bytes32[] memory receiptIds) {
+    function batchPostReceipts(Types.IntentReceipt[] calldata receipts)
+        external
+        whenNotPaused
+        nonReentrant
+        returns (bytes32[] memory receiptIds)
+    {
         require(receipts.length <= MAX_BATCH_SIZE, "Batch too large");
 
         receiptIds = new bytes32[](receipts.length);
@@ -358,8 +345,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     // ============ View Functions ============
 
     /// @inheritdoc IIntentReceiptHub
-    function getReceipt(bytes32 receiptId) external view 
-        returns (Types.IntentReceipt memory receipt, Types.ReceiptStatus status) 
+    function getReceipt(bytes32 receiptId)
+        external
+        view
+        returns (Types.IntentReceipt memory receipt, Types.ReceiptStatus status)
     {
         return (_receipts[receiptId], _receiptStatus[receiptId]);
     }
@@ -377,11 +366,11 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
-    function getReceiptsBySolver(
-        bytes32 solverId,
-        uint256 offset,
-        uint256 limit
-    ) external view returns (bytes32[] memory) {
+    function getReceiptsBySolver(bytes32 solverId, uint256 offset, uint256 limit)
+        external
+        view
+        returns (bytes32[] memory)
+    {
         bytes32[] storage all = _solverReceipts[solverId];
         uint256 total = all.length;
 
@@ -410,16 +399,18 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
     /// @inheritdoc IIntentReceiptHub
     function computeReceiptId(Types.IntentReceipt calldata receipt) public pure returns (bytes32) {
-        return keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        return keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
     }
 
     // ============ Admin Functions ============
@@ -463,7 +454,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     function sweepForfeitedBonds(address treasury) external onlyOwner nonReentrant {
         uint256 balance = address(this).balance;
         require(balance > 0, "No funds to sweep");
-        (bool sent, ) = treasury.call{value: balance}("");
+        (bool sent,) = treasury.call{ value: balance }("");
         require(sent, "Transfer failed");
     }
 
@@ -477,10 +468,11 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @notice Resolve an escalated dispute (DisputeModule only)
     /// @param receiptId Receipt under dispute
     /// @param solverFault Whether solver was at fault
-    function resolveEscalatedDispute(
-        bytes32 receiptId,
-        bool solverFault
-    ) external onlyDisputeModule receiptExists(receiptId) {
+    function resolveEscalatedDispute(bytes32 receiptId, bool solverFault)
+        external
+        onlyDisputeModule
+        receiptExists(receiptId)
+    {
         Types.ReceiptStatus status = _receiptStatus[receiptId];
         if (status != Types.ReceiptStatus.Disputed) revert ReceiptNotPending();
 
@@ -500,5 +492,5 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @notice Receive ETH (for challenger bonds)
-    receive() external payable {}
+    receive() external payable { }
 }

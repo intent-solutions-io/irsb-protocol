@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test, console} from "forge-std/Test.sol";
-import {IntentReceiptHub} from "../src/IntentReceiptHub.sol";
-import {SolverRegistry} from "../src/SolverRegistry.sol";
-import {Types} from "../src/libraries/Types.sol";
-import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import { Test, console } from "forge-std/Test.sol";
+import { IntentReceiptHub } from "../src/IntentReceiptHub.sol";
+import { SolverRegistry } from "../src/SolverRegistry.sol";
+import { Types } from "../src/libraries/Types.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
 contract IntentReceiptHubTest is Test {
     using ECDSA for bytes32;
@@ -26,7 +26,9 @@ contract IntentReceiptHubTest is Test {
     bytes32 public solverId;
 
     event ReceiptPosted(bytes32 indexed receiptId, bytes32 indexed intentHash, bytes32 indexed solverId, uint64 expiry);
-    event DisputeOpened(bytes32 indexed receiptId, bytes32 indexed solverId, address indexed challenger, Types.DisputeReason reason);
+    event DisputeOpened(
+        bytes32 indexed receiptId, bytes32 indexed solverId, address indexed challenger, Types.DisputeReason reason
+    );
     event DisputeResolved(bytes32 indexed receiptId, bytes32 indexed solverId, bool slashed, uint256 slashAmount);
     event ReceiptFinalized(bytes32 indexed receiptId, bytes32 indexed solverId);
     event SettlementProofSubmitted(bytes32 indexed receiptId, bytes32 proofHash);
@@ -48,18 +50,15 @@ contract IntentReceiptHubTest is Test {
 
         // Register and fund solver
         solverId = registry.registerSolver("ipfs://metadata", operator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
     }
 
     // Allow test contract to receive ETH (for slashing)
-    receive() external payable {}
+    receive() external payable { }
 
     // ============ Helper Functions ============
 
-    function _createReceipt(
-        bytes32 intentHash,
-        uint64 expiry
-    ) internal view returns (Types.IntentReceipt memory) {
+    function _createReceipt(bytes32 intentHash, uint64 expiry) internal view returns (Types.IntentReceipt memory) {
         Types.IntentReceipt memory receipt = Types.IntentReceipt({
             intentHash: intentHash,
             constraintsHash: keccak256("constraints"),
@@ -73,16 +72,18 @@ contract IntentReceiptHubTest is Test {
         });
 
         // Sign receipt
-        bytes32 messageHash = keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
         receipt.solverSig = abi.encodePacked(r, s, v);
@@ -168,16 +169,18 @@ contract IntentReceiptHubTest is Test {
         });
 
         // Sign with wrong key
-        bytes32 messageHash = keccak256(abi.encode(
-            receipt.intentHash,
-            receipt.constraintsHash,
-            receipt.routeHash,
-            receipt.outcomeHash,
-            receipt.evidenceHash,
-            receipt.createdAt,
-            receipt.expiry,
-            receipt.solverId
-        ));
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, ethSignedHash);
         receipt.solverSig = abi.encodePacked(r, s, v);
@@ -193,7 +196,7 @@ contract IntentReceiptHubTest is Test {
         bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
 
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         (, Types.ReceiptStatus status) = hub.getReceipt(receiptId);
         assertEq(uint256(status), uint256(Types.ReceiptStatus.Disputed));
@@ -212,12 +215,14 @@ contract IntentReceiptHubTest is Test {
 
         // Open first dispute
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Try to open second dispute
         vm.prank(challenger);
         vm.expectRevert(abi.encodeWithSignature("ReceiptNotPending()"));
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2"));
+        hub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2")
+        );
     }
 
     function test_OpenDispute_RevertChallengeWindowExpired() public {
@@ -228,7 +233,7 @@ contract IntentReceiptHubTest is Test {
 
         vm.prank(challenger);
         vm.expectRevert(abi.encodeWithSignature("ChallengeWindowExpired()"));
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
     }
 
     function test_OpenDispute_RevertInvalidReason() public {
@@ -251,7 +256,7 @@ contract IntentReceiptHubTest is Test {
 
         // Open timeout dispute with challenger bond
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Fast forward past expiry
         vm.warp(expiry + 1);
@@ -283,7 +288,7 @@ contract IntentReceiptHubTest is Test {
 
         // Open timeout dispute with challenger bond
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Fast forward past expiry
         vm.warp(expiry + 1);
@@ -302,7 +307,7 @@ contract IntentReceiptHubTest is Test {
         bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
 
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         vm.warp(block.timestamp + 31 minutes);
 
@@ -380,24 +385,23 @@ contract IntentReceiptHubTest is Test {
         Types.IntentReceipt[] memory receipts = new Types.IntentReceipt[](3);
 
         for (uint256 i = 0; i < 3; i++) {
-            receipts[i] = _createReceipt(
-                keccak256(abi.encodePacked("intent", i)),
-                uint64(block.timestamp + 1 hours)
-            );
+            receipts[i] = _createReceipt(keccak256(abi.encodePacked("intent", i)), uint64(block.timestamp + 1 hours));
             // Need to update createdAt to make unique receipt IDs
             receipts[i].createdAt = uint64(block.timestamp + i);
 
             // Re-sign with updated createdAt
-            bytes32 messageHash = keccak256(abi.encode(
-                receipts[i].intentHash,
-                receipts[i].constraintsHash,
-                receipts[i].routeHash,
-                receipts[i].outcomeHash,
-                receipts[i].evidenceHash,
-                receipts[i].createdAt,
-                receipts[i].expiry,
-                receipts[i].solverId
-            ));
+            bytes32 messageHash = keccak256(
+                abi.encode(
+                    receipts[i].intentHash,
+                    receipts[i].constraintsHash,
+                    receipts[i].routeHash,
+                    receipts[i].outcomeHash,
+                    receipts[i].evidenceHash,
+                    receipts[i].createdAt,
+                    receipts[i].expiry,
+                    receipts[i].solverId
+                )
+            );
             bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
             receipts[i].solverSig = abi.encodePacked(r, s, v);
@@ -411,10 +415,7 @@ contract IntentReceiptHubTest is Test {
     }
 
     function test_BatchPostReceipts_SkipsDuplicates() public {
-        Types.IntentReceipt memory receipt = _createReceipt(
-            keccak256("intent"),
-            uint64(block.timestamp + 1 hours)
-        );
+        Types.IntentReceipt memory receipt = _createReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
 
         Types.IntentReceipt[] memory receipts = new Types.IntentReceipt[](2);
         receipts[0] = receipt;
@@ -494,10 +495,7 @@ contract IntentReceiptHubTest is Test {
     function test_PauseUnpause() public {
         hub.pause();
 
-        Types.IntentReceipt memory receipt = _createReceipt(
-            keccak256("intent"),
-            uint64(block.timestamp + 1 hours)
-        );
+        Types.IntentReceipt memory receipt = _createReceipt(keccak256("intent"), uint64(block.timestamp + 1 hours));
 
         vm.prank(operator);
         vm.expectRevert();
@@ -517,7 +515,7 @@ contract IntentReceiptHubTest is Test {
         // Try to open dispute with insufficient bond
         vm.prank(challenger);
         vm.expectRevert(abi.encodeWithSignature("InsufficientChallengerBond()"));
-        hub.openDispute{value: CHALLENGER_BOND - 1}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND - 1 }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
     }
 
     function test_OpenDispute_RevertNoBond() public {
@@ -536,7 +534,7 @@ contract IntentReceiptHubTest is Test {
 
         // Open dispute with exact minimum bond
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Verify bond is held
         assertEq(hub.getChallengerBond(receiptId), CHALLENGER_BOND);
@@ -567,7 +565,7 @@ contract IntentReceiptHubTest is Test {
 
         // Open frivolous dispute
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         // Verify bond is held
         assertEq(hub.getChallengerBond(receiptId), CHALLENGER_BOND);
@@ -609,7 +607,7 @@ contract IntentReceiptHubTest is Test {
 
         // Open and lose dispute
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         vm.warp(block.timestamp + 31 minutes);
         hub.resolveDeterministic(receiptId);
@@ -636,7 +634,7 @@ contract IntentReceiptHubTest is Test {
         vm.prank(operator);
         hub.submitSettlementProof(receiptId, keccak256("proof"));
         vm.prank(challenger);
-        hub.openDispute{value: CHALLENGER_BOND}(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
         vm.warp(block.timestamp + 31 minutes);
         hub.resolveDeterministic(receiptId);
 

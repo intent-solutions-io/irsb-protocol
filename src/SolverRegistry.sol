@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
-import {ISolverRegistry} from "./interfaces/ISolverRegistry.sol";
-import {Types} from "./libraries/Types.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
+import { ISolverRegistry } from "./interfaces/ISolverRegistry.sol";
+import { Types } from "./libraries/Types.sol";
 
 /// @title SolverRegistry
 /// @notice Manages solver registration, bonds, and lifecycle
@@ -58,7 +58,7 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
 
     // ============ Constructor ============
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) { }
 
     // ============ Modifiers ============
 
@@ -92,10 +92,11 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     // ============ External Functions ============
 
     /// @inheritdoc ISolverRegistry
-    function registerSolver(
-        string calldata metadataURI,
-        address operator
-    ) external whenNotPaused returns (bytes32 solverId) {
+    function registerSolver(string calldata metadataURI, address operator)
+        external
+        whenNotPaused
+        returns (bytes32 solverId)
+    {
         if (operator == address(0)) revert InvalidOperatorAddress();
         if (_operatorToSolver[operator] != bytes32(0)) revert SolverAlreadyRegistered();
 
@@ -128,27 +129,19 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function depositBond(bytes32 solverId) external payable 
-        whenNotPaused 
-        solverExists(solverId) 
-        nonReentrant 
-    {
+    function depositBond(bytes32 solverId) external payable whenNotPaused solverExists(solverId) nonReentrant {
         require(msg.value > 0, "Zero deposit");
 
         Types.Solver storage solver = _solvers[solverId];
-        
+
         // Only operator or owner can deposit
-        require(
-            msg.sender == solver.operator || msg.sender == owner(),
-            "Not authorized to deposit"
-        );
+        require(msg.sender == solver.operator || msg.sender == owner(), "Not authorized to deposit");
 
         solver.bondBalance += msg.value;
         totalBonded += msg.value;
 
         // Activate solver if minimum bond met and currently inactive
-        if (solver.status == Types.SolverStatus.Inactive && 
-            solver.bondBalance >= MINIMUM_BOND) {
+        if (solver.status == Types.SolverStatus.Inactive && solver.bondBalance >= MINIMUM_BOND) {
             solver.status = Types.SolverStatus.Active;
             emit SolverStatusChanged(solverId, Types.SolverStatus.Inactive, Types.SolverStatus.Active);
         }
@@ -158,11 +151,7 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Initiate withdrawal cooldown
     /// @param solverId Solver to initiate withdrawal for
-    function initiateWithdrawal(bytes32 solverId) external
-        whenNotPaused
-        solverExists(solverId)
-        onlyOperator(solverId)
-    {
+    function initiateWithdrawal(bytes32 solverId) external whenNotPaused solverExists(solverId) onlyOperator(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         if (solver.lockedBalance > 0) revert BondLocked();
         if (_withdrawalRequest[solverId] != 0) revert WithdrawalCooldownActive();
@@ -171,7 +160,8 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function withdrawBond(bytes32 solverId, uint256 amount) external
+    function withdrawBond(bytes32 solverId, uint256 amount)
+        external
         whenNotPaused
         solverExists(solverId)
         onlyOperator(solverId)
@@ -203,23 +193,23 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
         totalBonded -= amount;
 
         // Deactivate if below minimum
-        if (solver.bondBalance < MINIMUM_BOND &&
-            solver.status == Types.SolverStatus.Active) {
+        if (solver.bondBalance < MINIMUM_BOND && solver.status == Types.SolverStatus.Active) {
             solver.status = Types.SolverStatus.Inactive;
             emit SolverStatusChanged(solverId, Types.SolverStatus.Active, Types.SolverStatus.Inactive);
         }
 
         // Transfer
-        (bool success, ) = payable(solver.operator).call{value: amount}("");
+        (bool success,) = payable(solver.operator).call{ value: amount }("");
         require(success, "Transfer failed");
 
         emit BondWithdrawn(solverId, amount, solver.bondBalance);
     }
 
     /// @inheritdoc ISolverRegistry
-    function setSolverKey(bytes32 solverId, address newOperator) external 
-        solverExists(solverId) 
-        onlyOperator(solverId) 
+    function setSolverKey(bytes32 solverId, address newOperator)
+        external
+        solverExists(solverId)
+        onlyOperator(solverId)
     {
         if (newOperator == address(0)) revert InvalidOperatorAddress();
         if (_operatorToSolver[newOperator] != bytes32(0)) revert SolverAlreadyRegistered();
@@ -236,10 +226,7 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function lockBond(bytes32 solverId, uint256 amount) external 
-        onlyAuthorized 
-        solverExists(solverId) 
-    {
+    function lockBond(bytes32 solverId, uint256 amount) external onlyAuthorized solverExists(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         require(solver.bondBalance >= amount, "Insufficient bond");
 
@@ -248,10 +235,7 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function unlockBond(bytes32 solverId, uint256 amount) external 
-        onlyAuthorized 
-        solverExists(solverId) 
-    {
+    function unlockBond(bytes32 solverId, uint256 amount) external onlyAuthorized solverExists(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         require(solver.lockedBalance >= amount, "Insufficient locked");
 
@@ -260,13 +244,12 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function slash(
-        bytes32 solverId,
-        uint256 amount,
-        bytes32 receiptId,
-        Types.DisputeReason reason,
-        address recipient
-    ) external onlyAuthorized solverExists(solverId) nonReentrant {
+    function slash(bytes32 solverId, uint256 amount, bytes32 receiptId, Types.DisputeReason reason, address recipient)
+        external
+        onlyAuthorized
+        solverExists(solverId)
+        nonReentrant
+    {
         Types.Solver storage solver = _solvers[solverId];
 
         // Slash from locked balance first, then available
@@ -287,24 +270,20 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
         solver.score.totalSlashed += amount;
 
         // Transfer slashed amount to recipient
-        (bool success, ) = payable(recipient).call{value: amount}("");
+        (bool success,) = payable(recipient).call{ value: amount }("");
         require(success, "Slash transfer failed");
 
         emit SolverSlashed(solverId, amount, receiptId, reason);
 
         // Check if should be deactivated or jailed
-        if (solver.bondBalance < MINIMUM_BOND && 
-            solver.status == Types.SolverStatus.Active) {
+        if (solver.bondBalance < MINIMUM_BOND && solver.status == Types.SolverStatus.Active) {
             solver.status = Types.SolverStatus.Inactive;
             emit SolverStatusChanged(solverId, Types.SolverStatus.Active, Types.SolverStatus.Inactive);
         }
     }
 
     /// @inheritdoc ISolverRegistry
-    function jailSolver(bytes32 solverId) external 
-        onlyAuthorized 
-        solverExists(solverId) 
-    {
+    function jailSolver(bytes32 solverId) external onlyAuthorized solverExists(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         Types.SolverStatus oldStatus = solver.status;
 
@@ -321,26 +300,19 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
-    function unjailSolver(bytes32 solverId) external 
-        onlyOwner 
-        solverExists(solverId) 
-    {
+    function unjailSolver(bytes32 solverId) external onlyOwner solverExists(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         require(solver.status == Types.SolverStatus.Jailed, "Not jailed");
 
-        Types.SolverStatus newStatus = solver.bondBalance >= MINIMUM_BOND 
-            ? Types.SolverStatus.Active 
-            : Types.SolverStatus.Inactive;
+        Types.SolverStatus newStatus =
+            solver.bondBalance >= MINIMUM_BOND ? Types.SolverStatus.Active : Types.SolverStatus.Inactive;
 
         solver.status = newStatus;
         emit SolverStatusChanged(solverId, Types.SolverStatus.Jailed, newStatus);
     }
 
     /// @inheritdoc ISolverRegistry
-    function banSolver(bytes32 solverId) external 
-        onlyOwner 
-        solverExists(solverId) 
-    {
+    function banSolver(bytes32 solverId) external onlyOwner solverExists(solverId) {
         Types.Solver storage solver = _solvers[solverId];
         Types.SolverStatus oldStatus = solver.status;
 
@@ -363,8 +335,7 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @inheritdoc ISolverRegistry
     function isValidSolver(bytes32 solverId, uint256 requiredBond) external view returns (bool) {
         Types.Solver storage solver = _solvers[solverId];
-        return solver.status == Types.SolverStatus.Active && 
-               solver.bondBalance >= requiredBond;
+        return solver.status == Types.SolverStatus.Active && solver.bondBalance >= requiredBond;
     }
 
     /// @inheritdoc ISolverRegistry
@@ -377,11 +348,11 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @return decayedSuccessfulFills Decayed successful fills count
     /// @return decayedVolumeProcessed Decayed volume processed
     /// @return decayMultiplierBps Current decay multiplier in basis points
-    function getDecayedScore(bytes32 solverId) external view returns (
-        uint64 decayedSuccessfulFills,
-        uint256 decayedVolumeProcessed,
-        uint16 decayMultiplierBps
-    ) {
+    function getDecayedScore(bytes32 solverId)
+        external
+        view
+        returns (uint64 decayedSuccessfulFills, uint256 decayedVolumeProcessed, uint16 decayMultiplierBps)
+    {
         Types.Solver storage solver = _solvers[solverId];
         decayMultiplierBps = getDecayMultiplier(solver.lastActivityAt);
 
@@ -437,11 +408,11 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @notice Update solver score (called by IntentReceiptHub)
-    function updateScore(
-        bytes32 solverId,
-        bool success,
-        uint256 volume
-    ) external onlyAuthorized solverExists(solverId) {
+    function updateScore(bytes32 solverId, bool success, uint256 volume)
+        external
+        onlyAuthorized
+        solverExists(solverId)
+    {
         Types.Solver storage solver = _solvers[solverId];
         solver.score.totalFills++;
         if (success) {

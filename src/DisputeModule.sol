@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import {IDisputeModule} from "./interfaces/IDisputeModule.sol";
-import {IIntentReceiptHub} from "./interfaces/IIntentReceiptHub.sol";
-import {ISolverRegistry} from "./interfaces/ISolverRegistry.sol";
-import {Types} from "./libraries/Types.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import { IDisputeModule } from "./interfaces/IDisputeModule.sol";
+import { IIntentReceiptHub } from "./interfaces/IIntentReceiptHub.sol";
+import { ISolverRegistry } from "./interfaces/ISolverRegistry.sol";
+import { Types } from "./libraries/Types.sol";
 
 /// @title DisputeModule
 /// @notice Pluggable dispute resolution for subjective cases (v0.2)
@@ -62,11 +62,7 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
 
     // ============ Constructor ============
 
-    constructor(
-        address _receiptHub,
-        address _solverRegistry,
-        address _arbitrator
-    ) Ownable(msg.sender) {
+    constructor(address _receiptHub, address _solverRegistry, address _arbitrator) Ownable(msg.sender) {
         receiptHub = IIntentReceiptHub(_receiptHub);
         solverRegistry = ISolverRegistry(_solverRegistry);
         arbitrator = _arbitrator;
@@ -99,11 +95,9 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
         }
 
         // Store evidence
-        _evidenceHistory[disputeId].push(Evidence({
-            hash: evidenceHash,
-            submitter: msg.sender,
-            timestamp: uint64(block.timestamp)
-        }));
+        _evidenceHistory[disputeId].push(
+            Evidence({ hash: evidenceHash, submitter: msg.sender, timestamp: uint64(block.timestamp) })
+        );
 
         emit EvidenceSubmitted(disputeId, msg.sender, evidenceHash);
     }
@@ -135,12 +129,11 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     }
 
     /// @inheritdoc IDisputeModule
-    function resolve(
-        bytes32 disputeId,
-        bool solverFault,
-        uint8 slashPercentage,
-        string calldata reason
-    ) external onlyArbitrator nonReentrant {
+    function resolve(bytes32 disputeId, bool solverFault, uint8 slashPercentage, string calldata reason)
+        external
+        onlyArbitrator
+        nonReentrant
+    {
         if (slashPercentage > 100) revert InvalidResolution();
 
         Types.Dispute memory dispute = receiptHub.getDispute(disputeId);
@@ -165,33 +158,15 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
             uint256 arbitratorShare = slashAmount - userShare - treasuryShare;
 
             if (userShare > 0) {
-                solverRegistry.slash(
-                    dispute.solverId,
-                    userShare,
-                    dispute.receiptId,
-                    dispute.reason,
-                    dispute.challenger
-                );
+                solverRegistry.slash(dispute.solverId, userShare, dispute.receiptId, dispute.reason, dispute.challenger);
             }
 
             if (treasuryShare > 0) {
-                solverRegistry.slash(
-                    dispute.solverId,
-                    treasuryShare,
-                    dispute.receiptId,
-                    dispute.reason,
-                    treasury
-                );
+                solverRegistry.slash(dispute.solverId, treasuryShare, dispute.receiptId, dispute.reason, treasury);
             }
 
             if (arbitratorShare > 0) {
-                solverRegistry.slash(
-                    dispute.solverId,
-                    arbitratorShare,
-                    dispute.receiptId,
-                    dispute.reason,
-                    arbitrator
-                );
+                solverRegistry.slash(dispute.solverId, arbitratorShare, dispute.receiptId, dispute.reason, arbitrator);
             }
 
             // Refund arbitration fee to escalator (they were right)
@@ -242,7 +217,7 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
         _arbitrationFees[disputeId] = 0;
 
         if (fee > 0 && escalator != address(0)) {
-            (bool success, ) = payable(escalator).call{value: fee}("");
+            (bool success,) = payable(escalator).call{ value: fee }("");
             require(success, "Fee refund failed");
         }
     }
@@ -250,12 +225,10 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     // ============ View Functions ============
 
     /// @inheritdoc IDisputeModule
-    function getEvidenceHistory(bytes32 disputeId) external view 
-        returns (
-            bytes32[] memory evidenceHashes,
-            address[] memory submitters,
-            uint64[] memory timestamps
-        ) 
+    function getEvidenceHistory(bytes32 disputeId)
+        external
+        view
+        returns (bytes32[] memory evidenceHashes, address[] memory submitters, uint64[] memory timestamps)
     {
         Evidence[] storage history = _evidenceHistory[disputeId];
         uint256 length = history.length;
@@ -274,9 +247,7 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     /// @inheritdoc IDisputeModule
     function canEscalate(bytes32 disputeId) external view returns (bool) {
         Types.Dispute memory dispute = receiptHub.getDispute(disputeId);
-        return dispute.reason == Types.DisputeReason.Subjective && 
-               !_escalated[disputeId] &&
-               !dispute.resolved;
+        return dispute.reason == Types.DisputeReason.Subjective && !_escalated[disputeId] && !dispute.resolved;
     }
 
     /// @inheritdoc IDisputeModule
@@ -338,10 +309,7 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     }
 
     /// @notice Update contract references
-    function setContracts(
-        address _receiptHub,
-        address _solverRegistry
-    ) external onlyOwner {
+    function setContracts(address _receiptHub, address _solverRegistry) external onlyOwner {
         receiptHub = IIntentReceiptHub(_receiptHub);
         solverRegistry = ISolverRegistry(_solverRegistry);
     }
@@ -351,10 +319,10 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
         uint256 balance = address(this).balance;
         require(balance > 0, "No fees to withdraw");
 
-        (bool success, ) = payable(treasury).call{value: balance}("");
+        (bool success,) = payable(treasury).call{ value: balance }("");
         require(success, "Withdrawal failed");
     }
 
     /// @notice Receive ETH for arbitration fees
-    receive() external payable {}
+    receive() external payable { }
 }

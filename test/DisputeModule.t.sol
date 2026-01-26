@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.25;
 
-import {Test} from "forge-std/Test.sol";
-import {DisputeModule} from "../src/DisputeModule.sol";
-import {IntentReceiptHub} from "../src/IntentReceiptHub.sol";
-import {SolverRegistry} from "../src/SolverRegistry.sol";
-import {IDisputeModule} from "../src/interfaces/IDisputeModule.sol";
-import {Types} from "../src/libraries/Types.sol";
+import { Test } from "forge-std/Test.sol";
+import { DisputeModule } from "../src/DisputeModule.sol";
+import { IntentReceiptHub } from "../src/IntentReceiptHub.sol";
+import { SolverRegistry } from "../src/SolverRegistry.sol";
+import { IDisputeModule } from "../src/interfaces/IDisputeModule.sol";
+import { Types } from "../src/libraries/Types.sol";
 
 contract DisputeModuleTest is Test {
     DisputeModule public disputeModule;
@@ -37,7 +37,7 @@ contract DisputeModuleTest is Test {
 
         // Configure authorizations
         registry.setAuthorizedCaller(address(receiptHub), true);
-        registry.setAuthorizedCaller(address(disputeModule), true);  // DisputeModule needs to slash/unlock
+        registry.setAuthorizedCaller(address(disputeModule), true); // DisputeModule needs to slash/unlock
         receiptHub.setDisputeModule(address(disputeModule));
         disputeModule.setTreasury(treasury);
 
@@ -52,7 +52,7 @@ contract DisputeModuleTest is Test {
     function _registerAndActivateSolver() internal returns (bytes32 solverId) {
         solverId = registry.registerSolver("ipfs://metadata", operator1);
         vm.prank(operator1);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
     }
 
     function _createSubjectiveDispute() internal returns (bytes32 receiptId, bytes32 solverId) {
@@ -66,10 +66,8 @@ contract DisputeModuleTest is Test {
 
         // Open subjective dispute
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
     }
 
@@ -82,16 +80,9 @@ contract DisputeModuleTest is Test {
         uint64 createdAt = uint64(block.timestamp);
         uint64 expiry = uint64(block.timestamp + 1 hours);
 
-        bytes32 messageHash = keccak256(abi.encode(
-            intentHash,
-            constraintsHash,
-            routeHash,
-            outcomeHash,
-            evidenceHash,
-            createdAt,
-            expiry,
-            solverId
-        ));
+        bytes32 messageHash = keccak256(
+            abi.encode(intentHash, constraintsHash, routeHash, outcomeHash, evidenceHash, createdAt, expiry, solverId)
+        );
 
         bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
@@ -119,17 +110,15 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("initial_evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("initial_evidence")
         );
 
         // Submit additional evidence
@@ -154,17 +143,15 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         // Solver submits counter-evidence
@@ -172,8 +159,7 @@ contract DisputeModuleTest is Test {
         vm.prank(realOperator);
         disputeModule.submitEvidence(receiptId, counterEvidence);
 
-        (bytes32[] memory hashes, address[] memory submitters,) =
-            disputeModule.getEvidenceHistory(receiptId);
+        (bytes32[] memory hashes, address[] memory submitters,) = disputeModule.getEvidenceHistory(receiptId);
 
         assertEq(hashes.length, 1);
         assertEq(submitters[0], realOperator);
@@ -185,17 +171,15 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         // Random address tries to submit evidence
@@ -211,17 +195,15 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         // Fast forward past evidence window (24 hours)
@@ -240,24 +222,22 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         // Escalate
         vm.prank(challenger);
         vm.expectEmit(true, true, false, false);
         emit DisputeEscalated(receiptId, arbitrator);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         assertTrue(disputeModule.isEscalated(receiptId));
         assertEq(disputeModule.getEscalator(receiptId), challenger);
@@ -270,7 +250,7 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
@@ -278,15 +258,11 @@ contract DisputeModuleTest is Test {
 
         // Open non-subjective dispute
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Timeout,
-            keccak256("evidence")
-        );
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
         vm.prank(challenger);
         vm.expectRevert(IDisputeModule.DisputeNotSubjective.selector);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
     }
 
     function test_Escalate_RevertInsufficientFee() public {
@@ -295,22 +271,20 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
         vm.expectRevert(IDisputeModule.ArbitrationFeeTooLow.selector);
-        disputeModule.escalate{value: ARBITRATION_FEE - 1}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE - 1 }(receiptId);
     }
 
     function test_Escalate_RevertAlreadyEscalated() public {
@@ -319,25 +293,23 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         vm.prank(challenger);
         vm.expectRevert(IDisputeModule.AlreadyEscalated.selector);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
     }
 
     // ============ Resolution Tests ============
@@ -348,21 +320,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         uint256 challengerBalanceBefore = challenger.balance;
 
@@ -384,21 +354,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         // Arbitrator resolves in favor of solver
         vm.prank(arbitrator);
@@ -415,21 +383,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         vm.prank(challenger);
         vm.expectRevert(IDisputeModule.NotAuthorizedArbitrator.selector);
@@ -442,21 +408,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         vm.prank(arbitrator);
         vm.expectRevert(IDisputeModule.InvalidResolution.selector);
@@ -471,21 +435,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         uint256 challengerBalanceBefore = challenger.balance;
 
@@ -511,17 +473,15 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         // Try timeout without escalation
@@ -537,21 +497,19 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         // Try before timeout
         vm.warp(block.timestamp + 6 days);
@@ -570,23 +528,21 @@ contract DisputeModuleTest is Test {
 
         bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
         vm.prank(realOperator);
-        registry.depositBond{value: MINIMUM_BOND}(solverId);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
         bytes32 receiptId = receiptHub.postReceipt(receipt);
 
         vm.prank(challenger);
-        receiptHub.openDispute{value: CHALLENGER_BOND}(
-            receiptId,
-            Types.DisputeReason.Subjective,
-            keccak256("evidence")
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
         );
 
         assertTrue(disputeModule.canEscalate(receiptId));
 
         vm.prank(challenger);
-        disputeModule.escalate{value: ARBITRATION_FEE}(receiptId);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
 
         assertFalse(disputeModule.canEscalate(receiptId));
     }
