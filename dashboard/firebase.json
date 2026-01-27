@@ -42,10 +42,6 @@
         "destination": "/go/request-docs.html"
       },
       {
-        "source": "/operator/**",
-        "destination": "/operator/[solverId].html"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }
