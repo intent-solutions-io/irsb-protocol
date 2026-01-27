@@ -34,7 +34,7 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-zinc-200 rounded-lg flex items-center justify-center">
+            <div className="hidden sm:flex w-8 h-8 bg-zinc-200 rounded-lg items-center justify-center">
               <span className="text-zinc-900 font-bold text-sm">IR</span>
             </div>
             <span className="text-xl font-bold text-zinc-50">
