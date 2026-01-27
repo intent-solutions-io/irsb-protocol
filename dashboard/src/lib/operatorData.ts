@@ -250,139 +250,7 @@ async function transformOperatorData(s: SubgraphSolverDetail): Promise<OperatorD
   }
 }
 
-// Demo data - fallback when subgraph unavailable
-const DEMO_OPERATORS: Record<string, OperatorData> = {
-  '0x1234567890123456789012345678901234567890': {
-    solverId: '0x1234567890123456789012345678901234567890',
-    name: 'Beaver Builder',
-    operatorAddress: '0xA1b2C3d4E5f6789012345678901234567890abcd',
-    metadataURI: 'ipfs://QmYjtig7VJQ6XsnUjqqJvj7QaMcCAwtrgNdahSiFofrE7o',
-    status: 'Active',
-
-    bondBalance: '5.0',
-    availableBond: '4.5',
-    lockedBond: '0.5',
-    isAboveMinimum: true,
-    recentBondEvents: [
-      { type: 'Deposit', amount: '1.0', timestamp: new Date(Date.now() - 86400000 * 2) },
-      { type: 'Withdrawal', amount: '0.5', timestamp: new Date(Date.now() - 86400000 * 7) },
-      { type: 'Deposit', amount: '2.0', timestamp: new Date(Date.now() - 86400000 * 14) },
-    ],
-
-    intentScore: 94,
-    fillRate: 99.8,
-    speedScore: 95,
-    volumeScore: 88,
-    disputeScore: 100,
-
-    timeoutRate: 0.2,
-    disputeRate: 0,
-    avgSettlementTime: 12,
-    totalFills: 15420,
-
-    lastActive: new Date(Date.now() - 60000),
-    registeredAt: new Date(Date.now() - 86400000 * 90),
-
-    recentReceipts: [
-      {
-        id: '0xabc123def456789012345678901234567890abcdef',
-        intentHash: '0xdef456789012345678901234567890abcdef1234',
-        status: 'Finalized',
-        postedAt: new Date(Date.now() - 300000),
-        finalizedAt: new Date(Date.now() - 240000),
-        settlementTime: 12,
-      },
-      {
-        id: '0xbcd234ef5678901234567890123456789012bcde',
-        intentHash: '0xef5678901234567890123456789012bcdef12345',
-        status: 'Finalized',
-        postedAt: new Date(Date.now() - 600000),
-        finalizedAt: new Date(Date.now() - 540000),
-        settlementTime: 15,
-      },
-      {
-        id: '0xcde345f67890123456789012345678901234cdef',
-        intentHash: '0xf67890123456789012345678901234cdef123456',
-        status: 'Pending',
-        postedAt: new Date(Date.now() - 120000),
-        finalizedAt: null,
-        settlementTime: null,
-      },
-    ],
-
-    slashEvents: [],
-  },
-
-  '0x6789012345678901234567890123456789012345': {
-    solverId: '0x6789012345678901234567890123456789012345',
-    name: 'GlueX',
-    operatorAddress: '0xB2c3D4e5F6789012345678901234567890bcde',
-    metadataURI: 'ipfs://QmXYZ123',
-    status: 'Jailed',
-
-    bondBalance: '0.5',
-    availableBond: '0.0',
-    lockedBond: '0.5',
-    isAboveMinimum: true,
-    recentBondEvents: [
-      { type: 'Withdrawal', amount: '0.5', timestamp: new Date(Date.now() - 86400000) },
-    ],
-
-    intentScore: 45,
-    fillRate: 92.1,
-    speedScore: 65,
-    volumeScore: 72,
-    disputeScore: 20,
-
-    timeoutRate: 5.2,
-    disputeRate: 4.8,
-    avgSettlementTime: 25,
-    totalFills: 4100,
-
-    lastActive: new Date(Date.now() - 86400000 * 7),
-    registeredAt: new Date(Date.now() - 86400000 * 180),
-
-    recentReceipts: [
-      {
-        id: '0xaaa111222333444555666777888999000111222',
-        intentHash: '0x111222333444555666777888999000111222333',
-        status: 'Slashed',
-        postedAt: new Date(Date.now() - 86400000 * 7),
-        finalizedAt: null,
-        settlementTime: null,
-      },
-      {
-        id: '0xbbb222333444555666777888999000111222333',
-        intentHash: '0x222333444555666777888999000111222333444',
-        status: 'Finalized',
-        postedAt: new Date(Date.now() - 86400000 * 8),
-        finalizedAt: new Date(Date.now() - 86400000 * 8 + 30000),
-        settlementTime: 30,
-      },
-    ],
-
-    slashEvents: [
-      {
-        id: '0xslash1',
-        receiptId: '0xaaa111222333444555666777888999000111222',
-        amount: '0.1',
-        reason: 'Timeout',
-        reasonCode: 1,
-        timestamp: new Date(Date.now() - 86400000 * 7),
-        txHash: '0xtx123456789',
-      },
-      {
-        id: '0xslash2',
-        receiptId: '0xprev123456789',
-        amount: '0.1',
-        reason: 'Min Output Violation',
-        reasonCode: 2,
-        timestamp: new Date(Date.now() - 86400000 * 14),
-        txHash: '0xtx234567890',
-      },
-    ],
-  },
-}
+// No demo data - show real subgraph data only
 
 // Default for unknown solvers
 const DEFAULT_OPERATOR: OperatorData = {
@@ -439,11 +307,7 @@ export async function fetchOperatorData(solverId: string): Promise<OperatorData>
     console.warn('Subgraph unavailable, using demo data:', error)
   }
 
-  // Fallback to demo data
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const demoData = DEMO_OPERATORS[solverId.toLowerCase()]
-  if (demoData) return demoData
-
+  // No demo data - return default for unknown solvers
   return {
     ...DEFAULT_OPERATOR,
     solverId: solverId,
