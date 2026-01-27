@@ -123,93 +123,8 @@ async function transformSolver(s: SubgraphSolver): Promise<Solver> {
   }
 }
 
-// Demo data fallback when subgraph unavailable
-const DEMO_SOLVERS: Solver[] = [
-  {
-    address: '0x1234567890123456789012345678901234567890',
-    name: 'Beaver Builder',
-    intentScore: 94,
-    fillRate: 99.8,
-    avgSpeed: 12,
-    totalIntents: 15420,
-    slashingEvents: 0,
-    bondAmount: '5.0',
-    status: 'active',
-    lastActive: new Date(Date.now() - 60000),
-  },
-  {
-    address: '0x2345678901234567890123456789012345678901',
-    name: 'PMM Solver',
-    intentScore: 91,
-    fillRate: 99.2,
-    avgSpeed: 15,
-    totalIntents: 12350,
-    slashingEvents: 1,
-    bondAmount: '3.5',
-    status: 'active',
-    lastActive: new Date(Date.now() - 120000),
-  },
-  {
-    address: '0x3456789012345678901234567890123456789012',
-    name: 'CowDAO Solver',
-    intentScore: 87,
-    fillRate: 98.1,
-    avgSpeed: 18,
-    totalIntents: 28900,
-    slashingEvents: 3,
-    bondAmount: '10.0',
-    status: 'active',
-    lastActive: new Date(Date.now() - 300000),
-  },
-  {
-    address: '0x4567890123456789012345678901234567890123',
-    name: 'Flashbots Relay',
-    intentScore: 89,
-    fillRate: 98.9,
-    avgSpeed: 14,
-    totalIntents: 8750,
-    slashingEvents: 1,
-    bondAmount: '2.0',
-    status: 'active',
-    lastActive: new Date(Date.now() - 180000),
-  },
-  {
-    address: '0x5678901234567890123456789012345678901234',
-    name: 'MEV Blocker',
-    intentScore: 85,
-    fillRate: 97.5,
-    avgSpeed: 20,
-    totalIntents: 6200,
-    slashingEvents: 2,
-    bondAmount: '1.5',
-    status: 'active',
-    lastActive: new Date(Date.now() - 600000),
-  },
-  {
-    address: '0x6789012345678901234567890123456789012345',
-    name: 'GlueX',
-    intentScore: 45,
-    fillRate: 92.1,
-    avgSpeed: 25,
-    totalIntents: 4100,
-    slashingEvents: 8,
-    bondAmount: '0.5',
-    status: 'jailed',
-    lastActive: new Date(Date.now() - 86400000 * 7),
-  },
-  {
-    address: '0x7890123456789012345678901234567890123456',
-    name: 'Barter',
-    intentScore: 0,
-    fillRate: 0,
-    avgSpeed: 0,
-    totalIntents: 2890,
-    slashingEvents: 15,
-    bondAmount: '0.0',
-    status: 'inactive',
-    lastActive: new Date(Date.now() - 86400000 * 30),
-  },
-]
+// No demo data - show empty state when subgraph unavailable
+// This keeps the site honest rather than showing fake solvers
 
 export async function fetchSolverData(): Promise<Solver[]> {
   try {
@@ -227,9 +142,8 @@ export async function fetchSolverData(): Promise<Solver[]> {
     console.warn('Subgraph unavailable, using demo data:', error)
   }
 
-  // Fallback to demo data
-  await new Promise(resolve => setTimeout(resolve, 300)) // Simulate delay
-  return DEMO_SOLVERS.sort((a, b) => b.intentScore - a.intentScore)
+  // No fake data - return empty array, dashboard shows empty state
+  return []
 }
 
 export function getScoreClass(score: number): string {

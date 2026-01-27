@@ -1,18 +1,12 @@
 import OperatorPageClient from './OperatorPageClient'
 
-// Demo solver addresses for static export
-const DEMO_SOLVER_IDS = [
-  '0x1234567890123456789012345678901234567890',
-  '0x2345678901234567890123456789012345678901',
-  '0x3456789012345678901234567890123456789012',
-  '0x4567890123456789012345678901234567890123',
-  '0x5678901234567890123456789012345678901234',
-  '0x6789012345678901234567890123456789012345',
-  '0x7890123456789012345678901234567890123456',
+// Real testnet solver addresses (registered on Sepolia)
+const TESTNET_SOLVER_IDS = [
+  '0x83A5F432f02B1503765bB61a9B358942d87c9dc0', // IRSB Test Solver
 ]
 
 export function generateStaticParams() {
-  return DEMO_SOLVER_IDS.map(solverId => ({ solverId }))
+  return TESTNET_SOLVER_IDS.map(solverId => ({ solverId }))
 }
 
 interface PageProps {

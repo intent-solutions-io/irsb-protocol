@@ -120,10 +120,10 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <h3 className="mt-4 text-lg font-medium text-zinc-50">
-                  No registered solvers yet
+                  Waiting for subgraph to index
                 </h3>
                 <p className="mt-2 text-sm text-zinc-400 max-w-sm mx-auto">
-                  Solvers will appear here once they register on the SolverRegistry contract and stake the minimum bond.
+                  Solvers registered on-chain will appear here once The Graph indexes the data. This can take a few minutes after new registrations.
                 </p>
                 <div className="mt-6">
                   <a
