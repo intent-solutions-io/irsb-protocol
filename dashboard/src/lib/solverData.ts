@@ -18,7 +18,7 @@ interface SubgraphSolver {
   operator: string
   metadataURI: string
   bondBalance: string
-  status: number
+  status: string
   intentScore: number
   fillRate: number
   avgSettlementTime: number
@@ -31,11 +31,12 @@ interface SubgraphResponse {
   solvers: SubgraphSolver[]
 }
 
-// Map subgraph status enum to our status
-function mapStatus(status: number): 'active' | 'jailed' | 'inactive' {
-  switch (status) {
-    case 1: return 'active'
-    case 2: return 'jailed'
+// Map subgraph status string to our status
+function mapStatus(status: string): 'active' | 'jailed' | 'inactive' {
+  switch (status?.toLowerCase()) {
+    case 'active': return 'active'
+    case 'jailed': return 'jailed'
+    case 'banned': return 'inactive'
     default: return 'inactive'
   }
 }

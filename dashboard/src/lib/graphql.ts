@@ -20,7 +20,6 @@ export const SOLVERS_QUERY = `
       first: $first
       orderBy: $orderBy
       orderDirection: $orderDirection
-      where: { status_not: 3 }
     ) {
       id
       operator
