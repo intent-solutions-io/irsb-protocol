@@ -51,7 +51,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className={`${inter.className} bg-zinc-900`}>
+      <body className={`${inter.className} bg-zinc-900 overflow-x-hidden`}>
         <Navigation />
         {children}
       </body>
