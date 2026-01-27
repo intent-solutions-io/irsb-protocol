@@ -29,23 +29,23 @@ export default function SlashHistory({ slashEvents }: SlashHistoryProps) {
   const totalSlashed = slashEvents.reduce((sum, e) => sum + parseFloat(e.amount), 0)
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg">
-      <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-zinc-800 border border-zinc-700 shadow rounded-lg">
+      <div className="px-6 py-4 border-b border-zinc-700">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-zinc-50">
               Slash History
             </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-zinc-400">
               {slashEvents.length} event{slashEvents.length !== 1 ? 's' : ''} recorded
             </p>
           </div>
           {slashEvents.length > 0 && (
             <div className="text-right">
-              <p className="text-2xl font-bold text-red-600 dark:text-red-400">
+              <p className="text-2xl font-bold text-red-400">
                 -{totalSlashed.toFixed(3)} ETH
               </p>
-              <p className="text-xs text-gray-500">Total Slashed</p>
+              <p className="text-xs text-zinc-500">Total Slashed</p>
             </div>
           )}
         </div>
@@ -54,48 +54,48 @@ export default function SlashHistory({ slashEvents }: SlashHistoryProps) {
       {slashEvents.length === 0 ? (
         <div className="px-6 py-12 text-center">
           <div className="text-4xl mb-2">✓</div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-zinc-400">
             No slash events - Clean record!
           </p>
         </div>
       ) : (
-        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="divide-y divide-zinc-700">
           {slashEvents.map(event => (
             <div
               key={event.id}
-              className="px-6 py-4 hover:bg-gray-50 dark:hover:bg-gray-700"
+              className="px-6 py-4 hover:bg-zinc-700/50"
             >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3">
                     <span className="w-2 h-2 bg-red-500 rounded-full" />
-                    <span className="font-medium text-gray-900 dark:text-white">
+                    <span className="font-medium text-zinc-50">
                       {DISPUTE_REASONS[event.reasonCode]?.label || event.reason}
                     </span>
-                    <span className="text-xs text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">
+                    <span className="text-xs text-zinc-400 bg-zinc-700 px-2 py-0.5 rounded">
                       Code: {event.reasonCode}
                     </span>
                   </div>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 ml-5">
+                  <p className="mt-1 text-sm text-zinc-400 ml-5">
                     {DISPUTE_REASONS[event.reasonCode]?.description || 'Unknown reason'}
                   </p>
-                  <div className="mt-2 ml-5 flex items-center space-x-4 text-xs text-gray-500">
+                  <div className="mt-2 ml-5 flex items-center space-x-4 text-xs text-zinc-500">
                     <span>Receipt: {event.receiptId.slice(0, 10)}...</span>
                     <a
                       href={`https://sepolia.etherscan.io/tx/${event.txHash}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-600 hover:text-indigo-500"
+                      className="text-zinc-200 hover:text-zinc-50"
                     >
                       View TX ↗
                     </a>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-lg font-bold text-red-600 dark:text-red-400">
+                  <p className="text-lg font-bold text-red-400">
                     -{event.amount} ETH
                   </p>
-                  <p className="text-xs text-gray-500">{formatTimeSince(event.timestamp)}</p>
+                  <p className="text-xs text-zinc-500">{formatTimeSince(event.timestamp)}</p>
                 </div>
               </div>
             </div>
@@ -105,8 +105,8 @@ export default function SlashHistory({ slashEvents }: SlashHistoryProps) {
 
       {/* Distribution Info */}
       {slashEvents.length > 0 && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
+        <div className="px-6 py-4 border-t border-zinc-700 bg-zinc-700/50">
+          <p className="text-xs text-zinc-400">
             Slash distribution: 80% to affected user, 15% to challenger, 5% to protocol treasury
           </p>
         </div>

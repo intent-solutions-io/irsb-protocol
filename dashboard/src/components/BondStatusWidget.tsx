@@ -27,13 +27,13 @@ export default function BondStatusWidget({
   const availablePercent = total > 0 ? (available / total) * 100 : 0
 
   return (
-    <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+    <div className="bg-zinc-800 border border-zinc-700 shadow rounded-lg p-6">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+        <h3 className="text-lg font-semibold text-zinc-50">
           Bond Status
         </h3>
         {!isAboveMinimum && (
-          <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+          <span className="px-2 py-1 bg-red-900/50 text-red-300 border border-red-700 text-xs rounded-full">
             Below Minimum
           </span>
         )}
@@ -42,20 +42,20 @@ export default function BondStatusWidget({
       {/* Bond Bar Visualization */}
       <div className="mb-6">
         <div className="flex justify-between text-sm mb-2">
-          <span className="text-gray-600 dark:text-gray-400">Available</span>
-          <span className="text-gray-900 dark:text-white font-medium">{availableBond} ETH</span>
+          <span className="text-zinc-400">Available</span>
+          <span className="text-zinc-50 font-medium">{availableBond} ETH</span>
         </div>
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="h-4 bg-zinc-700 rounded-full overflow-hidden">
           <div
             className="h-4 bg-gradient-to-r from-green-500 to-green-400 rounded-full transition-all duration-500"
             style={{ width: `${availablePercent}%` }}
           />
         </div>
         <div className="flex justify-between text-xs mt-1">
-          <span className="text-gray-500">
+          <span className="text-zinc-500">
             Locked: {lockedBond} ETH
           </span>
-          <span className="text-gray-500">
+          <span className="text-zinc-500">
             Total: {totalBond} ETH
           </span>
         </div>
@@ -64,32 +64,32 @@ export default function BondStatusWidget({
       {/* Bond Metrics */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="text-center">
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400">{totalBond}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Total Bond</p>
+          <p className="text-2xl font-bold text-green-400">{totalBond}</p>
+          <p className="text-xs text-zinc-500">Total Bond</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{availableBond}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Available</p>
+          <p className="text-2xl font-bold text-blue-400">{availableBond}</p>
+          <p className="text-xs text-zinc-500">Available</p>
         </div>
         <div className="text-center">
-          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{lockedBond}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400">Locked</p>
+          <p className="text-2xl font-bold text-yellow-400">{lockedBond}</p>
+          <p className="text-xs text-zinc-500">Locked</p>
         </div>
       </div>
 
       {/* Recent Bond Activity */}
       <div>
-        <h4 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+        <h4 className="text-sm font-medium text-zinc-50 mb-3">
           Recent Activity
         </h4>
         <div className="space-y-2 max-h-32 overflow-y-auto">
           {bondEvents.length === 0 ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400">No recent activity</p>
+            <p className="text-sm text-zinc-500">No recent activity</p>
           ) : (
             bondEvents.map((event, i) => (
               <div
                 key={i}
-                className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700 last:border-0"
+                className="flex items-center justify-between py-2 border-b border-zinc-700 last:border-0"
               >
                 <div className="flex items-center space-x-2">
                   <span
@@ -97,19 +97,19 @@ export default function BondStatusWidget({
                       event.type === 'Deposit' ? 'bg-green-500' : 'bg-red-500'
                     }`}
                   />
-                  <span className="text-sm text-gray-900 dark:text-white">{event.type}</span>
+                  <span className="text-sm text-zinc-50">{event.type}</span>
                 </div>
                 <div className="text-right">
                   <span
                     className={`text-sm font-medium ${
                       event.type === 'Deposit'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
+                        ? 'text-green-400'
+                        : 'text-red-400'
                     }`}
                   >
                     {event.type === 'Deposit' ? '+' : '-'}{event.amount} ETH
                   </span>
-                  <p className="text-xs text-gray-500">{formatTimeSince(event.timestamp)}</p>
+                  <p className="text-xs text-zinc-500">{formatTimeSince(event.timestamp)}</p>
                 </div>
               </div>
             ))
@@ -119,8 +119,8 @@ export default function BondStatusWidget({
 
       {/* Minimum Bond Warning */}
       {!isAboveMinimum && (
-        <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
-          <p className="text-sm text-red-700 dark:text-red-300">
+        <div className="mt-4 p-3 bg-red-900/20 border border-red-800 rounded-lg">
+          <p className="text-sm text-red-300">
             Bond is below minimum threshold (0.1 ETH). Solver cannot accept new intents.
           </p>
         </div>

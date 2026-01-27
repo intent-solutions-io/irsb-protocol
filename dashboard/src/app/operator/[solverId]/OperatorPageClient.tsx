@@ -57,10 +57,10 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <main className="min-h-screen bg-zinc-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">Loading operator data...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-200 mx-auto"></div>
+          <p className="mt-4 text-zinc-400">Loading operator data...</p>
         </div>
       </main>
     )
@@ -68,10 +68,10 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
 
   if (error || !data) {
     return (
-      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <main className="min-h-screen bg-zinc-900 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">{error || 'Operator not found'}</p>
-          <Link href="/" className="mt-4 text-indigo-600 hover:text-indigo-500">
+          <p className="text-red-400">{error || 'Operator not found'}</p>
+          <Link href="/" className="mt-4 text-zinc-200 hover:text-zinc-50">
             ← Back to Dashboard
           </Link>
         </div>
@@ -80,25 +80,25 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <main className="min-h-screen bg-zinc-900">
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow-sm">
+      <header className="bg-zinc-800 border-b border-zinc-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center space-x-3">
                 <Link
                   href="/"
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  className="text-zinc-400 hover:text-zinc-200"
                 >
                   ← Back
                 </Link>
-                <span className="text-gray-300 dark:text-gray-600">|</span>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                <span className="text-zinc-600">|</span>
+                <h1 className="text-2xl font-bold text-zinc-50">
                   {data.name || 'Relayer Operator'}
                 </h1>
               </div>
-              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 font-mono">
+              <p className="mt-1 text-sm text-zinc-400 font-mono">
                 {solverId.slice(0, 10)}...{solverId.slice(-8)}
               </p>
             </div>
@@ -124,8 +124,8 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
           />
 
           {/* SLA Metrics */}
-          <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-zinc-800 border border-zinc-700 shadow rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-zinc-50 mb-4">
               SLA Metrics
             </h3>
             <div className="grid grid-cols-2 gap-4">
@@ -154,12 +154,12 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
         </div>
 
         {/* Intent Score Visualization */}
-        <div className="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+        <div className="mt-6 bg-zinc-800 border border-zinc-700 shadow rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-zinc-50">
               IntentScore Breakdown
             </h3>
-            <span className="text-3xl font-bold text-indigo-600">{data.intentScore}</span>
+            <span className="text-3xl font-bold text-zinc-200">{data.intentScore}</span>
           </div>
           <div className="space-y-3">
             <ScoreBar label="Success Rate" value={data.fillRate} weight={40} />
@@ -167,7 +167,7 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
             <ScoreBar label="Volume" value={data.volumeScore} weight={20} />
             <ScoreBar label="Dispute Score" value={data.disputeScore} weight={20} />
           </div>
-          <p className="mt-4 text-xs text-gray-500 dark:text-gray-400">
+          <p className="mt-4 text-xs text-zinc-500">
             Score decays by 50% every 30 days of inactivity. Last active: {formatTimeSince(data.lastActive)}
           </p>
         </div>
@@ -183,8 +183,8 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
         </div>
 
         {/* Contract Links */}
-        <div className="mt-8 bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div className="mt-8 bg-zinc-800 border border-zinc-700 shadow rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-zinc-50 mb-4">
             Verification
           </h3>
           <div className="flex flex-wrap gap-4">
@@ -192,7 +192,7 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
               href={`https://sepolia.etherscan.io/address/${data.operatorAddress}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm"
+              className="inline-flex items-center px-4 py-2 bg-zinc-700/50 border border-zinc-600 hover:bg-zinc-700 rounded-lg text-sm text-zinc-200"
             >
               View on Etherscan ↗
             </a>
@@ -201,7 +201,7 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
                 href={getSafeMetadataUrl(data.metadataURI)!}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 rounded-lg text-sm"
+                className="inline-flex items-center px-4 py-2 bg-zinc-700/50 border border-zinc-600 hover:bg-zinc-700 rounded-lg text-sm text-zinc-200"
               >
                 View Metadata ↗
               </a>
@@ -215,10 +215,10 @@ export default function OperatorPageClient({ solverId }: OperatorPageClientProps
 
 function StatusBadge({ status }: { status: string }) {
   const colors: Record<string, string> = {
-    Active: 'bg-green-100 text-green-800',
-    Jailed: 'bg-red-100 text-red-800',
-    Inactive: 'bg-gray-100 text-gray-800',
-    Banned: 'bg-red-200 text-red-900',
+    Active: 'bg-green-900/50 text-green-300 border border-green-700',
+    Jailed: 'bg-red-900/50 text-red-300 border border-red-700',
+    Inactive: 'bg-zinc-700 text-zinc-400 border border-zinc-600',
+    Banned: 'bg-red-900/70 text-red-300 border border-red-600',
   }
 
   return (
@@ -229,9 +229,9 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function ScoreBadge({ score }: { score: number }) {
-  let colorClass = 'bg-green-100 text-green-800'
-  if (score < 50) colorClass = 'bg-red-100 text-red-800'
-  else if (score < 75) colorClass = 'bg-yellow-100 text-yellow-800'
+  let colorClass = 'bg-green-900/50 text-green-300 border border-green-700'
+  if (score < 50) colorClass = 'bg-red-900/50 text-red-300 border border-red-700'
+  else if (score < 75) colorClass = 'bg-yellow-900/50 text-yellow-300 border border-yellow-700'
 
   return (
     <span className={`px-3 py-1 rounded-full text-sm font-bold ${colorClass}`}>
@@ -250,14 +250,14 @@ function MetricCard({
   trend: 'good' | 'warning' | 'bad'
 }) {
   const trendColors = {
-    good: 'text-green-600 dark:text-green-400',
-    warning: 'text-yellow-600 dark:text-yellow-400',
-    bad: 'text-red-600 dark:text-red-400',
+    good: 'text-green-400',
+    warning: 'text-yellow-400',
+    bad: 'text-red-400',
   }
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-      <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</p>
+    <div className="bg-zinc-700/50 border border-zinc-600 rounded-lg p-4">
+      <p className="text-xs text-zinc-400 uppercase tracking-wide">{label}</p>
       <p className={`text-2xl font-bold mt-1 ${trendColors[trend]}`}>{value}</p>
     </div>
   )
@@ -270,14 +270,14 @@ function ScoreBar({ label, value, weight }: { label: string; value: number; weig
   return (
     <div>
       <div className="flex justify-between text-sm mb-1">
-        <span className="text-gray-600 dark:text-gray-400">{label}</span>
-        <span className="text-gray-900 dark:text-white font-medium">
+        <span className="text-zinc-400">{label}</span>
+        <span className="text-zinc-50 font-medium">
           +{contribution.toFixed(1)} ({weight}% weight)
         </span>
       </div>
-      <div className="h-2 bg-gray-200 dark:bg-gray-700 rounded-full">
+      <div className="h-2 bg-zinc-700 rounded-full">
         <div
-          className="h-2 bg-indigo-600 rounded-full transition-all duration-300"
+          className="h-2 bg-zinc-200 rounded-full transition-all duration-300"
           style={{ width: `${percentage}%` }}
         />
       </div>

@@ -242,11 +242,11 @@ export function getScoreClass(score: number): string {
 export function getStatusColor(status: Solver['status']): string {
   switch (status) {
     case 'active':
-      return 'bg-green-100 text-green-800'
+      return 'bg-green-900/50 text-green-300 border border-green-700'
     case 'jailed':
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-900/50 text-red-300 border border-red-700'
     case 'inactive':
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-zinc-700 text-zinc-400 border border-zinc-600'
   }
 }
 
