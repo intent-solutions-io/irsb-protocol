@@ -32,6 +32,12 @@ interface IReceiptV2Extension {
     /// @notice Emitted when a V2 dispute is resolved
     event ReceiptV2DisputeResolved(bytes32 indexed receiptId, bytes32 indexed solverId, bool solverFault);
 
+    /// @notice Emitted when a challenger bond is forfeited
+    event ChallengerBondForfeited(bytes32 indexed receiptId, uint256 amount);
+
+    /// @notice Emitted when a challenger bond is returned
+    event ChallengerBondReturned(bytes32 indexed receiptId, address indexed challenger, uint256 amount);
+
     // ============ Errors ============
 
     error ReceiptV2AlreadyExists();
@@ -97,4 +103,27 @@ interface IReceiptV2Extension {
     /// @notice Get minimum challenger bond
     /// @return minBond Minimum bond in wei
     function challengerBondMin() external view returns (uint256);
+
+    /// @notice Get challenger address for a disputed receipt
+    /// @param receiptId Receipt to query
+    /// @return challenger Challenger address
+    function getChallenger(bytes32 receiptId) external view returns (address challenger);
+
+    /// @notice Get challenger bond for a disputed receipt
+    /// @param receiptId Receipt to query
+    /// @return bond Bond amount in wei
+    function getChallengerBondV2(bytes32 receiptId) external view returns (uint256 bond);
+
+    /// @notice Mark a challenger bond as forfeited
+    /// @param receiptId Receipt whose challenger bond is forfeited
+    function forfeitChallengerBond(bytes32 receiptId) external;
+
+    /// @notice Return challenger bond to challenger
+    /// @param receiptId Receipt whose challenger bond should be returned
+    function returnChallengerBond(bytes32 receiptId) external;
+
+    /// @notice Transfer challenger bond to a specific recipient
+    /// @param receiptId Receipt whose challenger bond should be transferred
+    /// @param recipient Address to receive the bond
+    function transferChallengerBondTo(bytes32 receiptId, address recipient) external;
 }

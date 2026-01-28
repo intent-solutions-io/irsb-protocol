@@ -65,6 +65,9 @@ contract OptimisticDisputeTest is Test {
         disputeModule.setTreasury(treasury);
         disputeModule.setEscrowVault(address(escrowVault));
 
+        // Authorize dispute module to manage bonds in extension
+        extension.setOptimisticDisputeModule(address(disputeModule));
+
         // Authorize extension to interact with registry
         registry.setAuthorizedCaller(address(extension), true);
         registry.setAuthorizedCaller(address(disputeModule), true);
@@ -131,7 +134,7 @@ contract OptimisticDisputeTest is Test {
 
         // Then open optimistic dispute
         vm.prank(challenger);
-        _disputeId = disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+        _disputeId = disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
     }
 
     // ============ Open Dispute Tests ============
@@ -147,7 +150,7 @@ contract OptimisticDisputeTest is Test {
         // Then open optimistic dispute
         vm.prank(challenger);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
 
         // Verify dispute state
         IOptimisticDisputeModule.OptimisticDispute memory dispute = disputeModule.getDispute(disputeId);
@@ -177,7 +180,7 @@ contract OptimisticDisputeTest is Test {
         );
 
         vm.prank(challenger);
-        disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+        disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
     }
 
     function test_OpenOptimisticDispute_RevertNotDisputed() public {
@@ -187,7 +190,7 @@ contract OptimisticDisputeTest is Test {
         // Try to open optimistic dispute without first opening via extension
         vm.prank(challenger);
         vm.expectRevert(IOptimisticDisputeModule.ReceiptNotDisputed.selector);
-        disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+        disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
     }
 
     // ============ Counter-Bond Tests ============
@@ -549,12 +552,12 @@ contract OptimisticDisputeTest is Test {
 
         vm.prank(challenger);
         vm.expectRevert();
-        disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+        disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
 
         disputeModule.unpause();
 
         vm.prank(challenger);
-        disputeModule.openOptimisticDispute{ value: challengerBond }(_receiptId, keccak256("evidence"));
+        disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
     }
 
     // ============ Constants Tests ============

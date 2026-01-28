@@ -32,6 +32,9 @@ contract OptimisticDisputeFuzzTest is Test {
         disputeModule.setTreasury(treasury);
         disputeModule.setEscrowVault(address(escrowVault));
 
+        // Authorize dispute module to manage bonds in extension
+        extension.setOptimisticDisputeModule(address(disputeModule));
+
         registry.setAuthorizedCaller(address(extension), true);
         registry.setAuthorizedCaller(address(disputeModule), true);
         escrowVault.setAuthorizedHub(address(disputeModule), true);
@@ -111,19 +114,24 @@ contract OptimisticDisputeFuzzTest is Test {
         uint64 createdAt = uint64(block.timestamp);
         bytes32 receiptId = _createV2Receipt(solverId, solverKey, clientKey, createdAt);
 
-        // Open dispute via extension
+        // Track initial balance before dispute
+        uint256 initialBalance = challengerAddr.balance;
+
+        // Open dispute via extension (bond is taken here)
         vm.prank(challengerAddr);
         extension.openDisputeV2{ value: challengerBond }(receiptId, keccak256("reason"), keccak256("evidence"));
 
-        // Open optimistic dispute
-        uint256 challengerBalanceBefore = challengerAddr.balance;
+        // Verify bond was taken in openDisputeV2
+        assertEq(challengerAddr.balance, initialBalance - challengerBond);
+
+        // Open optimistic dispute (no additional bond required - references bond in extension)
+        uint256 balanceBeforeOptimistic = challengerAddr.balance;
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
-        uint256 balanceAfterOpen = challengerAddr.balance;
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
-        // Verify bond was taken
-        assertEq(balanceAfterOpen, challengerBalanceBefore - challengerBond);
+        // Verify no additional bond was taken
+        assertEq(challengerAddr.balance, balanceBeforeOptimistic);
 
         // Fast forward past counter-bond deadline
         vm.warp(block.timestamp + 24 hours + 1);
@@ -156,7 +164,7 @@ contract OptimisticDisputeFuzzTest is Test {
 
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
         IOptimisticDisputeModule.OptimisticDispute memory dispute = disputeModule.getDispute(disputeId);
 
@@ -190,7 +198,7 @@ contract OptimisticDisputeFuzzTest is Test {
 
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
         // Bound time elapsed to reasonable range
         timeElapsed = uint64(bound(timeElapsed, 0, 48 hours));
@@ -234,7 +242,7 @@ contract OptimisticDisputeFuzzTest is Test {
 
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
         IOptimisticDisputeModule.OptimisticDisputeStatus status = disputeModule.getDisputeStatus(disputeId);
         assertEq(uint256(status), uint256(IOptimisticDisputeModule.OptimisticDisputeStatus.Open));
@@ -292,7 +300,7 @@ contract OptimisticDisputeFuzzTest is Test {
 
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
         uint256 counterBond = disputeModule.getRequiredCounterBond(disputeId);
         vm.prank(solverAddr);
@@ -339,7 +347,7 @@ contract OptimisticDisputeFuzzTest is Test {
 
         vm.prank(challengerAddr);
         bytes32 disputeId =
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
 
         // Random address should not be able to submit evidence
         vm.prank(submitter);
@@ -381,7 +389,7 @@ contract OptimisticDisputeFuzzTest is Test {
             extension.openDisputeV2{ value: challengerBond }(receiptId, keccak256("reason"), keccak256("evidence"));
 
             vm.prank(challengerAddr);
-            disputeModule.openOptimisticDispute{ value: challengerBond }(receiptId, keccak256("evidence"));
+            disputeModule.openOptimisticDispute(receiptId, keccak256("evidence"));
         }
 
         assertEq(disputeModule.totalDisputes(), initialTotal + numDisputes);

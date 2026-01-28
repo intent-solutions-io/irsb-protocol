@@ -71,8 +71,14 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     /// @notice Total V2 disputes
     uint256 public totalDisputesV2;
 
+    /// @notice Total forfeited challenger bonds available for sweep
+    uint256 public totalForfeitedBonds;
+
     /// @notice Escrow vault address (for integration)
     address public escrowVault;
+
+    /// @notice Optimistic dispute module address (authorized to manage bonds)
+    address public optimisticDisputeModule;
 
     // ============ Constructor ============
 
@@ -324,12 +330,74 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     }
 
     /// @notice Sweep forfeited challenger bonds to treasury
+    /// @dev Only sweeps bonds explicitly marked as forfeited, not active dispute bonds
     /// @param treasury Address to receive funds
     function sweepForfeitedBonds(address treasury) external onlyOwner nonReentrant {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No funds to sweep");
-        (bool sent,) = treasury.call{ value: balance }("");
+        uint256 amount = totalForfeitedBonds;
+        require(amount > 0, "No forfeited bonds to sweep");
+        require(address(this).balance >= amount, "Insufficient balance");
+
+        totalForfeitedBonds = 0;
+        (bool sent,) = treasury.call{ value: amount }("");
         require(sent, "Transfer failed");
+    }
+
+    /// @notice Mark a challenger bond as forfeited (callable by optimistic dispute module)
+    /// @dev Called when a dispute resolves against the challenger
+    /// @param receiptId Receipt whose challenger bond is forfeited
+    function forfeitChallengerBond(bytes32 receiptId) external nonReentrant {
+        require(msg.sender == optimisticDisputeModule || msg.sender == owner(), "Not authorized");
+
+        uint256 bondAmount = _challengerBonds[receiptId];
+        require(bondAmount > 0, "No bond to forfeit");
+        require(_receiptStatusV2[receiptId] == TypesV2.ReceiptV2Status.Disputed, "Not disputed");
+
+        _challengerBonds[receiptId] = 0;
+        totalForfeitedBonds += bondAmount;
+
+        emit ChallengerBondForfeited(receiptId, bondAmount);
+    }
+
+    /// @notice Return challenger bond (callable by optimistic dispute module)
+    /// @dev Called when a dispute resolves in favor of the challenger
+    /// @param receiptId Receipt whose challenger bond should be returned
+    function returnChallengerBond(bytes32 receiptId) external nonReentrant {
+        require(msg.sender == optimisticDisputeModule || msg.sender == owner(), "Not authorized");
+
+        uint256 bondAmount = _challengerBonds[receiptId];
+        address challenger = _challengers[receiptId];
+        require(bondAmount > 0, "No bond to return");
+        require(challenger != address(0), "No challenger");
+
+        _challengerBonds[receiptId] = 0;
+        (bool sent,) = challenger.call{ value: bondAmount }("");
+        require(sent, "Transfer failed");
+
+        emit ChallengerBondReturned(receiptId, challenger, bondAmount);
+    }
+
+    /// @notice Transfer challenger bond to a specific recipient (callable by optimistic dispute module)
+    /// @dev Used when solver wins dispute - bond goes to solver as anti-griefing measure
+    /// @param receiptId Receipt whose challenger bond should be transferred
+    /// @param recipient Address to receive the bond
+    function transferChallengerBondTo(bytes32 receiptId, address recipient) external nonReentrant {
+        require(msg.sender == optimisticDisputeModule || msg.sender == owner(), "Not authorized");
+        require(recipient != address(0), "Invalid recipient");
+
+        uint256 bondAmount = _challengerBonds[receiptId];
+        require(bondAmount > 0, "No bond to transfer");
+
+        _challengerBonds[receiptId] = 0;
+        (bool sent,) = recipient.call{ value: bondAmount }("");
+        require(sent, "Transfer failed");
+
+        emit ChallengerBondForfeited(receiptId, bondAmount);
+    }
+
+    /// @notice Set optimistic dispute module address
+    /// @param _optimisticDisputeModule New optimistic dispute module address
+    function setOptimisticDisputeModule(address _optimisticDisputeModule) external onlyOwner {
+        optimisticDisputeModule = _optimisticDisputeModule;
     }
 
     // ============ Internal Functions ============

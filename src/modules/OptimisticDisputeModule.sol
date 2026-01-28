@@ -98,9 +98,9 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
     // ============ External Functions ============
 
     /// @inheritdoc IOptimisticDisputeModule
+    /// @dev No longer payable - references the bond already paid to ReceiptV2Extension
     function openOptimisticDispute(bytes32 receiptId, bytes32 evidenceHash)
         external
-        payable
         whenNotPaused
         nonReentrant
         returns (bytes32 disputeId)
@@ -115,8 +115,13 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
         // Check if dispute already exists for this receipt
         if (_receiptToDispute[receiptId] != bytes32(0)) revert DisputeAlreadyResolved();
 
-        // Require challenger bond (must match what was sent to ReceiptV2Extension)
-        if (msg.value == 0) revert InsufficientCounterBond();
+        // Verify caller is the same challenger who opened the dispute in ReceiptV2Extension
+        address originalChallenger = receiptV2Extension.getChallenger(receiptId);
+        if (msg.sender != originalChallenger) revert UnauthorizedCaller();
+
+        // Get the bond amount from ReceiptV2Extension (already paid there - no double charge)
+        uint256 challengerBond = receiptV2Extension.getChallengerBondV2(receiptId);
+        if (challengerBond == 0) revert InvalidChallengerBond();
 
         // Generate dispute ID
         disputeId = keccak256(abi.encode(receiptId, msg.sender, block.timestamp, totalDisputes));
@@ -126,7 +131,7 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
             receiptId: receiptId,
             solverId: receipt.solverId,
             challenger: msg.sender,
-            challengerBond: msg.value,
+            challengerBond: challengerBond,
             counterBond: 0,
             evidenceHash: evidenceHash,
             openedAt: uint64(block.timestamp),
@@ -146,7 +151,7 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
         totalDisputes++;
 
         emit OptimisticDisputeOpened(
-            disputeId, receiptId, receipt.solverId, msg.sender, msg.value, uint64(block.timestamp) + COUNTER_BOND_WINDOW
+            disputeId, receiptId, receipt.solverId, msg.sender, challengerBond, uint64(block.timestamp) + COUNTER_BOND_WINDOW
         );
     }
 
@@ -205,8 +210,8 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
             );
         }
 
-        // Return challenger bond
-        _transferETH(dispute.challenger, dispute.challengerBond);
+        // Return challenger bond (held by ReceiptV2Extension)
+        receiptV2Extension.returnChallengerBond(dispute.receiptId);
 
         // Handle escrow refund if applicable
         _handleEscrowOutcome(dispute.receiptId, false); // false = solver fault, refund to client
@@ -264,9 +269,13 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
                 }
             }
 
-            // Return challenger bond + award solver's counter-bond to challenger
-            uint256 challengerPayout = dispute.challengerBond + dispute.counterBond;
-            _transferETH(dispute.challenger, challengerPayout);
+            // Return challenger bond (held by ReceiptV2Extension)
+            receiptV2Extension.returnChallengerBond(dispute.receiptId);
+
+            // Award solver's counter-bond to challenger (held by this module)
+            if (dispute.counterBond > 0) {
+                _transferETH(dispute.challenger, dispute.counterBond);
+            }
 
             // Handle escrow refund
             _handleEscrowOutcome(dispute.receiptId, false); // Refund to client
@@ -279,11 +288,15 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
                 solverRegistry.unlockBond(dispute.solverId, solver.lockedBalance);
             }
 
-            // Return solver's counter-bond
-            _transferETH(_getSolverOperator(dispute.solverId), dispute.counterBond);
+            address solverOperator = _getSolverOperator(dispute.solverId);
 
-            // Challenger loses bond (goes to solver as anti-griefing)
-            _transferETH(_getSolverOperator(dispute.solverId), dispute.challengerBond);
+            // Return solver's counter-bond (held by this module)
+            if (dispute.counterBond > 0) {
+                _transferETH(solverOperator, dispute.counterBond);
+            }
+
+            // Challenger loses bond - goes to solver as anti-griefing (held by ReceiptV2Extension)
+            receiptV2Extension.transferChallengerBondTo(dispute.receiptId, solverOperator);
 
             // Handle escrow release to solver
             _handleEscrowOutcome(dispute.receiptId, true); // Release to solver
@@ -353,9 +366,13 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
             );
         }
 
-        // Return both bonds to challenger (arbitrator failed to act)
-        uint256 challengerPayout = dispute.challengerBond + dispute.counterBond;
-        _transferETH(dispute.challenger, challengerPayout);
+        // Return challenger bond (held by ReceiptV2Extension)
+        receiptV2Extension.returnChallengerBond(dispute.receiptId);
+
+        // Return solver's counter-bond to challenger too (held by this module) - arbitrator failed to act
+        if (dispute.counterBond > 0) {
+            _transferETH(dispute.challenger, dispute.counterBond);
+        }
 
         // Handle escrow refund
         _handleEscrowOutcome(dispute.receiptId, false);

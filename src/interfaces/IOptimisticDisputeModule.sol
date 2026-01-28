@@ -85,6 +85,9 @@ interface IOptimisticDisputeModule {
     /// @notice Insufficient counter-bond amount
     error InsufficientCounterBond();
 
+    /// @notice Invalid or missing challenger bond in ReceiptV2Extension
+    error InvalidChallengerBond();
+
     /// @notice Dispute not contested (no counter-bond)
     error DisputeNotContested();
 
@@ -115,10 +118,11 @@ interface IOptimisticDisputeModule {
     // ============ External Functions ============
 
     /// @notice Open an optimistic dispute against a V2 receipt
+    /// @dev No longer payable - references the bond already paid to ReceiptV2Extension
     /// @param receiptId Receipt to dispute
     /// @param evidenceHash Hash of challenger's evidence
     /// @return disputeId Unique dispute identifier
-    function openOptimisticDispute(bytes32 receiptId, bytes32 evidenceHash) external payable returns (bytes32 disputeId);
+    function openOptimisticDispute(bytes32 receiptId, bytes32 evidenceHash) external returns (bytes32 disputeId);
 
     /// @notice Solver posts counter-bond to contest dispute
     /// @param disputeId Dispute to contest
