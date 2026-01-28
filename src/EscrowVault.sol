@@ -39,6 +39,12 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
     /// @notice Total value refunded (native)
     uint256 public totalRefundedNative;
 
+    /// @notice Total native ETH currently escrowed (active escrows only)
+    uint256 public totalEscrowedNative;
+
+    /// @notice Total ERC20 currently escrowed per token (active escrows only)
+    mapping(address => uint256) public totalEscrowedERC20;
+
     // ============ Constructor ============
 
     constructor() Ownable(msg.sender) { }
@@ -85,6 +91,7 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
 
         _receiptToEscrow[receiptId] = escrowId;
         totalEscrows++;
+        totalEscrowedNative += msg.value;
 
         emit EscrowCreated(escrowId, receiptId, depositor, address(0), msg.value, deadline);
     }
@@ -119,6 +126,7 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
 
         _receiptToEscrow[receiptId] = escrowId;
         totalEscrows++;
+        totalEscrowedERC20[token] += amount;
 
         emit EscrowCreated(escrowId, receiptId, depositor, token, amount, deadline);
     }
@@ -140,10 +148,12 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
         if (token == address(0)) {
             // Native ETH transfer
             totalReleasedNative += amount;
+            totalEscrowedNative -= amount;
             (bool sent,) = recipient.call{ value: amount }("");
             if (!sent) revert TransferFailed();
         } else {
             // ERC20 transfer
+            totalEscrowedERC20[token] -= amount;
             IERC20(token).safeTransfer(recipient, amount);
         }
 
@@ -167,10 +177,12 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
         if (token == address(0)) {
             // Native ETH refund
             totalRefundedNative += amount;
+            totalEscrowedNative -= amount;
             (bool sent,) = depositor.call{ value: amount }("");
             if (!sent) revert TransferFailed();
         } else {
             // ERC20 refund
+            totalEscrowedERC20[token] -= amount;
             IERC20(token).safeTransfer(depositor, amount);
         }
 
@@ -227,7 +239,8 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
         _unpause();
     }
 
-    /// @notice Emergency withdraw stuck tokens (only if escrow resolved)
+    /// @notice Emergency withdraw stuck tokens (only excess funds not in active escrows)
+    /// @dev Cannot withdraw funds that belong to active escrows
     /// @param token Token to withdraw (address(0) for native)
     /// @param amount Amount to withdraw
     /// @param to Recipient address
@@ -235,9 +248,17 @@ contract EscrowVault is IEscrowVault, Ownable, ReentrancyGuard, Pausable {
         if (to == address(0)) revert TransferFailed();
 
         if (token == address(0)) {
+            // Calculate available amount (balance minus active escrows)
+            uint256 available = address(this).balance - totalEscrowedNative;
+            if (amount > available) revert InvalidAmount();
+
             (bool sent,) = to.call{ value: amount }("");
             if (!sent) revert TransferFailed();
         } else {
+            // Calculate available amount (balance minus active escrows)
+            uint256 available = IERC20(token).balanceOf(address(this)) - totalEscrowedERC20[token];
+            if (amount > available) revert InvalidAmount();
+
             IERC20(token).safeTransfer(to, amount);
         }
     }
