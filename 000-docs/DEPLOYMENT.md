@@ -83,12 +83,9 @@ forge install
 cp .env.example .env
 ```
 
-Edit `.env` with your values:
+Edit `.env` with your RPC and API values (but NOT private keys):
 
 ```bash
-# Deployer
-PRIVATE_KEY=0x...                    # Deployer private key (NEVER commit)
-
 # Sepolia
 SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
 ETHERSCAN_API_KEY=YOUR_ETHERSCAN_KEY
@@ -99,6 +96,17 @@ POLYGONSCAN_API_KEY=YOUR_POLYGONSCAN_KEY
 
 # Treasury (receives protocol fees)
 TREASURY_ADDRESS=0x...
+```
+
+**SECURITY: Export private key in shell session (never store in files)**
+
+```bash
+# Export deployer private key in your terminal session
+# This avoids storing secrets in project files
+export PRIVATE_KEY=0x...your-key-here...
+
+# Verify it's set (shows masked value)
+echo "PRIVATE_KEY is ${PRIVATE_KEY:0:6}...${PRIVATE_KEY: -4}"
 ```
 
 ### 3. Verify Configuration

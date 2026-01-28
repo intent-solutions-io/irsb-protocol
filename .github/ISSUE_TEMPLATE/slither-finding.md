@@ -3,7 +3,7 @@ name: Slither Finding
 about: Track findings from Slither static analysis
 title: "[SLITHER] "
 labels: security, static-analysis
-assignees: jeremy
+assignees: ""
 ---
 
 ## Finding Summary
