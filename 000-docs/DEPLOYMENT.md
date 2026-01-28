@@ -199,9 +199,25 @@ forge script script/DeployAmoy.s.sol:DeployAmoy \
   -vvvv
 
 # 4. If verification failed, run manually
+# SolverRegistry (no constructor args)
 forge verify-contract <SOLVER_REGISTRY_ADDRESS> \
   src/SolverRegistry.sol:SolverRegistry \
   --chain amoy \
+  --etherscan-api-key $POLYGONSCAN_API_KEY
+
+# IntentReceiptHub (requires SolverRegistry address)
+forge verify-contract <INTENT_RECEIPT_HUB_ADDRESS> \
+  src/IntentReceiptHub.sol:IntentReceiptHub \
+  --chain amoy \
+  --constructor-args $(cast abi-encode "constructor(address)" <SOLVER_REGISTRY_ADDRESS>) \
+  --etherscan-api-key $POLYGONSCAN_API_KEY
+
+# DisputeModule (requires Hub, Registry, and Arbitrator addresses)
+# Note: Replace <ARBITRATOR_ADDRESS> with the deployer address or designated arbitrator
+forge verify-contract <DISPUTE_MODULE_ADDRESS> \
+  src/DisputeModule.sol:DisputeModule \
+  --chain amoy \
+  --constructor-args $(cast abi-encode "constructor(address,address,address)" <INTENT_RECEIPT_HUB_ADDRESS> <SOLVER_REGISTRY_ADDRESS> <ARBITRATOR_ADDRESS>) \
   --etherscan-api-key $POLYGONSCAN_API_KEY
 
 # 5. Update deployments/amoy.json with new addresses

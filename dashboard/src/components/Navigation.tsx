@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { NETWORKS, DEFAULT_NETWORK, type NetworkConfig } from '@/lib/config'
 
 const navItems = [
@@ -12,15 +12,30 @@ const navItems = [
   { name: 'Book a Call', href: '/go/book' },
 ]
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
+
 // Network selector component
 function NetworkSelector() {
   const [selectedNetwork, setSelectedNetwork] = useState(DEFAULT_NETWORK)
   const [isOpen, setIsOpen] = useState(false)
 
   const currentNetwork = NETWORKS[selectedNetwork]
-  const availableNetworks = Object.entries(NETWORKS).filter(
-    ([key, config]) => config.contracts.solverRegistry !== '0x0000000000000000000000000000000000000000'
-  )
+
+  // Memoize network lists to avoid recomputing on every render
+  const { availableNetworks, comingSoonNetworks } = useMemo(() => {
+    const available: [string, NetworkConfig][] = []
+    const comingSoon: [string, NetworkConfig][] = []
+
+    Object.entries(NETWORKS).forEach(([key, config]) => {
+      if (config.contracts.solverRegistry !== ZERO_ADDRESS) {
+        available.push([key, config])
+      } else {
+        comingSoon.push([key, config])
+      }
+    })
+
+    return { availableNetworks: available, comingSoonNetworks: comingSoon }
+  }, [])
 
   const handleNetworkChange = (networkKey: string) => {
     setSelectedNetwork(networkKey)
@@ -81,9 +96,7 @@ function NetworkSelector() {
               </button>
             ))}
             {/* Show coming soon networks */}
-            {Object.entries(NETWORKS)
-              .filter(([key, config]) => config.contracts.solverRegistry === '0x0000000000000000000000000000000000000000')
-              .map(([key, network]) => (
+            {comingSoonNetworks.map(([key, network]) => (
                 <div
                   key={key}
                   className="w-full px-3 py-2 text-left text-sm text-zinc-500 cursor-not-allowed"

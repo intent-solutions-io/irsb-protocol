@@ -60,7 +60,7 @@ export const DEFAULT_NETWORK = process.env.NEXT_PUBLIC_DEFAULT_NETWORK || 'sepol
 // Get current network config
 export function getNetworkConfig(network?: string): NetworkConfig {
   const networkKey = network || DEFAULT_NETWORK;
-  return NETWORKS[networkKey] || NETWORKS.sepolia;
+  return NETWORKS[networkKey] || NETWORKS[DEFAULT_NETWORK];
 }
 
 // Legacy config export for backwards compatibility
