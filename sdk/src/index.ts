@@ -9,7 +9,7 @@
 // Main client
 export { IRSBClient, type IRSBClientConfig } from './client';
 
-// Types
+// V1 Types
 export {
   // Enums
   SolverStatus,
@@ -31,11 +31,76 @@ export {
   CONSTANTS,
 } from './types';
 
+// V2 Types and Helpers
+export {
+  // Enums
+  PrivacyLevel,
+  ReceiptV2Status,
+  OptimisticDisputeStatus,
+  EscrowStatus,
+  // Structs
+  type IntentReceiptV2,
+  type OptimisticDispute,
+  type Escrow,
+  // Input types
+  type PostReceiptV2Params,
+  type BuildReceiptV2Params,
+  type ReceiptV2TypedData,
+  type EIP712Domain,
+  // Constants
+  V2_CONSTANTS,
+  // Receipt building
+  RECEIPT_V2_TYPES,
+  buildReceiptV2,
+  getEIP712Domain,
+  getReceiptV2TypedData,
+  signReceiptV2,
+  buildAndSignReceiptV2,
+  computeReceiptV2Id,
+  verifyReceiptV2Signature,
+  createTestReceiptV2,
+} from './v2';
+
+// Privacy Module
+export {
+  // Types
+  type MetadataPayload,
+  type CommitmentResult,
+  type PointerValidation,
+  type EvidenceBundle,
+  type PrivacyConfig,
+  type AccessControlCondition,
+  type EncryptedPayload,
+  // Commitment functions
+  METADATA_SCHEMA_VERSION,
+  generateNonce,
+  canonicalize,
+  generateMetadataCommitment,
+  verifyCommitment,
+  validatePointer,
+  formatCiphertextPointer,
+  combineHashes,
+  computeRequestFingerprint,
+  computeTermsHash,
+  // Lit Protocol helpers
+  type LitConfig,
+  createBalanceCondition,
+  createTokenBalanceCondition,
+  createNFTOwnershipCondition,
+  createAddressCondition,
+  createReceiptAccessConditions,
+  createPrivacyConfig,
+  isLitAvailable,
+} from './privacy';
+
 // ABIs (for advanced usage)
 export {
   SOLVER_REGISTRY_ABI,
   INTENT_RECEIPT_HUB_ABI,
   DISPUTE_MODULE_ABI,
+  RECEIPT_V2_EXTENSION_ABI,
+  OPTIMISTIC_DISPUTE_MODULE_ABI,
+  ESCROW_VAULT_ABI,
 } from './contracts/abis';
 
 // Wallet API
