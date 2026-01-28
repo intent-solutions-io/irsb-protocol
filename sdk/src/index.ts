@@ -28,6 +28,9 @@ export {
   // Config
   type ChainConfig,
   CHAIN_CONFIGS,
+  CHAIN_ID_TO_NETWORK,
+  SUPPORTED_CHAIN_IDS,
+  getChainConfig,
   CONSTANTS,
 } from './types';
 
