@@ -624,7 +624,7 @@ contract IntentReceiptHubTest is Test {
     }
 
     function test_SweepForfeitedBonds_RevertNoFunds() public {
-        vm.expectRevert("No funds to sweep");
+        vm.expectRevert(abi.encodeWithSignature("NoForfeitedBonds()"));
         hub.sweepForfeitedBonds(address(0x999));
     }
 
