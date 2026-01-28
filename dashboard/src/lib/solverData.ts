@@ -20,9 +20,9 @@ interface SubgraphSolver {
   bondBalance: string
   status: string
   intentScore: number
-  fillRate: number
-  avgSettlementTime: number
-  totalFills: number
+  fillRate: string // Subgraph returns BigDecimal as string
+  avgSettlementTime: string // Subgraph returns BigInt as string
+  totalFills: string // Subgraph returns BigInt as string
   lastActiveTime: string
   slashEvents: Array<{ id: string }>
 }
@@ -114,9 +114,9 @@ async function transformSolver(s: SubgraphSolver): Promise<Solver> {
     address: s.id,
     name,
     intentScore: s.intentScore || 0,
-    fillRate: s.fillRate || 0,
-    avgSpeed: s.avgSettlementTime || 0,
-    totalIntents: s.totalFills || 0,
+    fillRate: parseFloat(s.fillRate || '0'),
+    avgSpeed: parseInt(s.avgSettlementTime || '0', 10),
+    totalIntents: parseInt(s.totalFills || '0', 10),
     slashingEvents: s.slashEvents?.length || 0,
     bondAmount: (parseFloat(s.bondBalance || '0') / 1e18).toFixed(2),
     status: mapStatus(s.status),
@@ -131,8 +131,6 @@ export async function fetchSolverData(): Promise<Solver[]> {
   try {
     const data = await graphqlClient.request<SubgraphResponse>(SOLVERS_QUERY, {
       first: 100,
-      orderBy: 'intentScore',
-      orderDirection: 'desc',
     })
 
     if (data.solvers && data.solvers.length > 0) {

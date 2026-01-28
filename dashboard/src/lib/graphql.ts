@@ -13,13 +13,13 @@ const SUBGRAPH_URL = process.env.NEXT_PUBLIC_SUBGRAPH_URL || SUBGRAPH_URLS.studi
 
 export const graphqlClient = new GraphQLClient(SUBGRAPH_URL)
 
-// Solver queries
+// Solver queries - using inline enum values (The Graph doesn't accept String for orderBy)
 export const SOLVERS_QUERY = `
-  query GetSolvers($first: Int!, $orderBy: String!, $orderDirection: String!) {
+  query GetSolvers($first: Int!) {
     solvers(
       first: $first
-      orderBy: $orderBy
-      orderDirection: $orderDirection
+      orderBy: intentScore
+      orderDirection: desc
     ) {
       id
       operator
