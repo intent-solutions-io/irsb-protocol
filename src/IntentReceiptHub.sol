@@ -63,6 +63,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @notice Total amount slashed
     uint256 public totalSlashed;
 
+    /// @notice Total forfeited bonds available for withdrawal
+    /// @dev Tracks bonds from rejected disputes, safe to sweep without affecting active disputes
+    uint256 public totalForfeitedBonds;
+
     /// @notice Challenger bonds by receipt ID
     mapping(bytes32 => uint256) private _challengerBonds;
 
@@ -272,9 +276,11 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
 
             // Challenger loses their bond (griefing protection)
+            // Track forfeited amount for safe withdrawal
+            totalForfeitedBonds += challengerBond;
             _challengerBonds[receiptId] = 0;
-            // Bond stays in contract, can be swept to treasury
 
+            emit ChallengerBondForfeited(receiptId, dispute.challenger, challengerBond);
             emit DisputeResolved(receiptId, receipt.solverId, false, 0);
         }
     }
@@ -450,12 +456,17 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @notice Sweep forfeited challenger bonds to treasury
+    /// @dev Only sweeps bonds from rejected disputes, not active challenger bonds
     /// @param treasury Address to receive funds
     function sweepForfeitedBonds(address treasury) external onlyOwner nonReentrant {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No funds to sweep");
-        (bool sent,) = treasury.call{ value: balance }("");
-        require(sent, "Transfer failed");
+        uint256 amount = totalForfeitedBonds;
+        if (amount == 0) revert NoForfeitedBonds();
+
+        totalForfeitedBonds = 0;
+        (bool sent,) = treasury.call{ value: amount }("");
+        if (!sent) revert SweepTransferFailed();
+
+        emit ForfeitedBondsSwept(treasury, amount);
     }
 
     /// @notice Get challenger bond amount for a receipt

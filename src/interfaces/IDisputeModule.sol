@@ -28,6 +28,16 @@ interface IDisputeModule {
     error ArbitrationFeeTooLow();
     error DisputeAlreadyResolved();
     error ArbitrationTimeout();
+    error NoFeesToWithdraw();
+    error FeeWithdrawalFailed();
+
+    // ============ Events (Additional) ============
+
+    /// @notice Emitted when an escalator's arbitration fee is forfeited
+    event ArbitrationFeeForfeited(bytes32 indexed disputeId, address indexed escalator, uint256 amount);
+
+    /// @notice Emitted when forfeited fees are withdrawn to treasury
+    event FeesWithdrawn(address indexed treasury, uint256 amount);
 
     // ============ External Functions ============
 
