@@ -123,10 +123,20 @@ contract ERC8004Adapter is IERC8004, Ownable {
         bytes32 evidenceHash,
         bytes memory metadata
     ) internal {
-        uint256 timestamp = block.timestamp;
+        _emitSignalWithTimestamp(taskId, agentId, outcome, evidenceHash, metadata, block.timestamp);
+    }
 
-        // Emit the validation signal event
-        emit ValidationSignalEmitted(taskId, agentId, outcome, timestamp);
+    /// @notice Internal signal emission with custom timestamp
+    function _emitSignalWithTimestamp(
+        bytes32 taskId,
+        bytes32 agentId,
+        ValidationOutcome outcome,
+        bytes32 evidenceHash,
+        bytes memory metadata,
+        uint256 timestamp
+    ) internal {
+        // Emit the validation signal event with all data for off-chain consumers
+        emit ValidationSignalEmitted(taskId, agentId, outcome, timestamp, evidenceHash, metadata);
 
         // Try to record to registry (non-reverting)
         if (address(registry) != address(0)) {
@@ -150,7 +160,9 @@ contract ERC8004Adapter is IERC8004, Ownable {
 
     /// @inheritdoc IERC8004
     function emitValidationSignal(ValidationSignal calldata signal) external onlyAuthorizedHub {
-        _emitSignal(signal.taskId, signal.agentId, signal.outcome, signal.evidenceHash, signal.metadata);
+        // Use signal's timestamp if provided (non-zero), otherwise use block.timestamp
+        uint256 timestamp = signal.timestamp > 0 ? signal.timestamp : block.timestamp;
+        _emitSignalWithTimestamp(signal.taskId, signal.agentId, signal.outcome, signal.evidenceHash, signal.metadata, timestamp);
     }
 
     /// @inheritdoc IERC8004

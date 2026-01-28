@@ -2,6 +2,7 @@
 pragma solidity ^0.8.25;
 
 import { Test } from "forge-std/Test.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { ERC8004Adapter } from "../src/adapters/ERC8004Adapter.sol";
 import { MockERC8004Registry } from "../src/mocks/MockERC8004Registry.sol";
 import { IERC8004 } from "../src/interfaces/IERC8004.sol";
@@ -19,7 +20,12 @@ contract ERC8004AdapterTest is Test {
     bytes32 public solverId = keccak256("solver-1");
 
     event ValidationSignalEmitted(
-        bytes32 indexed taskId, bytes32 indexed agentId, IERC8004.ValidationOutcome outcome, uint256 timestamp
+        bytes32 indexed taskId,
+        bytes32 indexed agentId,
+        IERC8004.ValidationOutcome outcome,
+        uint256 timestamp,
+        bytes32 evidenceHash,
+        bytes metadata
     );
     event ValidationRecorded(bytes32 indexed taskId, bytes32 indexed agentId, address indexed registry);
     event HubAuthorizationChanged(address indexed hub, bool authorized);
@@ -71,7 +77,7 @@ contract ERC8004AdapterTest is Test {
 
     function test_SignalFinalized_EmitsEvent() public {
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Finalized, block.timestamp);
+        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Finalized, block.timestamp, bytes32(0), "");
 
         vm.prank(hub);
         adapter.signalFinalized(receiptId, solverId);
@@ -117,7 +123,7 @@ contract ERC8004AdapterTest is Test {
         uint256 amount = 1 ether;
 
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Slashed, block.timestamp);
+        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Slashed, block.timestamp, bytes32(0), abi.encode(amount));
 
         vm.prank(hub);
         adapter.signalSlashed(receiptId, solverId, amount);
@@ -144,7 +150,7 @@ contract ERC8004AdapterTest is Test {
 
     function test_SignalDisputeWon_EmitsEvent() public {
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeWon, block.timestamp);
+        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeWon, block.timestamp, bytes32(0), "");
 
         vm.prank(hub);
         adapter.signalDisputeWon(receiptId, solverId);
@@ -173,7 +179,7 @@ contract ERC8004AdapterTest is Test {
         uint256 slashAmount = 0.5 ether;
 
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeLost, block.timestamp);
+        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeLost, block.timestamp, bytes32(0), abi.encode(slashAmount));
 
         vm.prank(hub);
         adapter.signalDisputeLost(receiptId, solverId, slashAmount);
@@ -297,7 +303,7 @@ contract ERC8004AdapterTest is Test {
 
     function test_SetAuthorizedHub_RevertsNonOwner() public {
         vm.prank(unauthorized);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorized));
         adapter.setAuthorizedHub(address(0x300), true);
     }
 
@@ -323,7 +329,7 @@ contract ERC8004AdapterTest is Test {
 
     function test_SetRegistry_RevertsNonOwner() public {
         vm.prank(unauthorized);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, unauthorized));
         adapter.setRegistry(address(0x400));
     }
 

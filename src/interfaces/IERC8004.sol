@@ -36,8 +36,15 @@ interface IERC8004 {
     /// @param agentId Agent/solver identifier
     /// @param outcome Validation outcome
     /// @param timestamp When signal was emitted
+    /// @param evidenceHash Hash of supporting evidence
+    /// @param metadata Additional context data
     event ValidationSignalEmitted(
-        bytes32 indexed taskId, bytes32 indexed agentId, ValidationOutcome outcome, uint256 timestamp
+        bytes32 indexed taskId,
+        bytes32 indexed agentId,
+        ValidationOutcome outcome,
+        uint256 timestamp,
+        bytes32 evidenceHash,
+        bytes metadata
     );
 
     /// @notice Emitted when a validation is recorded to registry
