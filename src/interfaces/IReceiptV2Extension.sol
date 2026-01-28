@@ -32,6 +32,12 @@ interface IReceiptV2Extension {
     /// @notice Emitted when a V2 dispute is resolved
     event ReceiptV2DisputeResolved(bytes32 indexed receiptId, bytes32 indexed solverId, bool solverFault);
 
+    /// @notice Emitted when a challenger bond is forfeited
+    event ChallengerBondForfeited(bytes32 indexed receiptId, uint256 amount);
+
+    /// @notice Emitted when a challenger bond is returned
+    event ChallengerBondReturned(bytes32 indexed receiptId, address indexed challenger, uint256 amount);
+
     // ============ Errors ============
 
     error ReceiptV2AlreadyExists();
