@@ -237,11 +237,11 @@ cast logs $INTENT_HUB "DisputeResolved(bytes32,bytes32,bool,uint256)"
 **Actions:**
 
 1. Document griefing pattern
-2. Consider increasing challenger bond (owner action):
+2. Consider increasing challenger bond minimum (owner action):
 
 ```bash
-cast send $INTENT_HUB "setChallengerBondBps(uint256)" 1500 --private-key $OWNER_KEY
-# Increases from 10% to 15%
+cast send $INTENT_HUB "setChallengerBondMin(uint256)" 50000000000000000 --private-key $OWNER_KEY
+# Sets challenger bond minimum to 0.05 ETH (50000000000000000 wei)
 ```
 
 ### 5.2 Evidence Spam

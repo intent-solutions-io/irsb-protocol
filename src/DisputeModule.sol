@@ -324,7 +324,7 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
 
     /// @notice Withdraw forfeited arbitration fees to treasury
     /// @dev Only withdraws fees from resolved disputes where escalator lost
-    function withdrawFees() external onlyOwner {
+    function withdrawFees() external onlyOwner nonReentrant {
         uint256 amount = withdrawableFees;
         if (amount == 0) revert NoFeesToWithdraw();
 
