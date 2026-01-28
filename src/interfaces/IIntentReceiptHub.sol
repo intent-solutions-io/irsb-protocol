@@ -43,6 +43,16 @@ interface IIntentReceiptHub {
     error DisputeAlreadyResolved();
     error InsufficientChallengerBond();
     error ChallengerBondTransferFailed();
+    error NoForfeitedBonds();
+    error SweepTransferFailed();
+
+    // ============ Events (Additional) ============
+
+    /// @notice Emitted when a challenger's bond is forfeited
+    event ChallengerBondForfeited(bytes32 indexed receiptId, address indexed challenger, uint256 amount);
+
+    /// @notice Emitted when forfeited bonds are swept to treasury
+    event ForfeitedBondsSwept(address indexed treasury, uint256 amount);
 
     // ============ External Functions ============
 

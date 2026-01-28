@@ -57,6 +57,10 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     /// @notice Arbitration fees collected by dispute ID
     mapping(bytes32 => uint256) private _arbitrationFees;
 
+    /// @notice Total forfeited fees available for withdrawal
+    /// @dev Tracks fees from resolved disputes where escalator lost, safe to withdraw
+    uint256 public withdrawableFees;
+
     /// @notice Treasury for collected fees
     address public treasury;
 
@@ -176,8 +180,12 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
             Types.Solver memory solver = solverRegistry.getSolver(dispute.solverId);
             solverRegistry.unlockBond(dispute.solverId, solver.lockedBalance);
 
-            // Escalator loses fee (sent to treasury)
+            // Escalator loses fee - track for safe withdrawal
+            uint256 forfeitedFee = _arbitrationFees[disputeId];
+            withdrawableFees += forfeitedFee;
             _arbitrationFees[disputeId] = 0;
+
+            emit ArbitrationFeeForfeited(disputeId, _escalators[disputeId], forfeitedFee);
         }
 
         // Update receipt status in IntentReceiptHub
@@ -314,13 +322,17 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
         solverRegistry = ISolverRegistry(_solverRegistry);
     }
 
-    /// @notice Withdraw collected arbitration fees to treasury
-    function withdrawFees() external onlyOwner {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No fees to withdraw");
+    /// @notice Withdraw forfeited arbitration fees to treasury
+    /// @dev Only withdraws fees from resolved disputes where escalator lost
+    function withdrawFees() external onlyOwner nonReentrant {
+        uint256 amount = withdrawableFees;
+        if (amount == 0) revert NoFeesToWithdraw();
 
-        (bool success,) = payable(treasury).call{ value: balance }("");
-        require(success, "Withdrawal failed");
+        withdrawableFees = 0;
+        (bool success,) = payable(treasury).call{ value: amount }("");
+        if (!success) revert FeeWithdrawalFailed();
+
+        emit FeesWithdrawn(treasury, amount);
     }
 
     /// @notice Receive ETH for arbitration fees

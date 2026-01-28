@@ -115,22 +115,58 @@ export interface ChallengeParams {
 
 export interface ChainConfig {
   chainId: number;
+  name: string;
   rpcUrl: string;
+  explorer: string;
+  nativeToken: string;
   solverRegistry: string;
   intentReceiptHub: string;
   disputeModule: string;
+  erc8004Adapter?: string;
 }
 
 export const CHAIN_CONFIGS: Record<string, ChainConfig> = {
   sepolia: {
     chainId: 11155111,
+    name: 'Sepolia',
     rpcUrl: 'https://rpc.sepolia.org',
+    explorer: 'https://sepolia.etherscan.io',
+    nativeToken: 'ETH',
     solverRegistry: '0xB6ab964832808E49635fF82D1996D6a888ecB745',
     intentReceiptHub: '0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c',
     disputeModule: '0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D',
   },
+  amoy: {
+    chainId: 80002,
+    name: 'Polygon Amoy',
+    rpcUrl: 'https://rpc-amoy.polygon.technology',
+    explorer: 'https://amoy.polygonscan.com',
+    nativeToken: 'POL',
+    // Placeholder addresses - update after deployment
+    solverRegistry: '0x0000000000000000000000000000000000000000',
+    intentReceiptHub: '0x0000000000000000000000000000000000000000',
+    disputeModule: '0x0000000000000000000000000000000000000000',
+    erc8004Adapter: '0x0000000000000000000000000000000000000000',
+  },
   // mainnet: { ... } // Add after mainnet deployment
 };
+
+// Chain ID to network name mapping
+export const CHAIN_ID_TO_NETWORK: Record<number, string> = {
+  11155111: 'sepolia',
+  80002: 'amoy',
+  // 1: 'mainnet',
+  // 137: 'polygon',
+};
+
+// Get chain config by chain ID
+export function getChainConfig(chainId: number): ChainConfig | undefined {
+  const networkName = CHAIN_ID_TO_NETWORK[chainId];
+  return networkName ? CHAIN_CONFIGS[networkName] : undefined;
+}
+
+// Supported chain IDs
+export const SUPPORTED_CHAIN_IDS = Object.keys(CHAIN_ID_TO_NETWORK).map(Number);
 
 // ============ Constants ============
 
