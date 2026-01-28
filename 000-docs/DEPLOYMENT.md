@@ -1,407 +1,502 @@
-# IRSB Protocol - Deployment Runbook
+# IRSB Protocol Deployment Runbook
 
-**Last Updated:** 2026-01-28
-**Maintainer:** jeremy@intentsolutions.io
-
----
+Complete guide for deploying IRSB Protocol to supported networks.
 
 ## Table of Contents
 
-1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Environment Setup](#environment-setup)
-4. [Pre-Deployment Checklist](#pre-deployment-checklist)
-5. [Sepolia Deployment](#sepolia-deployment)
-6. [Polygon Amoy Deployment](#polygon-amoy-deployment)
-7. [Post-Deployment Verification](#post-deployment-verification)
-8. [Contract Verification](#contract-verification)
-9. [Multisig Transition](#multisig-transition)
-10. [Rollback Procedures](#rollback-procedures)
-11. [Emergency Procedures](#emergency-procedures)
-
----
-
-## Overview
-
-IRSB Protocol consists of the following deployable components:
-
-| Component | Type | Networks |
-|-----------|------|----------|
-| SolverRegistry | Core Contract | Sepolia, Amoy |
-| IntentReceiptHub | Core Contract | Sepolia, Amoy |
-| DisputeModule | Core Contract | Sepolia, Amoy |
-| ReceiptV2Extension | Extension | Sepolia, Amoy |
-| EscrowVault | Extension | Sepolia, Amoy |
-| OptimisticDisputeModule | Extension | Sepolia, Amoy |
-| ERC8004Adapter | Adapter | Sepolia, Amoy |
-
-**Deployment Order:**
-```
-1. SolverRegistry
-2. IntentReceiptHub
-3. DisputeModule
-4. [Set authorizedCaller on SolverRegistry]
-5. ReceiptV2Extension (v2)
-6. EscrowVault (v2)
-7. OptimisticDisputeModule (v2)
-8. ERC8004Adapter (v2)
-```
+- [Prerequisites](#prerequisites)
+- [Environment Setup](#environment-setup)
+- [Network Reference](#network-reference)
+- [Deployment Steps](#deployment-steps)
+  - [Sepolia Deployment](#sepolia-deployment)
+  - [Polygon Amoy Deployment](#polygon-amoy-deployment)
+- [Post-Deployment](#post-deployment)
+- [Verification](#verification)
+- [Rollback Procedures](#rollback-procedures)
+- [Multisig Transition](#multisig-transition)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Prerequisites
 
-### Required Tools
-- [Foundry](https://book.getfoundry.sh/getting-started/installation) (forge, cast)
-- Node.js 20+
-- Git
+### Software Requirements
 
-### Required Accounts
-- Deployer wallet with sufficient ETH/POL
-- Etherscan API key (for Sepolia verification)
-- Polygonscan API key (for Amoy verification)
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Foundry | Latest | Solidity development |
+| Node.js | 18+ | SDK and dashboard |
+| Git | 2.40+ | Version control |
 
-### Required Access
-- Repository write access
-- RPC endpoint access (Alchemy/Infura)
+### Installation
+
+```bash
+# Install Foundry
+curl -L https://foundry.paradigm.xyz | bash
+foundryup
+
+# Verify installation
+forge --version
+cast --version
+```
+
+### Wallet Requirements
+
+- Deployer wallet with:
+  - Sepolia: ≥0.2 ETH
+  - Amoy: ≥0.5 POL
+- Private key (without 0x prefix)
+- Hardware wallet recommended for mainnet
 
 ---
 
 ## Environment Setup
 
-### 1. Clone and Install
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/intent-solutions-io/irsb-protocol.git
 cd irsb-protocol
-forge install
 ```
 
-### 2. Configure Environment
+### 2. Install Dependencies
+
+```bash
+# Solidity dependencies
+forge install
+
+# SDK dependencies
+cd sdk && npm install && cd ..
+
+# Dashboard dependencies (optional)
+cd dashboard && npm install && cd ..
+```
+
+### 3. Configure Environment
 
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` with your RPC and API values (but NOT private keys):
+Edit `.env` with your values:
 
 ```bash
+# Required for all deployments
+PRIVATE_KEY=your_private_key_without_0x
+
 # Sepolia
 SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
-ETHERSCAN_API_KEY=YOUR_ETHERSCAN_KEY
+ETHERSCAN_API_KEY=your_etherscan_api_key
 
 # Polygon Amoy
-AMOY_RPC_URL=https://polygon-amoy.g.alchemy.com/v2/YOUR_KEY
-POLYGONSCAN_API_KEY=YOUR_POLYGONSCAN_KEY
-
-# Treasury (receives protocol fees)
-TREASURY_ADDRESS=0x...
+AMOY_RPC_URL=https://rpc-amoy.polygon.technology
+POLYGONSCAN_API_KEY=your_polygonscan_api_key
 ```
 
-**SECURITY: Export private key in shell session (never store in files)**
+### 4. Verify Configuration
 
 ```bash
-# Export deployer private key in your terminal session
-# This avoids storing secrets in project files
-export PRIVATE_KEY=0x...your-key-here...
+# Load environment
+source .env
 
-# Verify it's set (shows masked value)
-echo "PRIVATE_KEY is ${PRIVATE_KEY:0:6}...${PRIVATE_KEY: -4}"
-```
+# Test RPC connections
+cast chain-id --rpc-url $SEPOLIA_RPC_URL    # Should return 11155111
+cast chain-id --rpc-url $AMOY_RPC_URL       # Should return 80002
 
-### 3. Verify Configuration
-
-```bash
 # Check deployer balance
-cast balance $(cast wallet address --private-key $PRIVATE_KEY) --rpc-url $SEPOLIA_RPC_URL
-
-# Expected: > 0.5 ETH for deployment + gas
+cast balance $(cast wallet address $PRIVATE_KEY) --rpc-url $SEPOLIA_RPC_URL
+cast balance $(cast wallet address $PRIVATE_KEY) --rpc-url $AMOY_RPC_URL
 ```
 
 ---
 
-## Pre-Deployment Checklist
+## Network Reference
 
-Before any deployment:
+| Network | Chain ID | Native Token | Explorer | Faucet |
+|---------|----------|--------------|----------|--------|
+| Sepolia | 11155111 | ETH | [sepolia.etherscan.io](https://sepolia.etherscan.io) | [sepoliafaucet.com](https://sepoliafaucet.com) |
+| Amoy | 80002 | POL | [amoy.polygonscan.com](https://amoy.polygonscan.com) | [faucet.polygon.technology](https://faucet.polygon.technology) |
 
-- [ ] All tests pass: `forge test`
-- [ ] Format check passes: `forge fmt --check`
-- [ ] Slither has no critical findings: `slither .`
-- [ ] Gas report reviewed: `forge test --gas-report`
-- [ ] Deployer has sufficient balance
-- [ ] Environment variables set correctly
-- [ ] Team notified of pending deployment
-- [ ] Deployment window confirmed (avoid high gas periods)
+### RPC Endpoints
+
+**Sepolia:**
+- Public: `https://rpc.sepolia.org`
+- Alchemy: `https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY`
+- Infura: `https://sepolia.infura.io/v3/YOUR_PROJECT_ID`
+
+**Polygon Amoy:**
+- Public: `https://rpc-amoy.polygon.technology`
+- Alchemy: `https://polygon-amoy.g.alchemy.com/v2/YOUR_KEY`
 
 ---
 
-## Sepolia Deployment
+## Deployment Steps
 
-### Existing Deployment (v1)
+### Pre-Deployment Checklist
 
-| Contract | Address |
-|----------|---------|
-| SolverRegistry | `0xB6ab964832808E49635fF82D1996D6a888ecB745` |
-| IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
-| DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
+- [ ] Environment variables configured
+- [ ] Deployer wallet funded
+- [ ] RPC endpoints working
+- [ ] All tests passing: `forge test`
+- [ ] Code formatted: `forge fmt --check`
+- [ ] Git status clean
 
-### Deploy New Extensions (v2)
+### Sepolia Deployment
 
 ```bash
-# Dry run first
-forge script script/DeployExtensions.s.sol:DeployExtensions \
-  --rpc-url $SEPOLIA_RPC_URL \
-  -vvvv
+# 1. Run tests
+forge test
 
-# If dry run succeeds, broadcast
-forge script script/DeployExtensions.s.sol:DeployExtensions \
+# 2. Dry-run (simulation)
+forge script script/Deploy.s.sol:DeploySepolia \
+  --rpc-url $SEPOLIA_RPC_URL \
+  -vvv
+
+# 3. Deploy (broadcast transactions)
+forge script script/Deploy.s.sol:DeploySepolia \
   --rpc-url $SEPOLIA_RPC_URL \
   --broadcast \
-  --verify \
-  -vvvv
-```
-
-### Record Deployment
-
-After successful deployment:
-
-1. Update `deployments/sepolia.json`
-2. Commit addresses to repository
-3. Update SDK constants
-4. Update subgraph configuration
-
----
-
-## Polygon Amoy Deployment
-
-### Prerequisites
-- POL tokens for gas (faucet: https://faucet.polygon.technology/)
-- Polygonscan API key configured
-
-### Deploy
-
-```bash
-# Dry run
-forge script script/DeployAmoy.s.sol:DeployAmoy \
-  --rpc-url $AMOY_RPC_URL \
   -vvvv
 
-# Broadcast
-forge script script/DeployAmoy.s.sol:DeployAmoy \
-  --rpc-url $AMOY_RPC_URL \
-  --broadcast \
-  --verify \
-  --verifier-url https://api-amoy.polygonscan.com/api \
-  -vvvv
-```
-
-### Record Deployment
-
-1. Update `deployments/amoy.json`
-2. Update SDK with Amoy addresses
-3. Configure subgraph for Amoy
-
----
-
-## Post-Deployment Verification
-
-### 1. Verify Contract Code
-
-```bash
-# Sepolia
-forge verify-contract <CONTRACT_ADDRESS> SolverRegistry \
-  --chain sepolia \
-  --etherscan-api-key $ETHERSCAN_API_KEY
-
-# Amoy
-forge verify-contract <CONTRACT_ADDRESS> SolverRegistry \
-  --chain polygon-amoy \
-  --verifier-url https://api-amoy.polygonscan.com/api \
-  --etherscan-api-key $POLYGONSCAN_API_KEY
-```
-
-### 2. Verify Authorization Setup
-
-```bash
-# Check authorizedCaller is set
-cast call <REGISTRY_ADDRESS> "authorizedCaller(address)(bool)" <HUB_ADDRESS> --rpc-url $SEPOLIA_RPC_URL
-# Expected: true
-
-cast call <REGISTRY_ADDRESS> "authorizedCaller(address)(bool)" <DISPUTE_MODULE_ADDRESS> --rpc-url $SEPOLIA_RPC_URL
-# Expected: true
-```
-
-### 3. Verify Parameters
-
-```bash
-# Check minimum bond
-cast call <REGISTRY_ADDRESS> "MINIMUM_BOND()(uint256)" --rpc-url $SEPOLIA_RPC_URL
-# Expected: 100000000000000000 (0.1 ETH)
-
-# Check challenge window
-cast call <HUB_ADDRESS> "challengeWindow()(uint256)" --rpc-url $SEPOLIA_RPC_URL
-# Expected: 3600 (1 hour)
-```
-
-### 4. Integration Test
-
-```bash
-# Run integration tests against deployed contracts
-SEPOLIA_REGISTRY=0x... SEPOLIA_HUB=0x... forge test --match-path test/integration/*.sol --fork-url $SEPOLIA_RPC_URL
-```
-
----
-
-## Contract Verification
-
-### Etherscan (Sepolia)
-
-```bash
-forge verify-contract \
-  --chain sepolia \
-  --compiler-version v0.8.24 \
-  --num-of-optimizations 200 \
-  --constructor-args $(cast abi-encode "constructor(address,address)" $TREASURY_ADDRESS $REGISTRY_ADDRESS) \
-  <CONTRACT_ADDRESS> \
-  src/IntentReceiptHub.sol:IntentReceiptHub \
-  --etherscan-api-key $ETHERSCAN_API_KEY
-```
-
-### Polygonscan (Amoy)
-
-```bash
-forge verify-contract \
-  --chain polygon-amoy \
-  --compiler-version v0.8.24 \
-  --num-of-optimizations 200 \
-  <CONTRACT_ADDRESS> \
+# 4. Verify contracts
+forge verify-contract <SOLVER_REGISTRY_ADDRESS> \
   src/SolverRegistry.sol:SolverRegistry \
-  --verifier-url https://api-amoy.polygonscan.com/api \
+  --chain sepolia \
+  --etherscan-api-key $ETHERSCAN_API_KEY
+
+forge verify-contract <INTENT_RECEIPT_HUB_ADDRESS> \
+  src/IntentReceiptHub.sol:IntentReceiptHub \
+  --chain sepolia \
+  --constructor-args $(cast abi-encode "constructor(address)" <SOLVER_REGISTRY_ADDRESS>) \
+  --etherscan-api-key $ETHERSCAN_API_KEY
+
+forge verify-contract <DISPUTE_MODULE_ADDRESS> \
+  src/DisputeModule.sol:DisputeModule \
+  --chain sepolia \
+  --constructor-args $(cast abi-encode "constructor(address,address,address)" <HUB_ADDRESS> <REGISTRY_ADDRESS> <ARBITRATOR_ADDRESS>) \
+  --etherscan-api-key $ETHERSCAN_API_KEY
+
+# 5. Update deployments/sepolia.json with new addresses
+```
+
+### Polygon Amoy Deployment
+
+```bash
+# 1. Run tests
+forge test
+
+# 2. Dry-run (simulation)
+forge script script/DeployAmoy.s.sol:DeployAmoy \
+  --rpc-url $AMOY_RPC_URL \
+  -vvv
+
+# 3. Deploy with verification
+forge script script/DeployAmoy.s.sol:DeployAmoy \
+  --rpc-url $AMOY_RPC_URL \
+  --broadcast \
+  --verify \
+  --etherscan-api-key $POLYGONSCAN_API_KEY \
+  -vvvv
+
+# 4. If verification failed, run manually
+# SolverRegistry (no constructor args)
+forge verify-contract <SOLVER_REGISTRY_ADDRESS> \
+  src/SolverRegistry.sol:SolverRegistry \
+  --chain amoy \
   --etherscan-api-key $POLYGONSCAN_API_KEY
+
+# IntentReceiptHub (requires SolverRegistry address)
+forge verify-contract <INTENT_RECEIPT_HUB_ADDRESS> \
+  src/IntentReceiptHub.sol:IntentReceiptHub \
+  --chain amoy \
+  --constructor-args $(cast abi-encode "constructor(address)" <SOLVER_REGISTRY_ADDRESS>) \
+  --etherscan-api-key $POLYGONSCAN_API_KEY
+
+# DisputeModule (requires Hub, Registry, and Arbitrator addresses)
+# Note: Replace <ARBITRATOR_ADDRESS> with the deployer address or designated arbitrator
+forge verify-contract <DISPUTE_MODULE_ADDRESS> \
+  src/DisputeModule.sol:DisputeModule \
+  --chain amoy \
+  --constructor-args $(cast abi-encode "constructor(address,address,address)" <INTENT_RECEIPT_HUB_ADDRESS> <SOLVER_REGISTRY_ADDRESS> <ARBITRATOR_ADDRESS>) \
+  --etherscan-api-key $POLYGONSCAN_API_KEY
+
+# 5. Update deployments/amoy.json with new addresses
 ```
 
 ---
 
-## Multisig Transition
+## Post-Deployment
 
-> **Note:** Production deployments should transfer ownership to a Gnosis Safe multisig.
+### 1. Update Deployment Records
 
-### Setup Gnosis Safe
+Edit `deployments/<network>.json`:
 
-1. Create Safe at https://app.safe.global
-2. Add signers (minimum 3 recommended)
-3. Set threshold (2-of-3 or 3-of-5)
-
-### Transfer Ownership
-
-```bash
-# For each contract:
-cast send <CONTRACT_ADDRESS> "transferOwnership(address)" <SAFE_ADDRESS> \
-  --private-key $PRIVATE_KEY \
-  --rpc-url $SEPOLIA_RPC_URL
+```json
+{
+  "network": "amoy",
+  "chainId": 80002,
+  "nativeToken": "POL",
+  "deployedAt": "2026-01-28T12:00:00Z",
+  "deployer": "0xYourDeployerAddress",
+  "contracts": {
+    "SolverRegistry": "0xNewAddress",
+    "IntentReceiptHub": "0xNewAddress",
+    "DisputeModule": "0xNewAddress",
+    "ERC8004Adapter": "0xNewAddress"
+  },
+  "polygonscan": {
+    "SolverRegistry": "https://amoy.polygonscan.com/address/0xNewAddress",
+    "IntentReceiptHub": "https://amoy.polygonscan.com/address/0xNewAddress",
+    "DisputeModule": "https://amoy.polygonscan.com/address/0xNewAddress",
+    "ERC8004Adapter": "https://amoy.polygonscan.com/address/0xNewAddress"
+  }
+}
 ```
 
-### Verify Transfer
+### 2. Update SDK Configuration
+
+Edit `sdk/src/types.ts`:
+
+```typescript
+amoy: {
+  chainId: 80002,
+  name: 'Polygon Amoy',
+  rpcUrl: 'https://rpc-amoy.polygon.technology',
+  explorer: 'https://amoy.polygonscan.com',
+  nativeToken: 'POL',
+  solverRegistry: '0xNewAddress',
+  intentReceiptHub: '0xNewAddress',
+  disputeModule: '0xNewAddress',
+  erc8004Adapter: '0xNewAddress',
+},
+```
+
+### 3. Update Dashboard Configuration
+
+Edit `dashboard/src/lib/config.ts`:
+
+```typescript
+amoy: {
+  chainId: 80002,
+  name: 'Polygon Amoy',
+  // ... update contract addresses
+}
+```
+
+### 4. Update Subgraph (if applicable)
+
+Edit `subgraph/networks.json` with new addresses, then:
 
 ```bash
-cast call <CONTRACT_ADDRESS> "owner()(address)" --rpc-url $SEPOLIA_RPC_URL
-# Expected: <SAFE_ADDRESS>
+cd subgraph
+npm run codegen
+npm run build
+npm run deploy:amoy  # If configured
+```
+
+### 5. Commit and Tag
+
+```bash
+git add deployments/ sdk/src/types.ts dashboard/src/lib/config.ts
+git commit -m "chore(deploy): update addresses for amoy deployment"
+git tag -a v1.0.0-amoy -m "Polygon Amoy deployment"
+git push origin main --tags
+```
+
+---
+
+## Verification
+
+### Verify Deployment State
+
+```bash
+# Check contract ownership
+cast call <SOLVER_REGISTRY> "owner()(address)" --rpc-url $AMOY_RPC_URL
+
+# Check authorized callers
+cast call <SOLVER_REGISTRY> "authorizedCallers(address)(bool)" <HUB_ADDRESS> --rpc-url $AMOY_RPC_URL
+
+# Check dispute module configuration
+cast call <HUB_ADDRESS> "disputeModule()(address)" --rpc-url $AMOY_RPC_URL
+
+# Check arbitrator
+cast call <DISPUTE_MODULE> "arbitrator()(address)" --rpc-url $AMOY_RPC_URL
+```
+
+### Smoke Test
+
+```bash
+# Register a test solver (requires ETH/POL)
+cast send <SOLVER_REGISTRY> \
+  "registerSolver(string,address)(bytes32)" \
+  "ipfs://QmTestMetadata" \
+  $(cast wallet address $PRIVATE_KEY) \
+  --rpc-url $AMOY_RPC_URL \
+  --private-key $PRIVATE_KEY
 ```
 
 ---
 
 ## Rollback Procedures
 
-### Scenario: Bug in New Extension
+### If Deployment Fails Mid-Way
 
-1. **Pause the extension** (if pausable):
+1. **DO NOT** redeploy partially
+2. Note which contracts deployed successfully
+3. Check transaction hashes in broadcast logs: `broadcast/<chainId>/run-latest.json`
+4. If SolverRegistry deployed but Hub failed:
+   - Redeploy Hub and DisputeModule only
+   - Manually call `setAuthorizedCaller`
+
+### If Wrong Configuration Applied
+
+1. Check owner has access
+2. Use admin functions to correct:
    ```bash
-   cast send <EXTENSION_ADDRESS> "pause()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+   # Fix authorized callers
+   cast send <SOLVER_REGISTRY> \
+     "setAuthorizedCaller(address,bool)" \
+     <CORRECT_ADDRESS> true \
+     --rpc-url $AMOY_RPC_URL \
+     --private-key $PRIVATE_KEY
    ```
 
-2. **Remove authorization** from SolverRegistry:
+### If Critical Bug Found
+
+1. **Pause if possible** (contracts have Pausable)
    ```bash
-   cast send <REGISTRY_ADDRESS> "setAuthorizedCaller(address,bool)" <EXTENSION_ADDRESS> false \
-     --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+   cast send <CONTRACT> "pause()" --rpc-url $RPC_URL --private-key $PRIVATE_KEY
    ```
-
-3. **Notify users** via Discord/Twitter
-
-4. **Deploy fixed version** (new address)
-
-### Scenario: Critical Vulnerability in Core Contract
-
-1. **Pause all contracts immediately**
-2. **Notify users** - emergency communication
-3. **Assess damage** - check for exploits
-4. **Deploy new contracts** if needed
-5. **Migrate state** via off-chain coordination
-6. **Post-mortem** - document and prevent recurrence
+2. Notify team immediately
+3. Do NOT unpause until fix deployed
+4. Deploy new contracts
+5. Migrate state if needed (coordinate with users)
 
 ---
 
-## Emergency Procedures
+## Multisig Transition
 
-### Emergency Contact
-- Protocol Lead: jeremy@intentsolutions.io
-- Discord: [IRSB Discord]
+### Recommended Multisig Setup
 
-### Pause All Contracts
+| Role | Type | Threshold |
+|------|------|-----------|
+| Owner | Gnosis Safe | 2-of-3 |
+| Arbitrator | Gnosis Safe | 2-of-3 |
+| Treasury | Gnosis Safe | 2-of-3 |
+
+### Transfer Ownership to Multisig
 
 ```bash
-# Pause SolverRegistry
-cast send $REGISTRY_ADDRESS "pause()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+# 1. Deploy Gnosis Safe (or use existing)
+# 2. Transfer ownership
+cast send <SOLVER_REGISTRY> \
+  "transferOwnership(address)" \
+  <SAFE_ADDRESS> \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY
 
-# Pause IntentReceiptHub
-cast send $HUB_ADDRESS "pause()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+cast send <HUB_ADDRESS> \
+  "transferOwnership(address)" \
+  <SAFE_ADDRESS> \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY
 
-# Pause DisputeModule
-cast send $DISPUTE_MODULE_ADDRESS "pause()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+# 3. Update arbitrator
+cast send <DISPUTE_MODULE> \
+  "setArbitrator(address)" \
+  <ARBITRATOR_SAFE_ADDRESS> \
+  --rpc-url $RPC_URL \
+  --private-key $PRIVATE_KEY
+
+# 4. Verify transfers
+cast call <SOLVER_REGISTRY> "owner()(address)" --rpc-url $RPC_URL
 ```
 
-### Unpause (After Resolution)
+### Emergency Multisig Procedures
+
+1. **Emergency Pause**: Any signer can propose, requires threshold approval
+2. **Ownership Recovery**: If keys lost, coordinate with remaining signers
+3. **Key Rotation**: Add new signer, remove old, maintain threshold
+
+---
+
+## Troubleshooting
+
+### Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `Not on Sepolia!` | Wrong network | Check RPC URL points to correct chain |
+| `Insufficient ETH` | Low balance | Fund deployer wallet |
+| `nonce too low` | Transaction already mined | Wait and retry, or increment nonce |
+| `replacement underpriced` | Gas price too low | Increase gas price or wait |
+| `execution reverted` | Contract revert | Check constructor args, verify dependencies |
+| `contract size exceeds` | Too large | Enable optimizer, reduce code |
+
+### Verification Failures
 
 ```bash
-cast send $CONTRACT_ADDRESS "unpause()" --private-key $PRIVATE_KEY --rpc-url $RPC_URL
+# If verification fails, try:
+# 1. Wait longer (etherscan may be slow)
+forge verify-contract <ADDRESS> <CONTRACT> --chain <CHAIN> --watch
+
+# 2. Check compiler version matches
+forge verify-contract <ADDRESS> <CONTRACT> --chain <CHAIN> --compiler-version 0.8.25
+
+# 3. Flatten and verify manually
+forge flatten src/Contract.sol > flat/Contract.sol
+# Then verify via etherscan UI
+```
+
+### Gas Estimation Errors
+
+```bash
+# Increase gas limit
+forge script ... --gas-estimate-multiplier 150
+
+# Or set explicit gas
+forge script ... --with-gas-price 30gwei
 ```
 
 ---
 
-## Appendix: Deployment Addresses
+## Quick Reference Commands
 
-### Sepolia Testnet
+```bash
+# Build
+forge build
 
-```json
-{
-  "chainId": 11155111,
-  "network": "sepolia",
-  "contracts": {
-    "SolverRegistry": "0xB6ab964832808E49635fF82D1996D6a888ecB745",
-    "IntentReceiptHub": "0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c",
-    "DisputeModule": "0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D",
-    "ReceiptV2Extension": "TBD",
-    "EscrowVault": "TBD",
-    "OptimisticDisputeModule": "TBD",
-    "ERC8004Adapter": "TBD"
-  },
-  "deployedAt": {
-    "SolverRegistry": 1737820800,
-    "IntentReceiptHub": 1737820800,
-    "DisputeModule": 1737820800
-  }
-}
+# Test
+forge test
+forge test -vvv  # Verbose
+
+# Deploy dry-run
+forge script script/Deploy.s.sol:DeploySepolia --rpc-url $SEPOLIA_RPC_URL -vvv
+
+# Deploy live
+forge script script/Deploy.s.sol:DeploySepolia --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
+
+# Verify
+forge verify-contract <ADDR> <CONTRACT> --chain <CHAIN> --etherscan-api-key <KEY>
+
+# Read contract
+cast call <ADDR> "functionName()(returnType)" --rpc-url $RPC_URL
+
+# Write contract
+cast send <ADDR> "functionName(args)" --rpc-url $RPC_URL --private-key $KEY
+
+# Check balance
+cast balance <ADDR> --rpc-url $RPC_URL
+
+# Get chain ID
+cast chain-id --rpc-url $RPC_URL
 ```
 
-### Polygon Amoy Testnet
+---
 
-```json
-{
-  "chainId": 80002,
-  "network": "amoy",
-  "contracts": {
-    "SolverRegistry": "TBD",
-    "IntentReceiptHub": "TBD",
-    "DisputeModule": "TBD"
-  }
-}
-```
+## Related Documents
+
+- [IRSB Protocol Overview](./001-RL-PROP-irsb-solver-accountability.md)
+- [Privacy Architecture](./PRIVACY.md)
+- [Validation Provider](./VALIDATION_PROVIDER.md)
+- [Monitoring Checklist](./MONITORING.md) *(Phase 7)*
