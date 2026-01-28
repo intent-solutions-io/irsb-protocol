@@ -288,23 +288,27 @@ const evidenceHash = generateEvidenceCommitment(evidence);
 
 ```
 ┌───────────┐      ┌───────────┐      ┌───────────┐      ┌───────────┐
-│ Challenger│      │   IRSB    │      │Arbitrator │      │  Solver   │
+│ Challenger│      │   IRSB    │      │Arbitrator │      │Lit Network│
 └─────┬─────┘      └─────┬─────┘      └─────┬─────┘      └─────┬─────┘
       │                  │                  │                  │
       │ 1. Submit evidence hash            │                  │
       │─────────────────>│                  │                  │
       │                  │                  │                  │
-      │                  │ 2. Request access│                  │
+      │                  │ 2. Notify dispute│                  │
       │                  │─────────────────>│                  │
       │                  │                  │                  │
       │                  │                  │ 3. Decrypt via Lit
-      │                  │                  │──────────────────>
-      │                  │                  │<──────────────────
-      │                  │                  │                  │
+      │                  │                  │─────────────────>│
+      │                  │                  │<─────────────────│
+      │                  │                  │  (direct access) │
       │                  │ 4. Resolve with evidence           │
       │                  │<─────────────────│                  │
       │                  │                  │                  │
 ```
+
+**Note:** The arbitrator decrypts data directly from Lit Network using their authorized
+address. No solver involvement is needed - access is granted by Lit's on-chain condition
+verification.
 
 ## Security Considerations
 

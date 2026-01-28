@@ -214,54 +214,29 @@ export function computeReceiptV2Id(receipt: Omit<IntentReceiptV2, 'solverSig' | 
 /**
  * Compute the struct hash for a V2 receipt (for signature verification)
  *
+ * Uses ethers.TypedDataEncoder for maintainable, standards-compliant hashing.
+ *
  * @param receipt - The receipt
  * @returns Struct hash
  */
 export function computeReceiptV2StructHash(receipt: Omit<IntentReceiptV2, 'solverSig' | 'clientSig'>): string {
-  const typeHash = ethers.keccak256(
-    ethers.toUtf8Bytes(
-      'IntentReceiptV2(bytes32 intentHash,bytes32 constraintsHash,bytes32 routeHash,bytes32 outcomeHash,bytes32 evidenceHash,uint64 createdAt,uint64 expiry,bytes32 solverId,address client,bytes32 metadataCommitment,string ciphertextPointer,uint8 privacyLevel,bytes32 escrowId)'
-    )
-  );
-
-  const pointerHash = ethers.keccak256(ethers.toUtf8Bytes(receipt.ciphertextPointer));
-
-  const encoded = ethers.AbiCoder.defaultAbiCoder().encode(
-    [
-      'bytes32', // typeHash
-      'bytes32', // intentHash
-      'bytes32', // constraintsHash
-      'bytes32', // routeHash
-      'bytes32', // outcomeHash
-      'bytes32', // evidenceHash
-      'uint64', // createdAt
-      'uint64', // expiry
-      'bytes32', // solverId
-      'address', // client
-      'bytes32', // metadataCommitment
-      'bytes32', // ciphertextPointer (hashed)
-      'uint8', // privacyLevel
-      'bytes32', // escrowId
-    ],
-    [
-      typeHash,
-      receipt.intentHash,
-      receipt.constraintsHash,
-      receipt.routeHash,
-      receipt.outcomeHash,
-      receipt.evidenceHash,
-      receipt.createdAt,
-      receipt.expiry,
-      receipt.solverId,
-      receipt.client,
-      receipt.metadataCommitment,
-      pointerHash,
-      receipt.privacyLevel,
-      receipt.escrowId,
-    ]
-  );
-
-  return ethers.keccak256(encoded);
+  // Use ethers.TypedDataEncoder for proper EIP-712 struct hashing
+  // This is more maintainable than manual encoding
+  return ethers.TypedDataEncoder.hashStruct('IntentReceiptV2', RECEIPT_V2_TYPES, {
+    intentHash: receipt.intentHash,
+    constraintsHash: receipt.constraintsHash,
+    routeHash: receipt.routeHash,
+    outcomeHash: receipt.outcomeHash,
+    evidenceHash: receipt.evidenceHash,
+    createdAt: receipt.createdAt.toString(),
+    expiry: receipt.expiry.toString(),
+    solverId: receipt.solverId,
+    client: receipt.client,
+    metadataCommitment: receipt.metadataCommitment,
+    ciphertextPointer: receipt.ciphertextPointer,
+    privacyLevel: receipt.privacyLevel,
+    escrowId: receipt.escrowId,
+  });
 }
 
 /**

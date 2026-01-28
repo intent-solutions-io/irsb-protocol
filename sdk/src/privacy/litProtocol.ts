@@ -353,11 +353,44 @@ export async function encryptWithLit(
   const litClient = litConfig ? await getLitClient(litConfig) : null;
 
   if (litClient) {
-    // Use real Lit encryption (implementation depends on Lit SDK version)
-    // This is a placeholder for actual Lit integration
-    console.log('Using Lit Protocol for encryption');
+    try {
+      // Use real Lit Protocol encryption
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const client = litClient as any;
+
+      // Get the chain from conditions or default to ethereum
+      const chain = conditions[0]?.chain || 'ethereum';
+
+      // Lit Protocol v3+ encryption API
+      const { ciphertext, dataToEncryptHash } = await client.encrypt({
+        accessControlConditions: conditions.map(c => ({
+          contractAddress: c.contractAddress || '',
+          standardContractType: c.standardContractType || '',
+          chain,
+          method: c.method || '',
+          parameters: c.parameters || [],
+          returnValueTest: c.returnValueTest,
+        })),
+        dataToEncrypt: new TextEncoder().encode(dataString),
+        chain,
+      });
+
+      return {
+        ciphertext: typeof ciphertext === 'string' ? ciphertext : Buffer.from(ciphertext).toString('base64'),
+        dataToEncryptHash: typeof dataToEncryptHash === 'string' ? dataToEncryptHash : ethers.hexlify(dataToEncryptHash),
+        accessControlConditions: conditions,
+        encryptionMetadata: {
+          network: litConfig?.network || DEFAULT_LIT_NETWORK,
+          keyType: 'lit-bls',
+          encryptedAt: Date.now(),
+        },
+      };
+    } catch (error) {
+      console.warn('Lit Protocol encryption failed, falling back to simulation:', error);
+      // Fall through to simulation
+    }
   }
 
-  // Fall back to simulation
+  // Fall back to simulation when Lit SDK is not available or encryption fails
   return simulateEncryption(dataString, conditions);
 }
