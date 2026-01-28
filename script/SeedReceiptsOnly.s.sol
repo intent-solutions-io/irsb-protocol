@@ -36,7 +36,7 @@ contract SeedReceiptsOnly is Script {
             uint256 needed = 0.1 ether - solver.bondBalance + 0.01 ether; // Extra buffer
             if (deployer.balance > needed + 0.01 ether) {
                 console.log("Depositing additional bond:", needed);
-                registry.depositBond{value: needed}(solverId);
+                registry.depositBond{ value: needed }(solverId);
             }
         }
 
@@ -53,21 +53,12 @@ contract SeedReceiptsOnly is Script {
 
             bytes32 messageHash = keccak256(
                 abi.encode(
-                    intentHash,
-                    constraintsHash,
-                    routeHash,
-                    outcomeHash,
-                    evidenceHash,
-                    createdAt,
-                    expiry,
-                    solverId
+                    intentHash, constraintsHash, routeHash, outcomeHash, evidenceHash, createdAt, expiry, solverId
                 )
             );
 
             // Sign the eth-prefixed hash
-            bytes32 ethSignedHash = keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-            );
+            bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPrivateKey, ethSignedHash);
             bytes memory signature = abi.encodePacked(r, s, v);
 

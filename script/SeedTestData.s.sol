@@ -40,7 +40,7 @@ contract SeedTestData is Script {
         uint256 bondAmount = deployer.balance > 0.015 ether ? deployer.balance - 0.01 ether : 0;
         if (bondAmount >= 0.01 ether) {
             console.log("Depositing bond:", bondAmount);
-            registry.depositBond{value: bondAmount}(solverId);
+            registry.depositBond{ value: bondAmount }(solverId);
             console.log("Bond deposited");
         } else {
             console.log("Insufficient balance for bond deposit");
@@ -60,20 +60,11 @@ contract SeedTestData is Script {
 
             bytes32 messageHash = keccak256(
                 abi.encode(
-                    intentHash,
-                    constraintsHash,
-                    routeHash,
-                    outcomeHash,
-                    evidenceHash,
-                    createdAt,
-                    expiry,
-                    solverId
+                    intentHash, constraintsHash, routeHash, outcomeHash, evidenceHash, createdAt, expiry, solverId
                 )
             );
             // Sign the eth-prefixed hash (matches toEthSignedMessageHash in contract)
-            bytes32 ethSignedHash = keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
-            );
+            bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
             (uint8 v, bytes32 r, bytes32 s) = vm.sign(deployerPrivateKey, ethSignedHash);
             bytes memory signature = abi.encodePacked(r, s, v);
 
