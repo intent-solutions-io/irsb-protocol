@@ -44,6 +44,7 @@ export {
 
 // Receipt building
 export {
+  RECEIPT_V2_TYPES,
   getEIP712Domain,
   buildReceiptV2FromX402,
   createSigningPayload,

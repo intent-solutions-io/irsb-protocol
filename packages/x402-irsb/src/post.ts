@@ -80,7 +80,9 @@ export async function postReceiptV2(
     .map((log: { topics: string[]; data: string }) => {
       try {
         return iface.parseLog(log);
-      } catch {
+      } catch (error) {
+        // Log parsing errors for debugging (expected for non-matching logs)
+        console.debug('[x402-irsb] Log parsing skipped:', error instanceof Error ? error.message : error);
         return null;
       }
     })
@@ -200,7 +202,9 @@ export async function receiptExists(
     const [, status] = await hub.getReceipt(receiptId);
     // Status 0 means not found (or Pending with no data)
     return status !== 0;
-  } catch {
+  } catch (error) {
+    // Log error for debugging while returning false to indicate receipt not found
+    console.error('[x402-irsb] Failed to check receipt existence:', error instanceof Error ? error.message : error);
     return false;
   }
 }

@@ -165,13 +165,29 @@ export function formatReceiptForResponse(result: ReceiptGenerationResult) {
       solverId: result.receipt.solverId,
       solverSig: result.receipt.solverSig,
     },
-    // Include signing payload for client attestation
+    // Include signing payload for client attestation (EIP-712 format)
     signingPayload: {
       domain: {
         name: 'IRSB IntentReceiptHub',
         version: '2',
         chainId: parseInt(process.env.CHAIN_ID || '11155111', 10),
         verifyingContract: process.env.IRSB_HUB_ADDRESS,
+      },
+      types: {
+        IntentReceiptV2: [
+          { name: 'intentHash', type: 'bytes32' },
+          { name: 'constraintsHash', type: 'bytes32' },
+          { name: 'routeHash', type: 'bytes32' },
+          { name: 'outcomeHash', type: 'bytes32' },
+          { name: 'evidenceHash', type: 'bytes32' },
+          { name: 'metadataCommitment', type: 'bytes32' },
+          { name: 'ciphertextPointer', type: 'string' },
+          { name: 'privacyLevel', type: 'uint8' },
+          { name: 'escrowId', type: 'bytes32' },
+          { name: 'createdAt', type: 'uint64' },
+          { name: 'expiry', type: 'uint64' },
+          { name: 'solverId', type: 'bytes32' },
+        ],
       },
       message: {
         intentHash: result.receipt.intentHash,

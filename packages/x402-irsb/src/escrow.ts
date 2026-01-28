@@ -220,7 +220,9 @@ export async function getEscrowInfo(
       createdAt: Number(createdAt),
       deadline: Number(deadline),
     };
-  } catch {
+  } catch (error) {
+    // Log error for debugging while returning null to indicate escrow not found
+    console.error('[x402-irsb] Failed to get escrow info:', error instanceof Error ? error.message : error);
     return null;
   }
 }

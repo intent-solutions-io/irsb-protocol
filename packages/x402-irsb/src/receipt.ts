@@ -5,7 +5,7 @@
  * with proper field mapping and EIP-712 signing payload generation.
  */
 
-import { ZeroHash } from 'ethers';
+import { ZeroHash, keccak256, solidityPacked } from 'ethers';
 import type {
   X402ReceiptPayload,
   X402ToReceiptParams,
@@ -26,7 +26,7 @@ import {
 /**
  * EIP-712 type definitions for ReceiptV2
  */
-const RECEIPT_V2_TYPES = {
+export const RECEIPT_V2_TYPES = {
   IntentReceiptV2: [
     { name: 'intentHash', type: 'bytes32' },
     { name: 'constraintsHash', type: 'bytes32' },
@@ -167,8 +167,6 @@ export function createSigningPayload(
  * @returns bytes32 receipt ID
  */
 export function computeReceiptV2Id(receipt: IntentReceiptV2): string {
-  const { keccak256, solidityPacked } = require('ethers');
-
   return keccak256(
     solidityPacked(
       [

@@ -142,7 +142,7 @@ The x402-irsb library transforms x402 payment artifacts into ReceiptV2 fields:
 ### Installation
 
 ```bash
-pnpm add @irsb/x402-irsb ethers
+pnpm add @irsb/x402-integration ethers
 ```
 
 ### Basic Usage (Micropayment Mode)
