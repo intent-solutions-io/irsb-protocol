@@ -16,6 +16,10 @@
 | 004 | MR | RSCH | [Accountability Gap Report](004-MR-RSCH-accountability-gap-report.md) |
 | 005 | MR | RSCH | [Pain Point Research & Validation Plan](005-MR-RSCH-pain-point-research.md) |
 | 006 | PP | AAR | [Session AAR 2026-01-25](006-PP-AAR-session-2026-01-25.md) |
+| 007 | AT | SPEC | [IRSB Receipt Schema](007-AT-SPEC-irsb-receipt-schema.md) |
+| 008 | AA | AUDT | [DevOps Playbook](008-AA-AUDT-appaudit-devops-playbook.md) |
+| 009 | AA | ADR | [vNext Scope ADR](009-AA-ADR-irsb-vnext-scope.md) |
+| - | - | RUNBOOK | [Deployment Runbook](DEPLOYMENT.md) |
 
 ---
 
@@ -25,6 +29,7 @@
 - **PP** - Product & Planning
 - **AT** - Architecture & Technical
 - **MR** - Market Research
+- **AA** - Architecture & Audit
 
 ## Type Legend
 
@@ -33,6 +38,9 @@
 - **SPEC** - Specification
 - **RSCH** - Research Report
 - **AAR** - After Action Report
+- **ADR** - Architecture Decision Record
+- **AUDT** - Audit/Analysis
+- **RUNBOOK** - Operational Runbook
 
 ---
 
