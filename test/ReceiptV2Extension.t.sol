@@ -41,11 +41,7 @@ contract ReceiptV2ExtensionTest is Test {
     event ReceiptV2Finalized(bytes32 indexed receiptId, bytes32 indexed solverId, bytes32 escrowId);
 
     event ReceiptV2Disputed(
-        bytes32 indexed receiptId,
-        bytes32 indexed solverId,
-        address indexed challenger,
-        bytes32 reasonHash,
-        bytes32 evidenceHash
+        bytes32 indexed receiptId, bytes32 indexed solverId, address indexed challenger, bytes32 reasonHash
     );
 
     function setUp() public {
@@ -382,12 +378,11 @@ contract ReceiptV2ExtensionTest is Test {
         bytes32 receiptId = _postReceiptV2(intentHash, expiry);
         bytes32 reasonHash = keccak256("timeout");
 
-        bytes32 evidenceHash = keccak256("evidence");
         vm.expectEmit(true, true, true, true);
-        emit ReceiptV2Disputed(receiptId, solverId, challenger, reasonHash, evidenceHash);
+        emit ReceiptV2Disputed(receiptId, solverId, challenger, reasonHash);
 
         vm.prank(challenger);
-        extension.openDisputeV2{ value: CHALLENGER_BOND }(receiptId, reasonHash, evidenceHash);
+        extension.openDisputeV2{ value: CHALLENGER_BOND }(receiptId, reasonHash, keccak256("evidence"));
 
         (, TypesV2.ReceiptV2Status status) = extension.getReceiptV2(receiptId);
         assertEq(uint256(status), uint256(TypesV2.ReceiptV2Status.Disputed));

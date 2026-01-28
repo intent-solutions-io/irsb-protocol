@@ -266,12 +266,24 @@ contract ReceiptV2FuzzTest is Test {
     }
 
     /// @notice Fuzz test: pointer validation
-    /// @dev Validation is length-only (character validation removed as too restrictive for CID formats)
     function testFuzz_PointerValidation(string memory pointer) public view {
         bytes memory b = bytes(pointer);
 
-        // Length-only validation: 1-64 bytes
-        bool expected = b.length > 0 && b.length <= 64;
+        // Check validation result matches expected
+        bool expected = true;
+
+        if (b.length == 0 || b.length > 64) {
+            expected = false;
+        } else {
+            for (uint256 i = 0; i < b.length; i++) {
+                bytes1 c = b[i];
+                bool isAlphanumeric = (c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5A) || (c >= 0x61 && c <= 0x7A);
+                if (!isAlphanumeric) {
+                    expected = false;
+                    break;
+                }
+            }
+        }
 
         bool result = TypesV2.isValidPointer(pointer);
         assertEq(result, expected, "Pointer validation mismatch");

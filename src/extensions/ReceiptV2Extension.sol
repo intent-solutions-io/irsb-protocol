@@ -22,6 +22,9 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     /// @notice Default challenge window duration (1 hour)
     uint64 public constant DEFAULT_CHALLENGE_WINDOW = 1 hours;
 
+    /// @notice Maximum batch size for posting receipts
+    uint256 public constant MAX_BATCH_SIZE = 50;
+
     // ============ Immutables ============
 
     /// @notice Cached domain separator (computed at deployment)
@@ -56,9 +59,6 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     /// @notice Dispute reason by receipt ID
     mapping(bytes32 => bytes32) private _disputeReasons;
 
-    /// @notice Dispute evidence hash by receipt ID
-    mapping(bytes32 => bytes32) private _disputeEvidence;
-
     /// @notice Receipts by solver (solverId => receiptId[])
     mapping(bytes32 => bytes32[]) private _solverReceiptsV2;
 
@@ -70,9 +70,6 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
 
     /// @notice Total V2 disputes
     uint256 public totalDisputesV2;
-
-    /// @notice Total forfeited challenger bonds available for sweep
-    uint256 public totalForfeitedBonds;
 
     /// @notice Escrow vault address (for integration)
     address public escrowVault;
@@ -202,7 +199,6 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
         _challengers[receiptId] = msg.sender;
         _challengerBonds[receiptId] = msg.value;
         _disputeReasons[receiptId] = reasonHash;
-        _disputeEvidence[receiptId] = evidenceHash;
 
         // Lock solver bond
         uint256 lockAmount = solverRegistry.getMinimumBond();
@@ -214,7 +210,7 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
         // Update solver dispute count
         solverRegistry.incrementDisputes(receipt.solverId);
 
-        emit ReceiptV2Disputed(receiptId, receipt.solverId, msg.sender, reasonHash, evidenceHash);
+        emit ReceiptV2Disputed(receiptId, receipt.solverId, msg.sender, reasonHash);
     }
 
     // ============ View Functions ============
@@ -288,13 +284,6 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
         return _challengerBonds[receiptId];
     }
 
-    /// @notice Get dispute evidence hash for a receipt
-    /// @param receiptId Receipt to query
-    /// @return evidenceHash Evidence bundle hash
-    function getDisputeEvidence(bytes32 receiptId) external view returns (bytes32) {
-        return _disputeEvidence[receiptId];
-    }
-
     // ============ Admin Functions ============
 
     /// @notice Set challenge window duration
@@ -335,46 +324,12 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     }
 
     /// @notice Sweep forfeited challenger bonds to treasury
-    /// @dev Only sweeps bonds explicitly marked as forfeited, not active dispute bonds
     /// @param treasury Address to receive funds
     function sweepForfeitedBonds(address treasury) external onlyOwner nonReentrant {
-        uint256 amount = totalForfeitedBonds;
-        require(amount > 0, "No forfeited bonds to sweep");
-        require(address(this).balance >= amount, "Insufficient balance");
-
-        totalForfeitedBonds = 0;
-        (bool sent,) = treasury.call{ value: amount }("");
+        uint256 balance = address(this).balance;
+        require(balance > 0, "No funds to sweep");
+        (bool sent,) = treasury.call{ value: balance }("");
         require(sent, "Transfer failed");
-    }
-
-    /// @notice Mark a challenger bond as forfeited (callable by dispute resolution)
-    /// @dev Called when a dispute resolves against the challenger
-    /// @param receiptId Receipt whose challenger bond is forfeited
-    function forfeitChallengerBond(bytes32 receiptId) external onlyOwner {
-        uint256 bondAmount = _challengerBonds[receiptId];
-        require(bondAmount > 0, "No bond to forfeit");
-        require(_receiptStatusV2[receiptId] == TypesV2.ReceiptV2Status.Disputed, "Not disputed");
-
-        _challengerBonds[receiptId] = 0;
-        totalForfeitedBonds += bondAmount;
-
-        emit ChallengerBondForfeited(receiptId, bondAmount);
-    }
-
-    /// @notice Return challenger bond (callable by dispute resolution)
-    /// @dev Called when a dispute resolves in favor of the challenger
-    /// @param receiptId Receipt whose challenger bond should be returned
-    function returnChallengerBond(bytes32 receiptId) external onlyOwner nonReentrant {
-        uint256 bondAmount = _challengerBonds[receiptId];
-        address challenger = _challengers[receiptId];
-        require(bondAmount > 0, "No bond to return");
-        require(challenger != address(0), "No challenger");
-
-        _challengerBonds[receiptId] = 0;
-        (bool sent,) = challenger.call{ value: bondAmount }("");
-        require(sent, "Transfer failed");
-
-        emit ChallengerBondReturned(receiptId, challenger, bondAmount);
     }
 
     // ============ Internal Functions ============
