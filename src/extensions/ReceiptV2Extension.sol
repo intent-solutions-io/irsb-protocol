@@ -22,9 +22,6 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     /// @notice Default challenge window duration (1 hour)
     uint64 public constant DEFAULT_CHALLENGE_WINDOW = 1 hours;
 
-    /// @notice Maximum batch size for posting receipts
-    uint256 public constant MAX_BATCH_SIZE = 50;
-
     // ============ Immutables ============
 
     /// @notice Cached domain separator (computed at deployment)
@@ -58,6 +55,9 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
 
     /// @notice Dispute reason by receipt ID
     mapping(bytes32 => bytes32) private _disputeReasons;
+
+    /// @notice Dispute evidence hash by receipt ID
+    mapping(bytes32 => bytes32) private _disputeEvidence;
 
     /// @notice Receipts by solver (solverId => receiptId[])
     mapping(bytes32 => bytes32[]) private _solverReceiptsV2;
@@ -202,6 +202,7 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
         _challengers[receiptId] = msg.sender;
         _challengerBonds[receiptId] = msg.value;
         _disputeReasons[receiptId] = reasonHash;
+        _disputeEvidence[receiptId] = evidenceHash;
 
         // Lock solver bond
         uint256 lockAmount = solverRegistry.getMinimumBond();
@@ -213,7 +214,7 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
         // Update solver dispute count
         solverRegistry.incrementDisputes(receipt.solverId);
 
-        emit ReceiptV2Disputed(receiptId, receipt.solverId, msg.sender, reasonHash);
+        emit ReceiptV2Disputed(receiptId, receipt.solverId, msg.sender, reasonHash, evidenceHash);
     }
 
     // ============ View Functions ============
@@ -285,6 +286,13 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
     /// @return bond Bond amount
     function getChallengerBondV2(bytes32 receiptId) external view returns (uint256) {
         return _challengerBonds[receiptId];
+    }
+
+    /// @notice Get dispute evidence hash for a receipt
+    /// @param receiptId Receipt to query
+    /// @return evidenceHash Evidence bundle hash
+    function getDisputeEvidence(bytes32 receiptId) external view returns (bytes32) {
+        return _disputeEvidence[receiptId];
     }
 
     // ============ Admin Functions ============

@@ -26,7 +26,11 @@ interface IReceiptV2Extension {
 
     /// @notice Emitted when a V2 receipt is disputed
     event ReceiptV2Disputed(
-        bytes32 indexed receiptId, bytes32 indexed solverId, address indexed challenger, bytes32 reasonHash
+        bytes32 indexed receiptId,
+        bytes32 indexed solverId,
+        address indexed challenger,
+        bytes32 reasonHash,
+        bytes32 evidenceHash
     );
 
     /// @notice Emitted when a V2 dispute is resolved

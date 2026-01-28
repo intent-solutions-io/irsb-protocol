@@ -107,26 +107,16 @@ library TypesV2 {
     }
 
     /// @notice Validate ciphertext pointer format
+    /// @dev Only validates length. Character set validation is complex, gas-intensive,
+    ///      and may become outdated as CID formats evolve (Base58 CIDv0, Base32 CIDv1, etc.)
     /// @param pointer The pointer to validate
     /// @return valid Whether the pointer is valid
     function isValidPointer(string memory pointer) internal pure returns (bool) {
         bytes memory b = bytes(pointer);
 
-        // Check length
+        // Check length only - character validation is too restrictive for CID formats
         if (b.length == 0 || b.length > MAX_POINTER_LENGTH) {
             return false;
-        }
-
-        // Check characters (alphanumeric + base58 safe chars)
-        for (uint256 i = 0; i < b.length; i++) {
-            bytes1 char = b[i];
-            bool isAlphanumeric = (char >= 0x30 && char <= 0x39) // 0-9
-                || (char >= 0x41 && char <= 0x5A) // A-Z
-                || (char >= 0x61 && char <= 0x7A); // a-z
-
-            if (!isAlphanumeric) {
-                return false;
-            }
         }
 
         return true;
