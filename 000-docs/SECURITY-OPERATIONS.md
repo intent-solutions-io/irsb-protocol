@@ -30,8 +30,8 @@ Until multisig transition (see `MULTISIG_PLAN.md`), the protocol operates with a
    # With Ledger
    cast send $CONTRACT "pause()" --ledger
 
-   # With encrypted keystore
-   cast send $CONTRACT "pause()" --keystore ~/.foundry/keystores/owner --password-file ~/.secrets/keystore-pw
+   # With encrypted keystore (prompts for password - more secure)
+   cast send $CONTRACT "pause()" --keystore ~/.foundry/keystores/owner
 
    # With Frame wallet
    cast send $CONTRACT "pause()" --unlocked
@@ -351,8 +351,8 @@ jobs:
         env:
           DEPLOYER_KEY: ${{ secrets.DEPLOYER_KEY }}
         run: |
-          # Key is masked in logs
-          forge script script/Deploy.s.sol --broadcast
+          # Key is masked in logs, passed explicitly to forge
+          forge script script/Deploy.s.sol --broadcast --private-key $DEPLOYER_KEY
 ```
 
 ## Incident Response Quick Reference

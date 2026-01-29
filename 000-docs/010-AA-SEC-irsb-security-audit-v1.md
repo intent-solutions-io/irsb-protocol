@@ -12,9 +12,9 @@
 This audit reviewed the three core IRSB Protocol smart contracts totaling approximately 1,286 lines of Solidity code. The review identified 5 HIGH severity, 5 MEDIUM severity, and 5 LOW severity findings.
 
 **Remediation Status:**
-- HIGH: 4/5 fixed, 1 deferred to v2
-- MEDIUM: 2/5 fixed, 3 documented as accepted risks
-- LOW: 0/5 fixed (documentation only)
+- HIGH: 4/5 fixed, 1 accepted with mitigations (IRSB-SEC-004)
+- MEDIUM: 1/5 fixed, 1 deferred to v2, 3 accepted risks
+- LOW: 0/5 fixed (documentation only, low impact)
 
 ---
 
