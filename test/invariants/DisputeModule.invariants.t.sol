@@ -53,12 +53,13 @@ contract DisputeModuleInvariants is Test {
     /// @notice DM-7: Slash Distribution (Arbitration) sums to 100%
     /// @dev userShare + treasuryShare + arbitratorShare == slashAmount
     function invariant_DM7_arbitrationSlashDistribution() public pure {
-        // Static check: arbitration distribution is 70 + 20 + 10 = 100%
-        uint256 userBps = 7000;
-        uint256 treasuryBps = 2000;
-        uint256 arbitratorBps = 1000;
+        // Static check: arbitration distribution matches contract constants (70 + 20 + 10 = 100%)
+        // Contract uses percentages, not BPS: see DisputeModule.sol lines 160-162
+        uint256 userPct = 70;
+        uint256 treasuryPct = 20;
+        uint256 arbitratorPct = 10;
 
-        assertEq(userBps + treasuryBps + arbitratorBps, 10000, "DM-7: Arbitration distribution != 100%");
+        assertEq(userPct + treasuryPct + arbitratorPct, 100, "DM-7: Arbitration distribution != 100%");
     }
 
     /// @notice CC-4: Slash Source Validity
