@@ -80,8 +80,20 @@ contract DisputeModuleTest is Test {
         uint64 createdAt = uint64(block.timestamp);
         uint64 expiry = uint64(block.timestamp + 1 hours);
 
+        // IRSB-SEC-001: Include chainId and hub address to prevent cross-chain replay
         bytes32 messageHash = keccak256(
-            abi.encode(intentHash, constraintsHash, routeHash, outcomeHash, evidenceHash, createdAt, expiry, solverId)
+            abi.encode(
+                block.chainid,
+                address(receiptHub),
+                intentHash,
+                constraintsHash,
+                routeHash,
+                outcomeHash,
+                evidenceHash,
+                createdAt,
+                expiry,
+                solverId
+            )
         );
 
         bytes32 ethSignedHash = keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash));
@@ -573,5 +585,62 @@ contract DisputeModuleTest is Test {
         address newTreasury = address(0x888);
         disputeModule.setTreasury(newTreasury);
         assertEq(disputeModule.treasury(), newTreasury);
+    }
+
+    // ============ Security Regression Tests ============
+
+    /// @notice IRSB-SEC-002: Verify non-parties cannot escalate disputes
+    /// @dev Previously anyone could escalate, enabling DoS/griefing attacks
+    function test_IRSB_SEC_002_escalateRevertNonParty() public {
+        address realOperator = vm.addr(operatorPrivateKey);
+        vm.deal(realOperator, 10 ether);
+
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
+        vm.prank(realOperator);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
+
+        Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
+        vm.prank(realOperator);
+        bytes32 receiptId = receiptHub.postReceipt(receipt);
+
+        vm.prank(challenger);
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
+        );
+
+        // Random non-party address tries to escalate
+        address randomAttacker = address(0x999);
+        vm.deal(randomAttacker, 1 ether);
+
+        vm.prank(randomAttacker);
+        vm.expectRevert(IDisputeModule.NotDisputeParty.selector);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
+    }
+
+    /// @notice IRSB-SEC-002: Verify solver operator can escalate
+    /// @dev Solver should be allowed to escalate, not just challenger
+    function test_IRSB_SEC_002_solverCanEscalate() public {
+        address realOperator = vm.addr(operatorPrivateKey);
+        vm.deal(realOperator, 10 ether);
+
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", realOperator);
+        vm.prank(realOperator);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
+
+        Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
+        vm.prank(realOperator);
+        bytes32 receiptId = receiptHub.postReceipt(receipt);
+
+        vm.prank(challenger);
+        receiptHub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.Subjective, keccak256("evidence")
+        );
+
+        // Solver (realOperator) should be able to escalate
+        vm.prank(realOperator);
+        disputeModule.escalate{ value: ARBITRATION_FEE }(receiptId);
+
+        assertTrue(disputeModule.isEscalated(receiptId));
+        assertEq(disputeModule.getEscalator(receiptId), realOperator);
     }
 }

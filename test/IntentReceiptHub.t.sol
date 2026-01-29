@@ -71,9 +71,11 @@ contract IntentReceiptHubTest is Test {
             solverSig: ""
         });
 
-        // Sign receipt
+        // Sign receipt (IRSB-SEC-001: includes chainId and hub address to prevent cross-chain replay)
         bytes32 messageHash = keccak256(
             abi.encode(
+                block.chainid,
+                address(hub),
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -168,9 +170,11 @@ contract IntentReceiptHubTest is Test {
             solverSig: ""
         });
 
-        // Sign with wrong key
+        // Sign with wrong key (IRSB-SEC-001: includes chainId and hub address)
         bytes32 messageHash = keccak256(
             abi.encode(
+                block.chainid,
+                address(hub),
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -297,7 +301,8 @@ contract IntentReceiptHubTest is Test {
         hub.resolveDeterministic(receiptId);
 
         (, Types.ReceiptStatus status) = hub.getReceipt(receiptId);
-        assertEq(uint256(status), uint256(Types.ReceiptStatus.Pending));
+        // IRSB-SEC-003: Rejected disputes finalize the receipt to prevent re-challenge attacks
+        assertEq(uint256(status), uint256(Types.ReceiptStatus.Finalized));
 
         // Challenger loses their bond (frivolous dispute)
         assertEq(challenger.balance, challengerBalanceBefore - CHALLENGER_BOND);
@@ -389,9 +394,11 @@ contract IntentReceiptHubTest is Test {
             // Need to update createdAt to make unique receipt IDs
             receipts[i].createdAt = uint64(block.timestamp + i);
 
-            // Re-sign with updated createdAt
+            // Re-sign with updated createdAt (IRSB-SEC-001: includes chainId and hub address)
             bytes32 messageHash = keccak256(
                 abi.encode(
+                    block.chainid,
+                    address(hub),
                     receipts[i].intentHash,
                     receipts[i].constraintsHash,
                     receipts[i].routeHash,
@@ -642,5 +649,120 @@ contract IntentReceiptHubTest is Test {
         vm.prank(challenger);
         vm.expectRevert();
         hub.sweepForfeitedBonds(challenger);
+    }
+
+    // ============ Security Regression Tests ============
+
+    /// @notice IRSB-SEC-001: Verify cross-chain replay is prevented
+    /// @dev Receipt signed for a different chainId must be rejected
+    function test_IRSB_SEC_001_crossChainReplayPrevented() public {
+        // Create receipt with signature for wrong chainId
+        Types.IntentReceipt memory receipt = Types.IntentReceipt({
+            intentHash: keccak256("intent"),
+            constraintsHash: keccak256("constraints"),
+            routeHash: keccak256("route"),
+            outcomeHash: keccak256("outcome"),
+            evidenceHash: keccak256("evidence"),
+            createdAt: uint64(block.timestamp),
+            expiry: uint64(block.timestamp + 1 hours),
+            solverId: solverId,
+            solverSig: ""
+        });
+
+        // Sign with WRONG chainId (simulating replay from another chain)
+        uint256 wrongChainId = 999999;
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                wrongChainId, // Wrong chain!
+                address(hub),
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
+        bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
+        receipt.solverSig = abi.encodePacked(r, s, v);
+
+        // Should fail because chainId doesn't match
+        vm.prank(operator);
+        vm.expectRevert(abi.encodeWithSignature("InvalidReceiptSignature()"));
+        hub.postReceipt(receipt);
+    }
+
+    /// @notice IRSB-SEC-001: Verify wrong contract address is rejected
+    /// @dev Receipt signed for a different contract address must be rejected
+    function test_IRSB_SEC_001_wrongContractAddressRejected() public {
+        Types.IntentReceipt memory receipt = Types.IntentReceipt({
+            intentHash: keccak256("intent"),
+            constraintsHash: keccak256("constraints"),
+            routeHash: keccak256("route"),
+            outcomeHash: keccak256("outcome"),
+            evidenceHash: keccak256("evidence"),
+            createdAt: uint64(block.timestamp),
+            expiry: uint64(block.timestamp + 1 hours),
+            solverId: solverId,
+            solverSig: ""
+        });
+
+        // Sign with WRONG contract address
+        address wrongHub = address(0xDEAD);
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                block.chainid,
+                wrongHub, // Wrong contract address!
+                receipt.intentHash,
+                receipt.constraintsHash,
+                receipt.routeHash,
+                receipt.outcomeHash,
+                receipt.evidenceHash,
+                receipt.createdAt,
+                receipt.expiry,
+                receipt.solverId
+            )
+        );
+        bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
+        receipt.solverSig = abi.encodePacked(r, s, v);
+
+        // Should fail because contract address doesn't match
+        vm.prank(operator);
+        vm.expectRevert(abi.encodeWithSignature("InvalidReceiptSignature()"));
+        hub.postReceipt(receipt);
+    }
+
+    /// @notice IRSB-SEC-003: Verify rejected dispute finalizes receipt and prevents re-challenge
+    /// @dev After dispute is rejected, receipt should be Finalized and cannot be disputed again
+    function test_IRSB_SEC_003_rejectedDisputeCannotBeRechallenged() public {
+        bytes32 receiptId = _postReceipt(keccak256("intent"), uint64(block.timestamp + 30 minutes));
+
+        // Submit settlement proof to make dispute fail
+        vm.prank(operator);
+        hub.submitSettlementProof(receiptId, keccak256("proof"));
+
+        // Open dispute (will be rejected due to proof)
+        vm.prank(challenger);
+        hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
+
+        // Fast forward and resolve - dispute should be rejected
+        vm.warp(block.timestamp + 31 minutes);
+        hub.resolveDeterministic(receiptId);
+
+        // Verify receipt is now Finalized (not Pending)
+        (, Types.ReceiptStatus status) = hub.getReceipt(receiptId);
+        assertEq(uint256(status), uint256(Types.ReceiptStatus.Finalized));
+
+        // Attempt to re-challenge should fail because receipt is not Pending
+        vm.deal(challenger, 10 ether); // Ensure challenger has funds
+        vm.prank(challenger);
+        vm.expectRevert(abi.encodeWithSignature("ReceiptNotPending()"));
+        hub.openDispute{ value: CHALLENGER_BOND }(
+            receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2")
+        );
     }
 }

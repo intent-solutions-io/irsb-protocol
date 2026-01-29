@@ -580,4 +580,28 @@ contract SolverRegistryTest is Test {
         uint16 multiplier = registry.getDecayMultiplier(0);
         assertEq(multiplier, 1000); // Minimum 10%
     }
+
+    // ============ Security Regression Tests ============
+
+    /// @notice IRSB-SEC-005: Verify zero-amount slash is prevented
+    /// @dev Slashing with amount=0 was previously a silent no-op, now reverts
+    function test_IRSB_SEC_005_zeroSlashAmountReverts() public {
+        bytes32 solverId = registry.registerSolver("ipfs://metadata", operator1);
+
+        vm.deal(operator1, 1 ether);
+        vm.prank(operator1);
+        registry.depositBond{ value: MINIMUM_BOND }(solverId);
+
+        // Lock some bond (simulating dispute)
+        vm.prank(authorizedCaller);
+        registry.lockBond(solverId, 0.05 ether);
+
+        address recipient = address(0x4);
+        bytes32 receiptId = bytes32(uint256(1));
+
+        // Attempt to slash with zero amount - should revert
+        vm.prank(authorizedCaller);
+        vm.expectRevert(abi.encodeWithSignature("ZeroSlashAmount()"));
+        registry.slash(solverId, 0, receiptId, Types.DisputeReason.Timeout, recipient);
+    }
 }
