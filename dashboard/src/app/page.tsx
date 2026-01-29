@@ -172,8 +172,135 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Proof of Work */}
+      {/* Standards Integration */}
       <section className="py-16 lg:py-24 bg-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-zinc-50">
+              How IRSB Connects to Other Standards
+            </h2>
+            <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
+              IRSB is the accountability layer that makes other standards production-safe.
+            </p>
+          </div>
+
+          {/* Visual Flow */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <div className="bg-zinc-900/60 rounded-xl p-8 border border-zinc-700">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                {/* Standards */}
+                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Intent Format</p>
+                  <p className="mt-1 text-lg font-semibold text-zinc-100">ERC-7683</p>
+                </div>
+                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Agent Registry</p>
+                  <p className="mt-1 text-lg font-semibold text-zinc-100">ERC-8004</p>
+                </div>
+                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider">HTTP Payments</p>
+                  <p className="mt-1 text-lg font-semibold text-zinc-100">x402</p>
+                </div>
+              </div>
+
+              {/* Arrows */}
+              <div className="flex justify-center my-4">
+                <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </div>
+
+              {/* IRSB Core */}
+              <div className="bg-gradient-to-r from-zinc-700 to-zinc-600 rounded-lg p-6 border-2 border-zinc-500">
+                <p className="text-center text-xl font-bold text-zinc-50">IRSB Protocol</p>
+                <p className="text-center text-sm text-zinc-300 mt-1">Receipts + Bonds + Disputes</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration Table */}
+          <div className="mt-12 max-w-4xl mx-auto">
+            <div className="overflow-hidden rounded-xl border border-zinc-700">
+              <table className="w-full">
+                <thead className="bg-zinc-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Standard</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">What It Does</th>
+                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">How IRSB Connects</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-700 bg-zinc-800/40">
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-semibold text-zinc-200">ERC-7683</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-400">
+                      Defines cross-chain intent format
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-300">
+                      IRSB receipts reference <code className="bg-zinc-700 px-1 rounded text-xs">intentHash</code> from ERC-7683 orders
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-semibold text-zinc-200">ERC-8004</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-400">
+                      Agent identity & reputation registry
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-300">
+                      IRSB is a <span className="font-semibold text-zinc-100">Validation Provider</span> — generates signals that feed the registry
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="font-semibold text-zinc-200">x402</span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-400">
+                      HTTP 402 payment protocol
+                    </td>
+                    <td className="px-6 py-4 text-sm text-zinc-300">
+                      IRSB adds accountability to paid APIs — receipts prove service delivery
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Scoreboard vs Referee */}
+          <div className="mt-12 max-w-3xl mx-auto">
+            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
+              <h3 className="text-lg font-semibold text-zinc-50 text-center">
+                IRSB + ERC-8004: The Scoreboard & The Referee
+              </h3>
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-zinc-700 rounded-lg flex items-center justify-center mx-auto">
+                    <svg className="w-6 h-6 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                  </div>
+                  <p className="mt-2 font-semibold text-zinc-200">ERC-8004 = Scoreboard</p>
+                  <p className="text-sm text-zinc-400">Stores agent identities and reputation scores</p>
+                </div>
+                <div className="text-center p-4">
+                  <div className="w-12 h-12 bg-zinc-700 rounded-lg flex items-center justify-center mx-auto">
+                    <svg className="w-6 h-6 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <p className="mt-2 font-semibold text-zinc-200">IRSB = Referee</p>
+                  <p className="text-sm text-zinc-400">Generates the validation signals that update those scores</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Proof of Work */}
+      <section className="py-16 lg:py-24 bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
@@ -235,7 +362,7 @@ export default function LandingPage() {
       </section>
 
       {/* Who It's For */}
-      <section className="py-16 lg:py-24 bg-zinc-900">
+      <section className="py-16 lg:py-24 bg-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
@@ -290,7 +417,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Band */}
-      <section className="py-16 lg:py-20 bg-zinc-800 border-y border-zinc-700">
+      <section className="py-16 lg:py-20 bg-zinc-900 border-y border-zinc-700">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-zinc-50">
             Interested in piloting IRSB?

@@ -43,6 +43,63 @@ flowchart LR
 - **Economically enforced** - Bonds ensure solvers have skin in the game
 - **Portable reputation** - Solver track records move across protocols
 
+## How IRSB Connects to Other Standards
+
+```mermaid
+flowchart TB
+    subgraph Standards
+        ERC7683[ERC-7683<br/>Intent Format]
+        ERC8004[ERC-8004<br/>Agent Registry]
+        X402[x402<br/>HTTP Payments]
+    end
+
+    subgraph IRSB[IRSB Protocol]
+        Core[Receipts + Bonds + Disputes]
+    end
+
+    ERC7683 -->|"intentHash"| Core
+    Core -->|"validation signals"| ERC8004
+    X402 -->|"payment proof"| Core
+    Core -->|"service accountability"| X402
+
+    style IRSB fill:#1a1a2e,stroke:#16213e
+    style Core fill:#0f3460,stroke:#e94560,color:#fff
+```
+
+| Standard | What It Does | How IRSB Connects |
+|----------|--------------|-------------------|
+| **ERC-7683** | Defines intent format | IRSB receipts reference `intentHash` from ERC-7683 orders |
+| **ERC-8004** | Agent identity & reputation registry | IRSB is a **Validation Provider** - generates signals that feed the registry |
+| **x402** | HTTP 402 payment protocol | IRSB adds accountability to paid APIs - receipts prove service delivery |
+
+### IRSB + ERC-8004: The Scoreboard & The Referee
+
+ERC-8004 is the **scoreboard** - it stores agent identities and reputation scores.
+
+IRSB is the **referee** - it generates the validation signals that update those scores.
+
+```
+Agent executes intent
+    → IRSB receipt posted
+    → Challenge window passes
+    → finalize() called
+    → ERC8004Adapter.signalFinalized()
+    → Agent reputation updated in ERC-8004 registry
+```
+
+### IRSB + x402: Accountability for Paid APIs
+
+When AI agents pay for services via x402, IRSB ensures accountability:
+
+```
+Client sends x402 payment → Service executes → IRSB receipt posted
+                                                    ↓
+                                            Dispute? → Slash bond
+                                            No dispute? → Reputation++
+```
+
+The `@irsb/x402-integration` package handles this flow.
+
 ## Quick Start
 
 ```bash
