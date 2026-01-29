@@ -50,12 +50,18 @@ contract VerifyAmoy is Script {
 
         if (disputeModule != address(0)) {
             console.log("# DisputeModule");
-            console.log("# Note: Replace <DEPLOYER_ADDRESS> with the address that deployed the contracts (initial arbitrator)");
+            console.log(
+                "# Note: Replace <DEPLOYER_ADDRESS> with the address that deployed the contracts (initial arbitrator)"
+            );
             console.log("forge verify-contract \\");
             console.log("  %s \\", disputeModule);
             console.log("  src/DisputeModule.sol:DisputeModule \\");
             console.log("  --chain amoy \\");
-            console.log("  --constructor-args $(cast abi-encode 'constructor(address,address,address)' %s %s <DEPLOYER_ADDRESS>) \\", receiptHub, solverRegistry);
+            console.log(
+                "  --constructor-args $(cast abi-encode 'constructor(address,address,address)' %s %s <DEPLOYER_ADDRESS>) \\",
+                receiptHub,
+                solverRegistry
+            );
             console.log("  --etherscan-api-key $POLYGONSCAN_API_KEY");
             console.log("");
         }

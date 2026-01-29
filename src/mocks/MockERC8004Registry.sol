@@ -89,7 +89,8 @@ contract MockERC8004Registry is IValidationRegistry {
 
         // Record validation
         uint64 timestamp = uint64(block.timestamp);
-        _validations[taskId] = ValidationRecord({ agentId: agentId, success: success, timestamp: timestamp, exists: true });
+        _validations[taskId] =
+            ValidationRecord({ agentId: agentId, success: success, timestamp: timestamp, exists: true });
 
         // Update agent stats
         _agentStats[agentId].total++;
