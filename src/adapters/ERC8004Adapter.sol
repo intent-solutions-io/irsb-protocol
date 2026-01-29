@@ -162,7 +162,9 @@ contract ERC8004Adapter is IERC8004, Ownable {
     function emitValidationSignal(ValidationSignal calldata signal) external onlyAuthorizedHub {
         // Use signal's timestamp if provided (non-zero), otherwise use block.timestamp
         uint256 timestamp = signal.timestamp > 0 ? signal.timestamp : block.timestamp;
-        _emitSignalWithTimestamp(signal.taskId, signal.agentId, signal.outcome, signal.evidenceHash, signal.metadata, timestamp);
+        _emitSignalWithTimestamp(
+            signal.taskId, signal.agentId, signal.outcome, signal.evidenceHash, signal.metadata, timestamp
+        );
     }
 
     /// @inheritdoc IERC8004

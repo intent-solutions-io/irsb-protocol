@@ -151,7 +151,12 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
         totalDisputes++;
 
         emit OptimisticDisputeOpened(
-            disputeId, receiptId, receipt.solverId, msg.sender, challengerBond, uint64(block.timestamp) + COUNTER_BOND_WINDOW
+            disputeId,
+            receiptId,
+            receipt.solverId,
+            msg.sender,
+            challengerBond,
+            uint64(block.timestamp) + COUNTER_BOND_WINDOW
         );
     }
 

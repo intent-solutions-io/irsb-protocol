@@ -77,7 +77,9 @@ contract ERC8004AdapterTest is Test {
 
     function test_SignalFinalized_EmitsEvent() public {
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Finalized, block.timestamp, bytes32(0), "");
+        emit ValidationSignalEmitted(
+            receiptId, solverId, IERC8004.ValidationOutcome.Finalized, block.timestamp, bytes32(0), ""
+        );
 
         vm.prank(hub);
         adapter.signalFinalized(receiptId, solverId);
@@ -123,7 +125,9 @@ contract ERC8004AdapterTest is Test {
         uint256 amount = 1 ether;
 
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.Slashed, block.timestamp, bytes32(0), abi.encode(amount));
+        emit ValidationSignalEmitted(
+            receiptId, solverId, IERC8004.ValidationOutcome.Slashed, block.timestamp, bytes32(0), abi.encode(amount)
+        );
 
         vm.prank(hub);
         adapter.signalSlashed(receiptId, solverId, amount);
@@ -150,7 +154,9 @@ contract ERC8004AdapterTest is Test {
 
     function test_SignalDisputeWon_EmitsEvent() public {
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeWon, block.timestamp, bytes32(0), "");
+        emit ValidationSignalEmitted(
+            receiptId, solverId, IERC8004.ValidationOutcome.DisputeWon, block.timestamp, bytes32(0), ""
+        );
 
         vm.prank(hub);
         adapter.signalDisputeWon(receiptId, solverId);
@@ -179,7 +185,14 @@ contract ERC8004AdapterTest is Test {
         uint256 slashAmount = 0.5 ether;
 
         vm.expectEmit(true, true, false, true);
-        emit ValidationSignalEmitted(receiptId, solverId, IERC8004.ValidationOutcome.DisputeLost, block.timestamp, bytes32(0), abi.encode(slashAmount));
+        emit ValidationSignalEmitted(
+            receiptId,
+            solverId,
+            IERC8004.ValidationOutcome.DisputeLost,
+            block.timestamp,
+            bytes32(0),
+            abi.encode(slashAmount)
+        );
 
         vm.prank(hub);
         adapter.signalDisputeLost(receiptId, solverId, slashAmount);

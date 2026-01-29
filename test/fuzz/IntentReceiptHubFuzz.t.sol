@@ -29,7 +29,7 @@ contract IntentReceiptHubFuzz is Test {
     bytes32 public solverId;
 
     // Allow test contract to receive ETH (for treasury share)
-    receive() external payable {}
+    receive() external payable { }
 
     function setUp() public {
         operator = vm.addr(operatorPrivateKey);
@@ -70,14 +70,10 @@ contract IntentReceiptHubFuzz is Test {
 
         uint64 expiry = uint64(block.timestamp + 30 minutes);
 
-        Types.IntentReceipt memory receipt1 = _createUnsignedReceipt(
-            keccak256(abi.encodePacked("intent", salt1)),
-            expiry
-        );
-        Types.IntentReceipt memory receipt2 = _createUnsignedReceipt(
-            keccak256(abi.encodePacked("intent", salt2)),
-            expiry
-        );
+        Types.IntentReceipt memory receipt1 =
+            _createUnsignedReceipt(keccak256(abi.encodePacked("intent", salt1)), expiry);
+        Types.IntentReceipt memory receipt2 =
+            _createUnsignedReceipt(keccak256(abi.encodePacked("intent", salt2)), expiry);
 
         bytes32 id1 = hub.computeReceiptId(receipt1);
         bytes32 id2 = hub.computeReceiptId(receipt2);
@@ -104,9 +100,7 @@ contract IntentReceiptHubFuzz is Test {
             // Open dispute (will be rejected because proof exists)
             vm.prank(challenger);
             hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256(abi.encodePacked("evidence", i))
+                receiptId, Types.DisputeReason.Timeout, keccak256(abi.encodePacked("evidence", i))
             );
 
             // Resolve (dispute rejected, bond forfeited)
@@ -136,9 +130,7 @@ contract IntentReceiptHubFuzz is Test {
 
             vm.prank(challenger);
             hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256(abi.encodePacked("evidence", i))
+                receiptId, Types.DisputeReason.Timeout, keccak256(abi.encodePacked("evidence", i))
             );
 
             hub.resolveDeterministic(receiptId);
@@ -152,18 +144,12 @@ contract IntentReceiptHubFuzz is Test {
 
         vm.prank(challenger);
         hub.openDispute{ value: CHALLENGER_BOND }(
-            activeReceiptId,
-            Types.DisputeReason.Timeout,
-            keccak256("active-evidence")
+            activeReceiptId, Types.DisputeReason.Timeout, keccak256("active-evidence")
         );
 
         // Contract balance includes both forfeited AND active dispute bonds
         uint256 contractBalance = address(hub).balance;
-        assertEq(
-            contractBalance,
-            expectedForfeited + CHALLENGER_BOND,
-            "Contract balance should be forfeited + active"
-        );
+        assertEq(contractBalance, expectedForfeited + CHALLENGER_BOND, "Contract balance should be forfeited + active");
 
         // Sweep forfeited
         address treasury = address(0x999);
@@ -194,18 +180,10 @@ contract IntentReceiptHubFuzz is Test {
         vm.prank(challenger);
         if (timePassed > challengeWindow) {
             vm.expectRevert(abi.encodeWithSignature("ChallengeWindowExpired()"));
-            hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256("evidence")
-            );
+            hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
         } else {
             // Should succeed
-            hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256("evidence")
-            );
+            hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
             Types.Dispute memory dispute = hub.getDispute(receiptId);
             assertEq(dispute.challenger, challenger, "Dispute should be opened");
@@ -270,11 +248,7 @@ contract IntentReceiptHubFuzz is Test {
         } else if (path == 1) {
             // Path: Pending → Disputed → Slashed (no proof, receipt expires)
             vm.prank(challenger);
-            hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256("evidence")
-            );
+            hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
             (, status) = hub.getReceipt(receiptId);
             assertEq(uint8(status), uint8(Types.ReceiptStatus.Disputed), "Should be Disputed");
@@ -290,17 +264,15 @@ contract IntentReceiptHubFuzz is Test {
             hub.submitSettlementProof(receiptId, keccak256("proof"));
 
             vm.prank(challenger);
-            hub.openDispute{ value: CHALLENGER_BOND }(
-                receiptId,
-                Types.DisputeReason.Timeout,
-                keccak256("evidence")
-            );
+            hub.openDispute{ value: CHALLENGER_BOND }(receiptId, Types.DisputeReason.Timeout, keccak256("evidence"));
 
             hub.resolveDeterministic(receiptId);
 
             // Contract returns to Pending after rejected dispute (challenge window continues)
             (, status) = hub.getReceipt(receiptId);
-            assertEq(uint8(status), uint8(Types.ReceiptStatus.Pending), "Should return to Pending after rejected dispute");
+            assertEq(
+                uint8(status), uint8(Types.ReceiptStatus.Pending), "Should return to Pending after rejected dispute"
+            );
 
             // Then can be finalized after challenge window
             vm.warp(block.timestamp + 1 hours + 1);

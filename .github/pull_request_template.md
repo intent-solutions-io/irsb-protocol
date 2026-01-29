@@ -65,6 +65,25 @@ forge test --match-path test/NewFeature.t.sol -vvv
 - [ ] Access control reviewed
 - [ ] Reentrancy safe (CEI pattern followed)
 
+## Security Fixes (if applicable)
+
+<!-- For PRs addressing security findings -->
+
+**Findings Addressed:**
+<!-- List IRSB-SEC-XXX IDs -->
+- [ ] IRSB-SEC-XXX: [Description]
+
+**Regression Tests Added:**
+<!-- List test names proving the fix -->
+- `test_XXX_reverts()`
+
+**Verification:**
+```bash
+# Commands to verify fix
+./scripts/security.sh
+forge test --match-test "test_XXX"
+```
+
 ### Documentation
 - [ ] Code comments added where needed
 - [ ] README/docs updated if behavior changed

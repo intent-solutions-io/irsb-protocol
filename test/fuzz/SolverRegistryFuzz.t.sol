@@ -46,11 +46,7 @@ contract SolverRegistryFuzz is Test {
         Types.Solver memory solver = registry.getSolver(solverId);
 
         // Invariant: total bond should equal deposited
-        assertEq(
-            solver.bondBalance + solver.lockedBalance,
-            depositAmount,
-            "Invariant violated: total != deposited"
-        );
+        assertEq(solver.bondBalance + solver.lockedBalance, depositAmount, "Invariant violated: total != deposited");
     }
 
     /// @notice Invariant: locking bond maintains total invariant
@@ -69,11 +65,7 @@ contract SolverRegistryFuzz is Test {
 
         // Verify invariant maintained
         Types.Solver memory solver = registry.getSolver(solverId);
-        assertEq(
-            solver.bondBalance + solver.lockedBalance,
-            depositAmount,
-            "Lock violated total invariant"
-        );
+        assertEq(solver.bondBalance + solver.lockedBalance, depositAmount, "Lock violated total invariant");
         assertEq(solver.lockedBalance, lockAmount, "Locked amount incorrect");
         assertEq(solver.bondBalance, depositAmount - lockAmount, "Available amount incorrect");
     }
@@ -98,11 +90,7 @@ contract SolverRegistryFuzz is Test {
 
         // Verify invariant maintained
         Types.Solver memory solver = registry.getSolver(solverId);
-        assertEq(
-            solver.bondBalance + solver.lockedBalance,
-            depositAmount,
-            "Unlock violated total invariant"
-        );
+        assertEq(solver.bondBalance + solver.lockedBalance, depositAmount, "Unlock violated total invariant");
     }
 
     /// @notice Invariant: slash correctly reduces total bond

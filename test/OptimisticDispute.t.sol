@@ -149,8 +149,7 @@ contract OptimisticDisputeTest is Test {
 
         // Then open optimistic dispute
         vm.prank(challenger);
-        bytes32 disputeId =
-            disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
+        bytes32 disputeId = disputeModule.openOptimisticDispute(_receiptId, keccak256("evidence"));
 
         // Verify dispute state
         IOptimisticDisputeModule.OptimisticDispute memory dispute = disputeModule.getDispute(disputeId);
