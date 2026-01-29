@@ -41,7 +41,7 @@ echo ""
 
 # 3. Forge tests
 echo -e "${YELLOW}[3/5] Running tests...${NC}"
-TEST_OUTPUT=$(forge test 2>&1)
+TEST_OUTPUT=$(forge test 2>&1 || true)
 if echo "$TEST_OUTPUT" | grep -q "passed"; then
     PASS_COUNT=$(echo "$TEST_OUTPUT" | grep -oE '[0-9]+ passed' | head -1)
     echo -e "${GREEN}[PASS] Tests passed: $PASS_COUNT${NC}"
