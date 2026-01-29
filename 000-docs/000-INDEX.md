@@ -2,7 +2,7 @@
 
 **Project:** IRSB (Intent Receipts & Solver Bonds)
 **Created:** 2026-01-13
-**Updated:** 2026-01-25
+**Updated:** 2026-01-28
 
 ---
 
@@ -19,7 +19,12 @@
 | 007 | AT | SPEC | [IRSB Receipt Schema](007-AT-SPEC-irsb-receipt-schema.md) |
 | 008 | AA | AUDT | [DevOps Playbook](008-AA-AUDT-appaudit-devops-playbook.md) |
 | 009 | AA | ADR | [vNext Scope ADR](009-AA-ADR-irsb-vnext-scope.md) |
+| 010 | AA | SEC | [Security Audit Report v1.0](010-AA-SEC-irsb-security-audit-v1.md) |
 | - | - | RUNBOOK | [Deployment Runbook](DEPLOYMENT.md) |
+| - | - | OPS | [Security Operations Guide](SECURITY-OPERATIONS.md) |
+| - | - | OPS | [Multisig Transition Plan](MULTISIG_PLAN.md) |
+| - | - | OPS | [Monitoring Checklist](MONITORING.md) |
+| - | - | OPS | [Incident Playbook](INCIDENT_PLAYBOOK.md) |
 
 ---
 
@@ -40,7 +45,9 @@
 - **AAR** - After Action Report
 - **ADR** - Architecture Decision Record
 - **AUDT** - Audit/Analysis
+- **SEC** - Security Report
 - **RUNBOOK** - Operational Runbook
+- **OPS** - Operations Guide
 
 ---
 
