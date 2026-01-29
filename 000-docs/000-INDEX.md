@@ -1,7 +1,7 @@
 # IRSB Protocol - Document Index
 
 **Last Updated:** 2026-01-28
-**Total Documents:** 19 files (18 documents + 1 index)
+**Total Documents:** 21 files (20 documents + 1 index)
 **Status:** Active - v1.0.0 deployed on Sepolia
 
 ## Quick Reference
@@ -12,8 +12,8 @@
 | PP | Product & Planning | 2 |
 | RL | Research & Learning | 1 |
 | MR | Mixed/Reports (Legacy) | 4 |
-| AA | After Action & Review | 2 |
-| OD | Operations & Deployment | 4 |
+| AA | After Action & Review | 3 |
+| OD | Operations & Deployment | 5 |
 
 ## Documents by Category
 
@@ -41,17 +41,19 @@
 - `005-MR-RSCH-pain-point-research.md` - Pain point research
 - `006-MR-FEAS-irsb-feasibility-report.md` - Feasibility report
 
-### AA - After Action & Review (2)
+### AA - After Action & Review (3)
 
 - `008-AA-AUDT-appaudit-devops-playbook.md` - AppAudit DevOps playbook
 - `009-AA-ADR-irsb-vnext-scope.md` - vNext scope architecture decision
+- `009-AA-SEC-irsb-security-audit-v1.md` - Security audit report v1
 
-### OD - Operations & Deployment (4)
+### OD - Operations & Deployment (5)
 
 - `010-OD-GUID-deployment-guide.md` - Production deployment runbook
 - `011-OD-GUID-incident-playbook.md` - Incident response procedures
 - `012-OD-GUID-monitoring-guide.md` - Monitoring and alerting setup
 - `013-OD-GUID-multisig-plan.md` - Multisig migration plan
+- `017-OD-GUID-security-operations.md` - Security operations guide
 
 ## Chronological List
 
@@ -75,6 +77,8 @@
 | 014 | 2026-01-28 | AT | DSGN | Privacy Design |
 | 015 | 2026-01-28 | AT | SPEC | Validation Provider |
 | 016 | 2026-01-28 | AT | INTG | x402 Integration |
+| 009b | 2026-01-29 | AA | SEC | Security Audit Report v1 |
+| 017 | 2026-01-29 | OD | GUID | Security Operations Guide |
 
 ## Legacy Files (Outside Numbering System)
 

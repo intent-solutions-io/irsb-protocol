@@ -394,3 +394,168 @@ See `audit/INVARIANTS.md` for formal invariants to be implemented as tests.
 
 **Document History:**
 - 2026-01-28: Initial draft (Phase 0 baseline)
+## Appendix B: Gas Impact
+
+| Function | Before | After | Delta |
+|----------|--------|-------|-------|
+| postReceipt | 182,340 | 183,890 | +0.8% |
+| openDispute | 145,200 | 145,200 | 0% |
+| slash | 98,450 | 99,100 | +0.7% |
+| escalate | 67,800 | 68,200 | +0.6% |
+
+Gas impact from security fixes is minimal (<1% increase).
+
+## Appendix C: Timelock Implementation Guide
+
+For mainnet deployment, parameter changes should go through a timelock. Here's the minimal implementation approach:
+
+### Option 1: Use OpenZeppelin TimelockController (Recommended)
+
+```solidity
+// Deploy TimelockController with:
+// - minDelay: 24 hours (86400 seconds)
+// - proposers: [multisig]
+// - executors: [multisig]
+// - admin: address(0) (renounced)
+
+import "@openzeppelin/contracts/governance/TimelockController.sol";
+
+// Deployment
+address[] memory proposers = new address[](1);
+proposers[0] = MULTISIG_ADDRESS;
+address[] memory executors = new address[](1);
+executors[0] = MULTISIG_ADDRESS;
+
+TimelockController timelock = new TimelockController(
+    86400,           // 24 hour delay
+    proposers,
+    executors,
+    address(0)       // no admin (immutable)
+);
+
+// Transfer ownership to timelock
+solverRegistry.transferOwnership(address(timelock));
+intentReceiptHub.transferOwnership(address(timelock));
+disputeModule.transferOwnership(address(timelock));
+```
+
+### Option 2: Minimal Custom Timelock
+
+```solidity
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
+
+contract IRSBTimelock {
+    uint256 public constant DELAY = 24 hours;
+    address public owner;
+
+    struct QueuedTx {
+        address target;
+        bytes data;
+        uint256 executeAfter;
+        bool executed;
+    }
+
+    mapping(bytes32 => QueuedTx) public queue;
+
+    event TxQueued(bytes32 indexed txId, address target, uint256 executeAfter);
+    event TxExecuted(bytes32 indexed txId);
+    event TxCancelled(bytes32 indexed txId);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    constructor(address _owner) {
+        owner = _owner;
+    }
+
+    function queueTx(address target, bytes calldata data) external onlyOwner returns (bytes32) {
+        bytes32 txId = keccak256(abi.encode(target, data, block.timestamp));
+        queue[txId] = QueuedTx({
+            target: target,
+            data: data,
+            executeAfter: block.timestamp + DELAY,
+            executed: false
+        });
+        emit TxQueued(txId, target, block.timestamp + DELAY);
+        return txId;
+    }
+
+    function executeTx(bytes32 txId) external onlyOwner {
+        QueuedTx storage tx = queue[txId];
+        require(tx.executeAfter != 0, "Not queued");
+        require(!tx.executed, "Already executed");
+        require(block.timestamp >= tx.executeAfter, "Too early");
+
+        tx.executed = true;
+        (bool success,) = tx.target.call(tx.data);
+        require(success, "Execution failed");
+        emit TxExecuted(txId);
+    }
+
+    function cancelTx(bytes32 txId) external onlyOwner {
+        delete queue[txId];
+        emit TxCancelled(txId);
+    }
+}
+```
+
+### Migration Path
+
+1. Deploy TimelockController with multisig as proposer/executor
+2. Transfer ownership of all contracts to timelock
+3. Test on Sepolia before mainnet
+4. Document all timelocked functions in ops runbook
+
+### Emergency Bypass
+
+The `pause()` function should remain immediately executable. Two options:
+
+**Option A:** Keep separate pauser role (not through timelock)
+```solidity
+// Add to each contract
+address public pauser;
+function setPauser(address _pauser) external onlyOwner { pauser = _pauser; }
+function pause() external { require(msg.sender == owner || msg.sender == pauser); _pause(); }
+```
+
+**Option B:** Use TimelockController's bypass for emergencies
+- Add multisig directly as executor with 0-delay for pause() calls only
+
+## Appendix D: Baseline Metrics
+
+### Contract Sizes
+
+| Contract | Runtime (B) | Margin |
+|----------|-------------|--------|
+| SolverRegistry | 10,589 | 14,187 |
+| IntentReceiptHub | 14,252 | 10,324 |
+| DisputeModule | 7,268 | 17,308 |
+| EscrowVault | 4,305 | 20,271 |
+| ReceiptV2Extension | 14,509 | 10,067 |
+| OptimisticDisputeModule | 14,312 | 10,264 |
+
+All contracts within 24,576 byte limit.
+
+### Test Coverage
+
+```
+| Contract              | Lines    | Statements | Branches | Functions |
+|-----------------------|----------|------------|----------|-----------|
+| DisputeModule         | 88.43%   | 87.77%     | 37.50%   | 90.00%    |
+| EscrowVault           | 86.84%   | 80.46%     | 62.50%   | 86.67%    |
+| IntentReceiptHub      | 92.35%   | 86.08%     | 44.44%   | 100.00%   |
+| SolverRegistry        | 91.14%   | 87.58%     | 46.67%   | 92.86%    |
+| AcrossAdapter         | 97.59%   | 97.50%     | 76.47%   | 100.00%   |
+| ERC8004Adapter        | 93.75%   | 89.74%     | 80.00%   | 94.12%    |
+| ReceiptV2Extension    | 82.52%   | 81.76%     | 31.48%   | 80.77%    |
+| OptimisticDispute     | 92.35%   | 86.79%     | 55.10%   | 96.43%    |
+```
+
+### Test Summary
+
+- **308 tests passing**
+- **14 test suites**
+- **Fuzz tests:** 256 runs (default), 10,000 runs (CI profile)
