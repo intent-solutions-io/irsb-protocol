@@ -1,7 +1,7 @@
 # IRSB Protocol - Document Index
 
-**Last Updated:** 2026-01-28
-**Total Documents:** 24 files (23 documents + 1 index)
+**Last Updated:** 2026-01-29
+**Total Documents:** 25 files (24 documents + 1 index)
 **Status:** Active - v1.0.0 deployed on Sepolia
 
 ## Quick Reference
@@ -41,11 +41,12 @@
 - `005-MR-RSCH-pain-point-research.md` - Pain point research
 - `006-MR-FEAS-irsb-feasibility-report.md` - Feasibility report
 
-### AA - After Action & Review (3)
+### AA - After Action & Review (4)
 
-- `008-AA-AUDT-appaudit-devops-playbook.md` - AppAudit DevOps playbook
+- `008-AA-AUDT-appaudit-devops-playbook.md` - AppAudit DevOps playbook (legacy)
 - `009-AA-ADR-irsb-vnext-scope.md` - vNext scope architecture decision
 - `009-AA-SEC-irsb-security-audit-v1.md` - Security audit report v1
+- `021-AA-AUDT-appaudit-devops-playbook.md` - Operator-grade system analysis (current)
 
 ### OD - Operations & Deployment (8)
 
@@ -85,6 +86,7 @@
 | 018 | 2026-01-29 | OD | GUID | Discussions Setup Guide |
 | 019 | 2026-01-29 | OD | GUID | Repository Gaps |
 | 020 | 2026-01-29 | OD | GUID | Custom Properties Guide |
+| 021 | 2026-01-29 | AA | AUDT | Operator-Grade System Analysis |
 
 ## Legacy Files (Outside Numbering System)
 
