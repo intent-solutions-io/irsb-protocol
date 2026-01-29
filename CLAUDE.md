@@ -4,163 +4,253 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**IRSB (Intent Receipts & Solver Bonds)** - An Ethereum protocol providing accountability for intent-based transactions. Complements ERC-7683 cross-chain intents with:
-- **Intent Receipts**: On-chain records proving solver execution
-- **Solver Bonds**: Staked collateral slashable for violations
-- **Deterministic Enforcement**: Automated slashing for timeout, constraint violation, receipt forgery
+**IRSB (Intent Receipts & Solver Bonds)** - The accountability layer for intent-based transactions.
+
+> "Intents need receipts. Solvers need skin in the game."
+
+ERC-7683 standardizes cross-chain intents but doesn't answer: **"What happens when the solver fails?"**
+
+IRSB fills that gap with:
+- **Receipts**: On-chain proof of intent execution (V1 single-sig, V2 dual attestation)
+- **Bonds**: Staked collateral slashable for violations
+- **Disputes**: Deterministic + optimistic resolution with counter-bonds
+- **Escrow**: Native ETH and ERC20 tied to receipt lifecycle
+- **Reputation**: Portable IntentScore across protocols
+
+**Status**: v1.0.0 released, deployed on Sepolia, open source (MIT)
 
 ## Architecture
 
 ```
-┌─────────────────┐         ┌──────────────────┐
-│ SolverRegistry  │◄────────► IntentReceiptHub │
-├─────────────────┤         ├──────────────────┤
-│ • Registration  │         │ • Receipt post   │
-│ • Bond mgmt     │         │ • Disputes       │
-│ • Slashing      │         │ • Finalization   │
-│ • Reputation    │         │ • Settlement     │
-└────────┬────────┘         └────────┬─────────┘
-         │                           │
-         │                  ┌────────▼─────────┐
-         │                  │  DisputeModule   │
-         │                  ├──────────────────┤
-         │                  │ • Evidence       │
-         │                  │ • Escalation     │
-         │                  │ • Arbitration    │
-         │                  └──────────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│ SolverRegistry  │◄───►│ IntentReceiptHub │◄───►│  DisputeModule   │
+├─────────────────┤     ├──────────────────┤     ├──────────────────┤
+│ • Registration  │     │ • Post receipts  │     │ • Evidence       │
+│ • Bond staking  │     │ • V2 extension   │     │ • Escalation     │
+│ • Slashing      │     │ • Disputes       │     │ • Arbitration    │
+│ • Reputation    │     │ • Finalization   │     │                  │
+└────────┬────────┘     └────────┬─────────┘     └──────────────────┘
+         │                       │
+         │              ┌────────▼─────────┐
+         │              │   EscrowVault    │
+         │              ├──────────────────┤
+         │              │ • ETH + ERC20    │
+         │              │ • Release/Refund │
+         │              │ • Receipt-linked │
+         │              └──────────────────┘
          │
-┌────────▼─────────┐
-│  AcrossAdapter   │
-├──────────────────┤
-│ • Across→IRSB    │
-│ • Receipt prep   │
-│ • Fill validation│
-└──────────────────┘
+┌────────▼────────────────┐     ┌──────────────────────────┐
+│ OptimisticDisputeModule │     │    ReceiptV2Extension    │
+├─────────────────────────┤     ├──────────────────────────┤
+│ • Counter-bond window   │     │ • Dual attestation       │
+│ • Timeout resolution    │     │ • EIP-712 signatures     │
+│ • Escalation to arb     │     │ • Privacy commitments    │
+└─────────────────────────┘     └──────────────────────────┘
 ```
 
-**Authorization Model:**
-- SolverRegistry grants `authorizedCaller` to IntentReceiptHub and DisputeModule
-- Only authorized callers can slash/lock bonds
-- DisputeModule has separate `arbitrator` role for resolutions
+## Deployments
 
-**Contract Interaction Flow:**
-1. Solver registers via `SolverRegistry.registerSolver()` → deposits bond → becomes Active
-2. Solver posts signed receipts via `IntentReceiptHub.postReceipt()`
-3. Anyone can challenge within `CHALLENGE_WINDOW` via `openDispute()` (requires bond)
-4. Disputes resolve via `resolveDeterministic()` or escalate to `DisputeModule`
-5. Receipts finalize after challenge window via `finalize()`
+### Sepolia Testnet (Production)
+| Contract | Address |
+|----------|---------|
+| SolverRegistry | `0xB6ab964832808E49635fF82D1996D6a888ecB745` |
+| IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
+| DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
+
+## Repository Structure
+
+```
+irsb-protocol/
+├── src/                        # Solidity contracts
+│   ├── SolverRegistry.sol      # Solver lifecycle, bonding, slashing
+│   ├── IntentReceiptHub.sol    # Receipt posting, disputes, finalization
+│   ├── DisputeModule.sol       # Arbitration for complex disputes
+│   ├── EscrowVault.sol         # ETH + ERC20 escrow
+│   ├── extensions/
+│   │   └── ReceiptV2Extension.sol  # Dual attestation, EIP-712
+│   ├── modules/
+│   │   └── OptimisticDisputeModule.sol  # Counter-bond disputes
+│   ├── adapters/
+│   │   └── ERC8004Adapter.sol  # Validation provider
+│   ├── interfaces/             # Contract interfaces
+│   └── libraries/
+│       ├── Types.sol           # V1 structs, enums, constants
+│       ├── TypesV2.sol         # V2 structs, PrivacyLevel
+│       └── Events.sol          # Shared events
+├── test/                       # Foundry tests (308 passing)
+│   └── fuzz/                   # Fuzz tests (10k runs)
+├── script/                     # Deployment scripts
+├── sdk/                        # TypeScript SDK
+├── packages/
+│   └── x402-irsb/              # x402 HTTP payment integration
+├── examples/
+│   └── x402-express-service/   # Express example with 402 flow
+├── dashboard/                  # Next.js dashboard + landing page
+├── subgraph/                   # The Graph indexer
+├── deployments/                # Deployed addresses by network
+└── 000-docs/                   # Architecture docs, specs, guides
+```
 
 ## Build Commands
 
 ```bash
-forge build                                    # Build (via_ir enabled, optimizer 200 runs)
-forge test                                     # All tests
-forge test --match-path test/SolverRegistry.t.sol  # Single file
-forge test --match-test testDepositBond        # Single test
-forge test -vvv                                # Verbose stack traces
-forge test -vvvv                               # Full trace including calls
-forge test --gas-report                        # Gas analysis
-forge fmt                                      # Format (120 char line length)
-forge doc                                      # Generate docs to docs/
+# Contracts
+forge build                     # Build (via_ir, optimizer 200 runs)
+forge test                      # All 308 tests
+forge test -vvv                 # Verbose
+forge test --gas-report         # Gas analysis
+forge fmt                       # Format
+
+# Fuzz tests (CI profile)
+FOUNDRY_PROFILE=ci forge test --match-path "test/fuzz/*.sol"
+
+# SDK
+cd sdk && pnpm build && pnpm test
+
+# x402 package
+cd packages/x402-irsb && pnpm build && pnpm test
+
+# Dashboard
+cd dashboard && pnpm dev        # Local dev
+cd dashboard && pnpm build      # Production build
 ```
 
-**CI Profile** (more thorough): `FOUNDRY_PROFILE=ci forge test` runs 1000 fuzz iterations
-
-## Environment Setup
-
-Copy `.env.example` to `.env` and set:
-- `PRIVATE_KEY` - Deployer key
-- `SEPOLIA_RPC_URL` - Sepolia endpoint
-- `ETHERSCAN_API_KEY` - For verification
-
-## Deployment
-
-```bash
-# Local (anvil)
-anvil &
-forge script script/Deploy.s.sol:DeployLocal --fork-url http://localhost:8545 --broadcast
-
-# Sepolia
-source .env
-forge script script/Deploy.s.sol:DeploySepolia --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
-```
-
-**Deploy order:** SolverRegistry → IntentReceiptHub → DisputeModule → call `setAuthorizedCaller()` on registry
-
-## Key Constants
+## Key Parameters
 
 | Parameter | Value | Purpose |
 |-----------|-------|---------|
 | MINIMUM_BOND | 0.1 ETH | Solver activation threshold |
-| WITHDRAWAL_COOLDOWN | 7 days | Bond withdrawal delay |
-| MAX_JAILS | 3 | Jails before permanent ban |
 | CHALLENGE_WINDOW | 1 hour | Time to dispute receipt |
-| CHALLENGER_BOND_BPS | 1000 (10%) | Anti-griefing bond |
-| EVIDENCE_WINDOW | 24 hours | Evidence submission period |
-| ARBITRATION_TIMEOUT | 7 days | Default resolution deadline |
-| DECAY_HALF_LIFE | 30 days | Reputation decay rate |
+| WITHDRAWAL_COOLDOWN | 7 days | Bond withdrawal delay |
+| MAX_JAILS | 3 | Strikes before permanent ban |
+| COUNTER_BOND_WINDOW | 24 hours | Time for solver to counter |
+| ARBITRATION_TIMEOUT | 7 days | Max time for arbitration |
 
 ## Slashing Distribution
 
-| Recipient | Standard Slash | Arbitration |
-|-----------|---------------|-------------|
+| Recipient | Standard | Arbitration |
+|-----------|----------|-------------|
 | User | 80% | 70% |
 | Challenger | 15% | - |
 | Treasury | 5% | 20% |
 | Arbitrator | - | 10% |
 
-## Testing Conventions
+## Receipt Types
 
-- Test files: `test/<ContractName>.t.sol`
-- Use `setUp()` for fixture initialization
-- `vm.prank(address)` for caller impersonation
-- `vm.expectRevert()` for error assertions
-- `vm.warp()` for time-dependent tests (disputes, cooldowns)
-- `vm.deal()` for ETH balances
-- `vm.expectEmit()` for event verification
-
-**Common test patterns:**
+### V1 Receipt (Single Attestation)
 ```solidity
-// Expect custom error
-vm.expectRevert(abi.encodeWithSignature("SolverNotActive()"));
+struct IntentReceipt {
+    bytes32 intentHash;
+    bytes32 constraintsHash;
+    bytes32 routeHash;
+    bytes32 outcomeHash;
+    bytes32 evidenceHash;
+    uint64 createdAt;
+    uint64 expiry;
+    bytes32 solverId;
+    bytes solverSig;        // Single signature
+}
+```
 
-// Fast-forward past challenge window
+### V2 Receipt (Dual Attestation + Privacy)
+```solidity
+struct IntentReceiptV2 {
+    // ... V1 fields ...
+    bytes32 metadataCommitment;  // Hash only, no plaintext
+    string ciphertextPointer;     // IPFS CID or digest
+    PrivacyLevel privacyLevel;    // PUBLIC | SEMI_PUBLIC | PRIVATE
+    bytes32 escrowId;             // Optional escrow link
+    bytes clientSig;              // Client/payer attestation (EIP-712)
+}
+```
+
+## Dispute Flow
+
+```
+Receipt Posted
+    │
+    ├── [1 hour CHALLENGE_WINDOW]
+    │
+    ├── No dispute → finalize() → Reputation updated
+    │
+    └── Dispute opened (with bond)
+        │
+        ├── Deterministic (timeout, wrong amount)
+        │   └── resolveDeterministic() → Auto-slash
+        │
+        └── Optimistic (V2)
+            │
+            ├── [24h COUNTER_BOND_WINDOW]
+            │
+            ├── No counter-bond → Challenger wins by timeout
+            │
+            └── Counter-bond posted → Escalate to Arbitrator
+                │
+                └── [7d max] → Arbitrator rules → Slash or release
+```
+
+## Testing Patterns
+
+```solidity
+// Time manipulation for disputes
 vm.warp(block.timestamp + 1 hours + 1);
 
 // Deposit bond as operator
 vm.deal(operator, 1 ether);
 vm.prank(operator);
 registry.depositBond{value: 0.1 ether}(solverId);
+
+// Expect custom error
+vm.expectRevert(abi.encodeWithSignature("SolverNotActive()"));
 ```
 
-## Signature Verification
+## x402 Integration
 
-Receipts use Ethereum personal_sign:
-```solidity
-bytes32 messageHash = keccak256(abi.encode(...));
-bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
-address signer = ethSignedHash.recover(receipt.solverSig);
+The `@irsb/x402-integration` package bridges HTTP 402 payments to IRSB:
+
+```typescript
+import { buildReceiptV2FromX402, postReceiptV2FromX402 } from '@irsb/x402-integration';
+
+// After x402 payment verified
+const receipt = buildReceiptV2FromX402({
+  payload: { service, payment, request, response, timing },
+  ciphertextPointer: resultCID,
+  solverId: myRegisteredSolverId
+});
+
+await postReceiptV2FromX402(irsbClient, receipt, solverSigner);
 ```
 
-## File Structure
+## Environment Setup
 
-```
-src/
-├── SolverRegistry.sol       # Solver lifecycle and bonding
-├── IntentReceiptHub.sol     # Receipt posting and disputes
-├── DisputeModule.sol        # Arbitration for subjective disputes
-├── adapters/
-│   └── AcrossAdapter.sol    # Across Protocol integration
-├── interfaces/              # Contract interfaces (ISolverRegistry, etc.)
-└── libraries/
-    ├── Types.sol            # Shared structs, enums, constants
-    └── Events.sol           # Shared events
+Copy `.env.example` to `.env`:
+```bash
+PRIVATE_KEY=0x...
+SEPOLIA_RPC_URL=https://...
+ETHERSCAN_API_KEY=...
 ```
 
-## Project References
+## Key Documentation
 
-- [ERC-7683 Cross Chain Intents](https://eips.ethereum.org/EIPS/eip-7683)
-- Protocol spec: `000-docs/001-RL-PROP-irsb-solver-accountability.md`
-- PRD: `000-docs/002-PP-PROD-irsb-prd.md`
-- EIP spec: `000-docs/003-AT-SPEC-irsb-eip-spec.md`
-- Receipt schema: `000-docs/007-AT-SPEC-irsb-receipt-schema.md`
+| Document | Purpose |
+|----------|---------|
+| `000-docs/X402-INTEGRATION.md` | x402 HTTP payment integration guide |
+| `000-docs/PRIVACY.md` | On-chain vs off-chain data model |
+| `000-docs/DEPLOYMENT.md` | Deployment runbook |
+| `000-docs/MONITORING.md` | Monitoring checklist |
+| `000-docs/INCIDENT_PLAYBOOK.md` | Emergency procedures |
+| `000-docs/MULTISIG_PLAN.md` | Gnosis Safe transition |
+
+## Strategic Context
+
+**Goal**: IRSB aims to become the global standard accountability layer for intent-based systems.
+
+**Competition**: No direct competitors building a cross-protocol intent accountability standard. Protocol-specific solutions (UniswapX, Across, CoW) have internal reputation but nothing portable.
+
+**Path to Standard**:
+1. Deploy to mainnet
+2. Get 1 major integration (Across, CoW, UniswapX)
+3. Submit as ERC/EIP proposal
+4. Multi-chain deployment (Arbitrum, Base, Polygon)
+
+**Key Insight**: Don't own a chain. Own the standard. Standards win by being everywhere, not by controlling infrastructure.
