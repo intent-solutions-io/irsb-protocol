@@ -30,3 +30,4 @@ sdk/dist/
 subgraph/build/
 subgraph/generated/
 dashboard/.next/
+.venv/
