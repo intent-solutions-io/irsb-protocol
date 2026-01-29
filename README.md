@@ -216,15 +216,40 @@ sequenceDiagram
 ## Development
 
 ```bash
+# Run all tests
+forge test
+
 # Run specific test file
 forge test --match-path test/SolverRegistry.t.sol -vvv
 
 # Gas report
 forge test --gas-report
 
+# Coverage report
+forge coverage --report summary --ir-minimum
+
 # Deploy locally
 anvil &
 forge script script/Deploy.s.sol:DeployLocal --fork-url http://localhost:8545 --broadcast
+```
+
+### Security Testing
+
+```bash
+# Run with CI-equivalent fuzz iterations (10,000 runs)
+FOUNDRY_PROFILE=ci forge test
+
+# Or set fuzz runs directly
+FOUNDRY_FUZZ_RUNS=10000 forge test
+
+# Run invariant tests
+forge test --match-path "test/invariants/*.sol"
+
+# Static analysis with Slither
+slither . --config-file slither.config.json
+
+# Full security check
+./scripts/security.sh
 ```
 
 ## Contributing
