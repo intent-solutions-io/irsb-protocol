@@ -1,159 +1,187 @@
 # IRSB Protocol
 
-**Intent Receipts & Solver Bonds** - An accountability layer for intent-based transactions.
+**The accountability layer for intent-based transactions.**
 
-## Overview
+> Intents need receipts. Solvers need skin in the game.
 
-IRSB provides a standardized framework for solver accountability in the intent-based transaction ecosystem. It enables:
+---
 
-- **Solver Registration & Bonding** - Solvers stake ETH as collateral
-- **Receipt Posting** - Cryptographically signed proof of intent execution
-- **Deterministic Disputes** - On-chain verification of solver violations
-- **Reputation Tracking** - IntentScore metrics for solver performance
+## The Problem
 
-## Architecture
+[ERC-7683](https://eips.ethereum.org/EIPS/eip-7683) standardizes how users express cross-chain intents. But it doesn't answer:
 
+**"What happens when the solver fails?"**
+
+Today: Nothing. Users lose money. Solvers face no consequences. Trust is informal.
+
+## The Solution
+
+IRSB (Intent Receipts & Solver Bonds) adds the missing accountability layer:
+
+| Component | What It Does |
+|-----------|--------------|
+| **Receipts** | On-chain proof that a solver executed an intent |
+| **Bonds** | Staked collateral that can be slashed for violations |
+| **Disputes** | Automated enforcement for timeouts, wrong outputs, fraud |
+| **Reputation** | Portable trust scores that follow solvers across protocols |
+
+```mermaid
+flowchart LR
+    A[User Intent] --> B[Solver Executes]
+    B --> C[Posts Receipt]
+    C --> D{Challenge Window}
+    D -->|No Dispute| E[✓ Finalized]
+    D -->|Disputed| F[Evidence Review]
+    F -->|Solver Fault| G[Slash Bond → Compensate User]
+    F -->|No Fault| E
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      IRSB Protocol                          │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│ SolverRegistry  │ IntentReceiptHub│    DisputeModule        │
-│                 │                 │                         │
-│ • Registration  │ • Post Receipts │ • Arbitration           │
-│ • Bond Mgmt     │ • Open Disputes │ • Complex Disputes      │
-│ • Slashing      │ • Finalization  │ • Evidence Review       │
-│ • Jail/Ban      │ • Settlement    │                         │
-└─────────────────┴─────────────────┴─────────────────────────┘
-```
 
-## Contracts
+## Why IRSB?
 
-| Contract | Description |
-|----------|-------------|
-| `SolverRegistry` | Solver registration, bonding, slashing, jail/ban lifecycle |
-| `IntentReceiptHub` | Receipt posting, disputes, finalization, settlement proofs |
-| `DisputeModule` | Arbitration interface for complex (non-deterministic) disputes |
-| `Types.sol` | Shared data structures and constants |
+- **ERC-7683 compatible** - Works with the emerging intent standard
+- **Protocol-agnostic** - One accountability layer for all intent systems
+- **Economically enforced** - Bonds ensure solvers have skin in the game
+- **Portable reputation** - Solver track records move across protocols
 
 ## Quick Start
 
-### Prerequisites
-
-- [Foundry](https://book.getfoundry.sh/getting-started/installation)
-
-### Build
-
 ```bash
+# Install
+forge install
+
+# Build
 forge build
+
+# Test (308 tests)
+forge test
 ```
 
-### Test
+## Deployments
 
-```bash
-forge test -vv
+### Sepolia Testnet
+
+| Contract | Address |
+|----------|---------|
+| SolverRegistry | `0xB6ab964832808E49635fF82D1996D6a888ecB745` |
+| IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
+| DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph IRSB Protocol
+        SR[SolverRegistry]
+        IRH[IntentReceiptHub]
+        DM[DisputeModule]
+    end
+
+    SR <--> IRH
+    IRH <--> DM
+
+    SR --- SR1[Registration]
+    SR --- SR2[Bond Staking]
+    SR --- SR3[Slashing]
+    SR --- SR4[Reputation]
+
+    IRH --- IRH1[Post Receipts]
+    IRH --- IRH2[Open Disputes]
+    IRH --- IRH3[Finalization]
+
+    DM --- DM1[Evidence]
+    DM --- DM2[Escalation]
+    DM --- DM3[Arbitration]
 ```
 
-### Deploy (Local)
+## Solver Lifecycle
 
-```bash
-# Start local node
-anvil &
-
-# Deploy
-forge script script/Deploy.s.sol:DeployLocal --fork-url http://localhost:8545 --broadcast
+```mermaid
+stateDiagram-v2
+    [*] --> Inactive: Register
+    Inactive --> Active: Deposit Bond ≥ 0.1 ETH
+    Active --> Jailed: Violation
+    Jailed --> Active: Wait + Deposit
+    Jailed --> Banned: 3rd Jail
+    Active --> Inactive: Withdraw Bond
+    Banned --> [*]
 ```
 
-### Deploy (Sepolia)
+## Receipt Flow
 
-```bash
-# Set environment variables
-cp .env.example .env
-# Edit .env with PRIVATE_KEY and SEPOLIA_RPC_URL
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant S as Solver
+    participant H as IntentReceiptHub
+    participant R as SolverRegistry
 
-# Deploy
-source .env
-forge script script/Deploy.s.sol:DeploySepolia --rpc-url $SEPOLIA_RPC_URL --broadcast -vvvv
+    U->>S: Submit Intent
+    S->>S: Execute Off-chain
+    S->>H: postReceipt(receipt)
+    H->>H: Validate Signature
+    H-->>U: Challenge Window (1 hr)
+
+    alt No Dispute
+        H->>H: finalize()
+        H->>R: updateScore(success)
+    else Disputed
+        U->>H: openDispute(evidence)
+        H->>R: slash(solver, amount)
+        R-->>U: Compensation
+    end
 ```
 
-## Key Features
+## Key Parameters
 
-### Solver Lifecycle
+| Parameter | Value | Purpose |
+|-----------|-------|---------|
+| Minimum Bond | 0.1 ETH | Solver activation threshold |
+| Challenge Window | 1 hour | Time to dispute a receipt |
+| Withdrawal Cooldown | 7 days | Delay before withdrawing bond |
+| Max Jails | 3 | Strikes before permanent ban |
 
-```
-Inactive → Active → Jailed → Banned
-    ↑         │         │
-    └─────────┴─────────┘ (can recover with bond)
-```
+## Documentation
 
-### Receipt Flow
+| Document | Description |
+|----------|-------------|
+| [CHANGELOG](./CHANGELOG.md) | Release history |
+| [000-docs/](./000-docs/) | Architecture decisions, specs, guides |
+| [X402-INTEGRATION](./000-docs/X402-INTEGRATION.md) | HTTP 402 payment integration |
+| [PRIVACY](./000-docs/PRIVACY.md) | On-chain vs off-chain data model |
 
-```
-1. Solver executes intent off-chain
-2. Solver posts signed receipt on-chain
-3. Challenge window opens (1 hour default)
-4. If disputed → Deterministic resolution or arbitration
-5. If no dispute → Receipt finalized, reputation updated
-```
+## Packages
 
-### Dispute Reasons
-
-| Code | Reason | Resolution |
-|------|--------|------------|
-| `0x01` | Timeout | Deterministic (on-chain) |
-| `0x02` | MinOutViolation | Requires evidence |
-| `0x03` | WrongToken | Requires evidence |
-| `0x04` | WrongChain | Requires evidence |
-| `0x05` | WrongRecipient | Requires evidence |
-| `0x07` | InvalidSignature | Deterministic (on-chain) |
-
-## Configuration
-
-### Constants
-
-| Parameter | Value | Description |
-|-----------|-------|-------------|
-| `MINIMUM_BOND` | 0.1 ETH | Min stake to activate solver |
-| `CHALLENGE_WINDOW` | 1 hour | Time to dispute a receipt |
-| `WITHDRAWAL_COOLDOWN` | 7 days | Delay before withdrawing bond |
-| `MAX_JAILS` | 3 | Jails before permanent ban |
+| Package | Description |
+|---------|-------------|
+| `packages/x402-irsb` | x402 HTTP payment integration |
+| `examples/x402-express-service` | Express example with 402 flow |
 
 ## Development
 
-### Project Structure
-
-```
-├── src/
-│   ├── interfaces/      # Contract interfaces
-│   ├── libraries/       # Shared types and utilities
-│   ├── SolverRegistry.sol
-│   ├── IntentReceiptHub.sol
-│   └── DisputeModule.sol
-├── test/                # Foundry tests
-├── script/              # Deployment scripts
-└── foundry.toml         # Foundry configuration
-```
-
-### Running Tests
-
 ```bash
-# All tests
-forge test
-
-# Verbose output
-forge test -vvvv
-
-# Specific test
-forge test --match-test test_RegisterSolver
+# Run specific test file
+forge test --match-path test/SolverRegistry.t.sol -vvv
 
 # Gas report
 forge test --gas-report
+
+# Deploy locally
+anvil &
+forge script script/Deploy.s.sol:DeployLocal --fork-url http://localhost:8545 --broadcast
 ```
+
+## Contributing
+
+IRSB aims to be the standard accountability layer for intents. Contributions welcome:
+
+1. Open an issue to discuss changes
+2. Fork and create a feature branch
+3. Submit a PR with tests
 
 ## License
 
-MIT
+MIT - See [LICENSE](./LICENSE)
 
-## Links
+---
 
-- [ERC-7683 Standard](https://eips.ethereum.org/EIPS/eip-7683) - Cross-chain intents
-- [Foundry Book](https://book.getfoundry.sh/) - Development framework
+**IRSB v1.0.0** | [ERC-7683](https://eips.ethereum.org/EIPS/eip-7683) | [Foundry](https://book.getfoundry.sh/)
