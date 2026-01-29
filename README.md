@@ -203,8 +203,8 @@ sequenceDiagram
 |----------|-------------|
 | [CHANGELOG](./CHANGELOG.md) | Release history |
 | [000-docs/](./000-docs/) | Architecture decisions, specs, guides |
-| [X402-INTEGRATION](./000-docs/X402-INTEGRATION.md) | HTTP 402 payment integration |
-| [PRIVACY](./000-docs/PRIVACY.md) | On-chain vs off-chain data model |
+| [x402 Integration](./000-docs/016-AT-INTG-x402-integration.md) | HTTP 402 payment integration |
+| [Privacy Design](./000-docs/014-AT-DSGN-privacy-design.md) | On-chain vs off-chain data model |
 
 ## Packages
 
