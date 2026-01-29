@@ -19,6 +19,7 @@
 | 007 | AT | SPEC | [IRSB Receipt Schema](007-AT-SPEC-irsb-receipt-schema.md) |
 | 008 | AA | AUDT | [DevOps Playbook](008-AA-AUDT-appaudit-devops-playbook.md) |
 | 009 | AA | ADR | [vNext Scope ADR](009-AA-ADR-irsb-vnext-scope.md) |
+| 010 | AA | SEC | [Security Audit Report v1](009-AA-SEC-irsb-security-audit-v1.md) |
 | - | - | RUNBOOK | [Deployment Runbook](DEPLOYMENT.md) |
 
 ---
@@ -40,6 +41,7 @@
 - **AAR** - After Action Report
 - **ADR** - Architecture Decision Record
 - **AUDT** - Audit/Analysis
+- **SEC** - Security Audit
 - **RUNBOOK** - Operational Runbook
 
 ---
