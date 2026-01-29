@@ -10,14 +10,16 @@ export default function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-50 tracking-tight">
-              IRSB
+              IRSB Protocol
             </h1>
             <p className="mt-2 text-xl sm:text-2xl font-medium text-zinc-200">
-              Accountability for Intent Execution
+              The accountability layer for intent-based transactions
             </p>
-            <p className="mt-6 max-w-2xl mx-auto text-lg text-zinc-400">
-              Receipts + economic guarantees for solvers, so wallets and protocols
-              can trust outcomes.
+            <p className="mt-4 text-lg italic text-zinc-300">
+              "Intents need receipts. Solvers need skin in the game."
+            </p>
+            <p className="mt-6 max-w-2xl mx-auto text-base text-zinc-400">
+              ERC-7683 standardizes intents. IRSB standardizes what happens when solvers fail.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -44,9 +46,11 @@ export default function LandingPage() {
             <h2 className="text-3xl font-bold text-zinc-50">
               The Problem
             </h2>
-            <p className="mt-6 text-lg text-zinc-300">
-              Intent-based systems delegate execution to solvers — but there's no
-              standardized way to verify they did what they claimed.
+            <p className="mt-6 text-2xl font-semibold text-red-400">
+              "What happens when the solver fails?"
+            </p>
+            <p className="mt-4 text-lg text-zinc-300">
+              Today: <span className="text-zinc-100">Nothing.</span> Users lose money. Solvers face no consequences. Trust is informal.
             </p>
           </div>
 
@@ -323,7 +327,7 @@ export default function LandingPage() {
                 <span className="text-lg font-bold text-zinc-50">IRSB</span>
               </div>
               <p className="mt-4 text-sm text-zinc-400">
-                Accountability for intent execution.
+                The accountability layer for intent-based transactions.
               </p>
             </div>
 

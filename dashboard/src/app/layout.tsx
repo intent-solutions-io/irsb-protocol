@@ -7,11 +7,11 @@ const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
   title: {
-    default: 'IRSB Protocol - The Credit Score Layer for Intent Solvers',
+    default: 'IRSB Protocol - The Accountability Layer for Intent-Based Transactions',
     template: '%s | IRSB Protocol',
   },
-  description: 'IRSB Protocol brings accountability to intent-based transactions. On-chain receipts, staked bonds, and transparent reputation for Ethereum intent solvers.',
-  keywords: ['IRSB', 'Intent Solver', 'Ethereum', 'ERC-7683', 'DeFi', 'Cross-chain', 'Blockchain', 'Reputation'],
+  description: 'What happens when the solver fails? IRSB adds receipts, bonds, and disputes to intent-based systems. The missing accountability layer for ERC-7683.',
+  keywords: ['IRSB', 'Intent Solver', 'Ethereum', 'ERC-7683', 'DeFi', 'Cross-chain', 'Blockchain', 'Accountability', 'Solver Bonds', 'Intent Receipts'],
   authors: [{ name: 'Intent Solutions', url: 'https://intentsolutions.io' }],
   creator: 'Intent Solutions',
   publisher: 'Intent Solutions',
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: 'https://irsb-protocol.web.app',
     siteName: 'IRSB Protocol',
-    title: 'IRSB Protocol - The Credit Score Layer for Intent Solvers',
-    description: 'IRSB Protocol brings accountability to intent-based transactions. On-chain receipts, staked bonds, and transparent reputation for Ethereum intent solvers.',
+    title: 'IRSB Protocol - The Accountability Layer for Intent-Based Transactions',
+    description: 'What happens when the solver fails? IRSB adds receipts, bonds, and disputes to intent-based systems. The missing accountability layer for ERC-7683.',
     images: [
       {
         url: '/og-image.png',
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'IRSB Protocol - The Credit Score Layer for Intent Solvers',
-    description: 'IRSB Protocol brings accountability to intent-based transactions. On-chain receipts, staked bonds, and transparent reputation.',
+    title: 'IRSB Protocol - The Accountability Layer for Intent-Based Transactions',
+    description: 'What happens when the solver fails? IRSB adds receipts, bonds, and disputes. The missing layer for ERC-7683.',
     images: ['/og-image.png'],
   },
   robots: {
