@@ -218,8 +218,51 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Integration Table */}
-          <div className="mt-12 max-w-4xl mx-auto">
+          {/* Integration - Mobile Cards */}
+          <div className="mt-12 max-w-4xl mx-auto md:hidden space-y-4">
+            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-semibold text-zinc-100">ERC-7683</h4>
+                <span className="text-xs text-zinc-500 uppercase">Intent Format</span>
+              </div>
+              <p className="text-sm text-zinc-400 mb-3">Defines cross-chain intent format</p>
+              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
+                <p className="text-sm text-zinc-300">
+                  Receipts reference <code className="code-mobile">intentHash</code> from ERC-7683 orders
+                </p>
+              </div>
+            </div>
+            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-semibold text-zinc-100">ERC-8004</h4>
+                <span className="text-xs text-zinc-500 uppercase">Agent Registry</span>
+              </div>
+              <p className="text-sm text-zinc-400 mb-3">Agent identity & reputation registry</p>
+              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
+                <p className="text-sm text-zinc-300">
+                  IRSB is a <span className="font-semibold text-zinc-100">Validation Provider</span> — generates signals that feed the registry
+                </p>
+              </div>
+            </div>
+            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-base font-semibold text-zinc-100">x402</h4>
+                <span className="text-xs text-zinc-500 uppercase">HTTP Payments</span>
+              </div>
+              <p className="text-sm text-zinc-400 mb-3">HTTP 402 payment protocol</p>
+              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
+                <p className="text-sm text-zinc-300">
+                  Adds accountability to paid APIs — receipts prove service delivery
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration - Desktop Table */}
+          <div className="mt-12 max-w-4xl mx-auto hidden md:block">
             <div className="overflow-hidden rounded-xl border border-zinc-700">
               <table className="w-full">
                 <thead className="bg-zinc-800">
@@ -238,7 +281,7 @@ export default function LandingPage() {
                       Defines cross-chain intent format
                     </td>
                     <td className="px-6 py-4 text-sm text-zinc-300">
-                      IRSB receipts reference <code className="bg-zinc-700 px-1 rounded text-xs">intentHash</code> from ERC-7683 orders
+                      IRSB receipts reference <code className="code-mobile">intentHash</code> from ERC-7683 orders
                     </td>
                   </tr>
                   <tr>
@@ -462,14 +505,14 @@ export default function LandingPage() {
               <h3 className="text-sm font-semibold text-zinc-50 uppercase tracking-wider">
                 Resources
               </h3>
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-4 space-y-1">
                 <li>
-                  <Link href="/dashboard" className="text-sm text-zinc-400 hover:text-zinc-200">
+                  <Link href="/dashboard" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
                     Solver Dashboard
                   </Link>
                 </li>
                 <li>
-                  <Link href="/request-docs" className="text-sm text-zinc-400 hover:text-zinc-200">
+                  <Link href="/request-docs" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
                     Request Documentation
                   </Link>
                 </li>
@@ -478,17 +521,22 @@ export default function LandingPage() {
 
             <div>
               <h3 className="text-sm font-semibold text-zinc-50 uppercase tracking-wider">
-                Contact
+                Legal
               </h3>
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-4 space-y-1">
                 <li>
-                  <a href={`mailto:${config.email}`} className="text-sm text-zinc-400 hover:text-zinc-200">
-                    {config.email}
-                  </a>
+                  <Link href="/privacy" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
+                    Privacy Policy
+                  </Link>
                 </li>
                 <li>
-                  <a href={config.companyUrl} target="_blank" rel="noopener noreferrer" className="text-sm text-zinc-400 hover:text-zinc-200">
-                    {config.company}
+                  <Link href="/terms" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li>
+                  <a href={`mailto:${config.email}`} className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
+                    {config.email}
                   </a>
                 </li>
               </ul>

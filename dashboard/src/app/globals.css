@@ -31,3 +31,25 @@ body {
 .score-danger {
   @apply bg-red-900/50 text-red-300 border border-red-700;
 }
+
+/* Mobile UX utilities */
+.touch-target-min {
+  @apply min-h-[44px] min-w-[44px];
+}
+
+.code-mobile {
+  @apply text-xs sm:text-sm bg-zinc-700 px-1.5 py-0.5 rounded font-mono;
+}
+
+/* Prevent horizontal scroll globally */
+html, body {
+  @apply overflow-x-hidden;
+}
+
+/* Focus visible for keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  @apply outline-2 outline-offset-2 outline-zinc-400 ring-0;
+}

@@ -131,7 +131,8 @@ export default function Navigation() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
               </span>
-              Testnet Preview — Live contracts on Sepolia with sample data
+              <span className="hidden sm:inline">Testnet Preview — Live contracts on Sepolia with sample data</span>
+              <span className="sm:hidden">Testnet Preview — Sepolia</span>
             </span>
           </p>
         </div>
@@ -140,11 +141,11 @@ export default function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3 shrink-0">
-            <div className="hidden sm:flex w-8 h-8 bg-zinc-200 rounded-lg items-center justify-center">
-              <span className="text-zinc-900 font-bold text-sm">IR</span>
+          <Link href="/" className="flex items-center space-x-2 sm:space-x-3 shrink-0">
+            <div className="flex w-7 h-7 sm:w-8 sm:h-8 bg-zinc-200 rounded-lg items-center justify-center">
+              <span className="text-zinc-900 font-bold text-xs sm:text-sm">IR</span>
             </div>
-            <span className="text-xl font-bold text-zinc-50">
+            <span className="text-lg sm:text-xl font-bold text-zinc-50">
               IRSB
             </span>
             <span className="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-900/50 text-amber-300 border border-amber-700">
@@ -185,7 +186,7 @@ export default function Navigation() {
             <NetworkSelector />
             <button
               type="button"
-              className="inline-flex items-center justify-center p-2 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 transition-colors"
+              className="inline-flex items-center justify-center p-3 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 active:bg-zinc-700 transition-colors touch-target-min"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label="Toggle menu"
