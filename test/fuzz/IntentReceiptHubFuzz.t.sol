@@ -259,7 +259,8 @@ contract IntentReceiptHubFuzz is Test {
             (, status) = hub.getReceipt(receiptId);
             assertEq(uint8(status), uint8(Types.ReceiptStatus.Slashed), "Should be Slashed");
         } else {
-            // Path: Pending → Disputed → Pending (dispute rejected, returns to pending)
+            // Path: Pending → Disputed → Finalized (dispute rejected)
+            // IRSB-SEC-003: Rejected disputes now finalize the receipt to prevent re-challenge attacks
             vm.prank(operator);
             hub.submitSettlementProof(receiptId, keccak256("proof"));
 
@@ -268,18 +269,9 @@ contract IntentReceiptHubFuzz is Test {
 
             hub.resolveDeterministic(receiptId);
 
-            // Contract returns to Pending after rejected dispute (challenge window continues)
+            // IRSB-SEC-003: Receipt is now Finalized after rejected dispute
             (, status) = hub.getReceipt(receiptId);
-            assertEq(
-                uint8(status), uint8(Types.ReceiptStatus.Pending), "Should return to Pending after rejected dispute"
-            );
-
-            // Then can be finalized after challenge window
-            vm.warp(block.timestamp + 1 hours + 1);
-            hub.finalize(receiptId);
-
-            (, status) = hub.getReceipt(receiptId);
-            assertEq(uint8(status), uint8(Types.ReceiptStatus.Finalized), "Should be Finalized after window");
+            assertEq(uint8(status), uint8(Types.ReceiptStatus.Finalized), "Should be Finalized after rejected dispute");
         }
     }
 
@@ -310,8 +302,11 @@ contract IntentReceiptHubFuzz is Test {
     {
         Types.IntentReceipt memory receipt = _createUnsignedReceipt(intentHash, expiry);
 
+        // IRSB-SEC-001: Include chainId and hub address to prevent cross-chain replay
         bytes32 messageHash = keccak256(
             abi.encode(
+                block.chainid,
+                address(hub),
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,

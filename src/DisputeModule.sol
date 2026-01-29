@@ -107,8 +107,15 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
     }
 
     /// @inheritdoc IDisputeModule
+    /// @dev IRSB-SEC-002: Only dispute parties (challenger or solver) can escalate
     function escalate(bytes32 disputeId) external payable nonReentrant {
         Types.Dispute memory dispute = receiptHub.getDispute(disputeId);
+
+        // IRSB-SEC-002: Only dispute parties can escalate to prevent DoS/griefing
+        Types.Solver memory solver = solverRegistry.getSolver(dispute.solverId);
+        if (msg.sender != dispute.challenger && msg.sender != solver.operator) {
+            revert NotDisputeParty();
+        }
 
         // Only subjective disputes can be escalated
         if (dispute.reason != Types.DisputeReason.Subjective) {

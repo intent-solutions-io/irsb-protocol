@@ -41,6 +41,7 @@ interface ISolverRegistry {
     error InvalidOperatorAddress();
     error MinimumBondNotMet();
     error WithdrawalCooldownActive();
+    error ZeroSlashAmount();
 
     // ============ External Functions ============
 

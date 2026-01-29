@@ -94,10 +94,12 @@ contract SolverRegistryFuzz is Test {
     }
 
     /// @notice Invariant: slash correctly reduces total bond
+    /// @dev IRSB-SEC-005: slashAmount must be > 0 (zero slashes now revert)
     function testFuzz_SlashReducesTotal(uint256 depositAmount, uint256 lockAmount, uint256 slashAmount) public {
         depositAmount = bound(depositAmount, MINIMUM_BOND, 10 ether);
         lockAmount = bound(lockAmount, MINIMUM_BOND / 2, depositAmount);
-        slashAmount = bound(slashAmount, 0, lockAmount);
+        // IRSB-SEC-005: slashAmount must be > 0 (zero slashes now revert)
+        slashAmount = bound(slashAmount, 1, lockAmount);
 
         address recipient = address(0x999);
 

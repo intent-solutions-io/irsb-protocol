@@ -1,55 +1,112 @@
 # IRSB Protocol - Document Index
 
-**Project:** IRSB (Intent Receipts & Solver Bonds)
-**Created:** 2026-01-13
-**Updated:** 2026-01-25
+**Last Updated:** 2026-01-28
+**Total Documents:** 19 files (18 documents + 1 index)
+**Status:** Active - v1.0.0 deployed on Sepolia
 
----
+## Quick Reference
 
-## Documents
+| Code | Category | Count |
+|------|----------|-------|
+| AT | Architecture & Technical | 5 |
+| PP | Product & Planning | 2 |
+| RL | Research & Learning | 1 |
+| MR | Mixed/Reports (Legacy) | 4 |
+| AA | After Action & Review | 2 |
+| OD | Operations & Deployment | 4 |
 
-| ID | Category | Type | Description |
-|----|----------|------|-------------|
-| 001 | RL | PROP | [IRSB Solver Accountability Protocol Proposal](001-RL-PROP-irsb-solver-accountability.md) |
-| 002 | PP | PROD | [IRSB Product Requirements Document](002-PP-PROD-irsb-prd.md) |
-| 003 | AT | SPEC | [IRSB EIP-Style Specification](003-AT-SPEC-irsb-eip-spec.md) |
-| 004 | MR | RSCH | [Accountability Gap Report](004-MR-RSCH-accountability-gap-report.md) |
-| 005 | MR | RSCH | [Pain Point Research & Validation Plan](005-MR-RSCH-pain-point-research.md) |
-| 006 | PP | AAR | [Session AAR 2026-01-25](006-PP-AAR-session-2026-01-25.md) |
-| 007 | AT | SPEC | [IRSB Receipt Schema](007-AT-SPEC-irsb-receipt-schema.md) |
-| 008 | AA | AUDT | [DevOps Playbook](008-AA-AUDT-appaudit-devops-playbook.md) |
-| 009 | AA | ADR | [vNext Scope ADR](009-AA-ADR-irsb-vnext-scope.md) |
-| 010 | AA | SEC | [Security Audit Report v1](009-AA-SEC-irsb-security-audit-v1.md) |
-| - | - | RUNBOOK | [Deployment Runbook](DEPLOYMENT.md) |
+## Documents by Category
 
----
+### AT - Architecture & Technical (5)
 
-## Category Legend
+- `003-AT-SPEC-irsb-eip-spec.md` - IRSB EIP specification
+- `007-AT-SPEC-irsb-receipt-schema.md` - Receipt schema specification
+- `014-AT-DSGN-privacy-design.md` - Privacy architecture design
+- `015-AT-SPEC-validation-provider.md` - ERC-8004 validation provider spec
+- `016-AT-INTG-x402-integration.md` - x402 HTTP payment integration
 
-- **RL** - Research & Learning
-- **PP** - Product & Planning
+### PP - Product & Planning (2)
+
+- `002-PP-PROD-irsb-prd.md` - Product requirements document
+- `006-PP-AAR-session-2026-01-25.md` - Planning session after-action
+
+### RL - Research & Learning (1)
+
+- `001-RL-PROP-irsb-solver-accountability.md` - Original accountability proposal
+
+### MR - Mixed/Reports (Legacy) (4)
+
+- `004-MR-RSCH-accountability-gap-report.md` - Gap analysis research
+- `005-MR-AAR-development-status-jan2026.md` - Development status report
+- `005-MR-RSCH-pain-point-research.md` - Pain point research
+- `006-MR-FEAS-irsb-feasibility-report.md` - Feasibility report
+
+### AA - After Action & Review (2)
+
+- `008-AA-AUDT-appaudit-devops-playbook.md` - AppAudit DevOps playbook
+- `009-AA-ADR-irsb-vnext-scope.md` - vNext scope architecture decision
+
+### OD - Operations & Deployment (4)
+
+- `010-OD-GUID-deployment-guide.md` - Production deployment runbook
+- `011-OD-GUID-incident-playbook.md` - Incident response procedures
+- `012-OD-GUID-monitoring-guide.md` - Monitoring and alerting setup
+- `013-OD-GUID-multisig-plan.md` - Multisig migration plan
+
+## Chronological List
+
+| # | Date | Category | Type | Title |
+|---|------|----------|------|-------|
+| 001 | 2026-01-13 | RL | PROP | IRSB Solver Accountability Proposal |
+| 002 | 2026-01-13 | PP | PROD | IRSB Product Requirements Document |
+| 003 | 2026-01-14 | AT | SPEC | IRSB EIP Specification |
+| 004 | 2026-01-25 | MR | RSCH | Accountability Gap Report |
+| 005a | 2026-01-25 | MR | AAR | Development Status Jan 2026 |
+| 005b | 2026-01-25 | MR | RSCH | Pain Point Research |
+| 006a | 2026-01-25 | MR | FEAS | Feasibility Report |
+| 006b | 2026-01-25 | PP | AAR | Planning Session 2026-01-25 |
+| 007 | 2026-01-25 | AT | SPEC | Receipt Schema Specification |
+| 008 | 2026-01-26 | AA | AUDT | AppAudit DevOps Playbook |
+| 009 | 2026-01-28 | AA | ADR | vNext Scope ADR |
+| 010 | 2026-01-28 | OD | GUID | Deployment Guide |
+| 011 | 2026-01-28 | OD | GUID | Incident Playbook |
+| 012 | 2026-01-28 | OD | GUID | Monitoring Guide |
+| 013 | 2026-01-28 | OD | GUID | Multisig Plan |
+| 014 | 2026-01-28 | AT | DSGN | Privacy Design |
+| 015 | 2026-01-28 | AT | SPEC | Validation Provider |
+| 016 | 2026-01-28 | AT | INTG | x402 Integration |
+
+## Legacy Files (Outside Numbering System)
+
+- `008-AA-AUDT-appaudit-devops-playbook.pdf` - PDF export of 008-AA-AUDT
+- `IRSB-Feasibility-Report-Jan2026.pdf` - PDF export of 006-MR-FEAS
+
+## Category Code Reference
+
 - **AT** - Architecture & Technical
-- **MR** - Market Research
-- **AA** - Architecture & Audit
+- **PP** - Product & Planning
+- **RL** - Research & Learning
+- **MR** - Mixed/Reports (legacy category for multi-faceted documents)
+- **AA** - After Action & Review
+- **OD** - Operations & Deployment
 
-## Type Legend
+## Document Type Reference
 
 - **PROP** - Proposal
-- **PROD** - Product Requirements Document
+- **PROD** - Product Requirements
 - **SPEC** - Specification
-- **RSCH** - Research Report
+- **RSCH** - Research
 - **AAR** - After Action Report
+- **FEAS** - Feasibility Study
+- **AUDT** - Audit
 - **ADR** - Architecture Decision Record
-- **AUDT** - Audit/Analysis
+- **GUID** - Guide/Manual
+- **DSGN** - Design Document
+- **INTG** - Integration Guide
 - **SEC** - Security Audit
-- **RUNBOOK** - Operational Runbook
 
 ---
 
-## Deployment Records
-
-| Network | Date | Status |
-|---------|------|--------|
-| Sepolia | 2026-01-25 | Deployed |
-
-See `deployments/sepolia.json` for contract addresses.
+**Filing System:** v4.2 Standard (Flat 000-docs structure)
+**Project:** IRSB Protocol (Intent Receipts & Solver Bonds)
+**Repository:** github.com/intent-solutions-io/irsb-protocol

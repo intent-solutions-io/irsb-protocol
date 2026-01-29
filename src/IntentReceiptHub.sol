@@ -116,9 +116,11 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         // Check for duplicates
         if (_receipts[receiptId].createdAt != 0) revert ReceiptAlreadyExists();
 
-        // Verify signature
+        // Verify signature (IRSB-SEC-001: include chainId and contract address for replay protection)
         bytes32 messageHash = keccak256(
             abi.encode(
+                block.chainid,
+                address(this),
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -215,9 +217,11 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
                 shouldSlash = true;
             }
         } else if (dispute.reason == Types.DisputeReason.InvalidSignature) {
-            // Re-verify signature
+            // Re-verify signature (IRSB-SEC-001: must match postReceipt format)
             bytes32 messageHash = keccak256(
                 abi.encode(
+                    block.chainid,
+                    address(this),
                     receipt.intentHash,
                     receipt.constraintsHash,
                     receipt.routeHash,
@@ -271,9 +275,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
             emit DisputeResolved(receiptId, receipt.solverId, true, slashAmount);
         } else {
-            // Dispute rejected: unlock solver bond, forfeit challenger bond to treasury
+            // IRSB-SEC-003: Dispute rejected - finalize receipt to prevent re-challenge attacks
+            // The receipt has survived a dispute challenge, confirming its validity
             solverRegistry.unlockBond(receipt.solverId, slashAmount);
-            _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
+            _receiptStatus[receiptId] = Types.ReceiptStatus.Finalized;
+
+            // Update solver score for successful dispute defense
+            solverRegistry.updateScore(receipt.solverId, true, 0);
 
             // Challenger loses their bond (griefing protection)
             // Track forfeited amount for safe withdrawal
@@ -281,6 +289,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             _challengerBonds[receiptId] = 0;
 
             emit ChallengerBondForfeited(receiptId, dispute.challenger, challengerBond);
+            emit ReceiptFinalized(receiptId, receipt.solverId);
             emit DisputeResolved(receiptId, receipt.solverId, false, 0);
         }
     }
@@ -319,6 +328,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     }
 
     /// @inheritdoc IIntentReceiptHub
+    /// @dev IRSB-SEC-009: Full validation including signature verification for each receipt
     function batchPostReceipts(Types.IntentReceipt[] calldata receipts)
         external
         whenNotPaused
@@ -326,16 +336,45 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         returns (bytes32[] memory receiptIds)
     {
         require(receipts.length <= MAX_BATCH_SIZE, "Batch too large");
+        require(receipts.length > 0, "Empty batch");
 
         receiptIds = new bytes32[](receipts.length);
 
         for (uint256 i = 0; i < receipts.length; i++) {
-            // Simplified validation for batch (assumes same solver)
             Types.IntentReceipt calldata receipt = receipts[i];
 
-            bytes32 receiptId = computeReceiptId(receipt);
-            if (_receipts[receiptId].createdAt != 0) continue; // Skip duplicates
+            // IRSB-SEC-009: Full validation for each receipt (same as postReceipt)
+            // Validate solver
+            Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
+            if (solver.status != Types.SolverStatus.Active) revert InvalidSolver();
+            if (solver.operator != msg.sender) revert InvalidSolver();
 
+            // Compute receipt ID
+            bytes32 receiptId = computeReceiptId(receipt);
+
+            // Skip duplicates
+            if (_receipts[receiptId].createdAt != 0) continue;
+
+            // Verify signature (IRSB-SEC-001: include chainId and contract address)
+            bytes32 messageHash = keccak256(
+                abi.encode(
+                    block.chainid,
+                    address(this),
+                    receipt.intentHash,
+                    receipt.constraintsHash,
+                    receipt.routeHash,
+                    receipt.outcomeHash,
+                    receipt.evidenceHash,
+                    receipt.createdAt,
+                    receipt.expiry,
+                    receipt.solverId
+                )
+            );
+            bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
+            address signer = ethSignedHash.recover(receipt.solverSig);
+            if (signer != solver.operator) revert InvalidReceiptSignature();
+
+            // Store receipt
             _receipts[receiptId] = receipt;
             _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
             _solverReceipts[receipt.solverId].push(receiptId);

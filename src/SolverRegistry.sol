@@ -244,12 +244,16 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     }
 
     /// @inheritdoc ISolverRegistry
+    /// @dev IRSB-SEC-005: Validates that slash amount is non-zero to prevent silent failures
     function slash(bytes32 solverId, uint256 amount, bytes32 receiptId, Types.DisputeReason reason, address recipient)
         external
         onlyAuthorized
         solverExists(solverId)
         nonReentrant
     {
+        // IRSB-SEC-005: Prevent zero-amount slashes that would be silent no-ops
+        if (amount == 0) revert ZeroSlashAmount();
+
         Types.Solver storage solver = _solvers[solverId];
 
         // Slash from locked balance first, then available
