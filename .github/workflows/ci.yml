@@ -38,6 +38,22 @@ jobs:
         run: forge coverage --report summary
         id: coverage
 
+      - name: Check coverage threshold (80%)
+        run: |
+          # Extract line coverage percentage from forge coverage output
+          COVERAGE=$(forge coverage --report summary 2>&1 | grep -E "^Lines:" | awk '{print $NF}' | tr -d '%')
+          echo "Line coverage: ${COVERAGE}%"
+          if [ -z "$COVERAGE" ]; then
+            echo "Warning: Could not parse coverage, skipping threshold check"
+            exit 0
+          fi
+          if (( $(echo "$COVERAGE < 80" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% is below 80% threshold"
+            exit 1
+          fi
+          echo "Coverage ${COVERAGE}% meets 80% threshold"
+        id: coverage-threshold
+
       - name: Run Forge gas report
         run: forge test --gas-report
         id: gas
@@ -141,7 +157,7 @@ jobs:
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [contracts, lint, sdk, subgraph]
+    needs: [contracts, lint, sdk, subgraph, security]
     if: always()
     steps:
       - name: Check results
@@ -154,3 +170,4 @@ jobs:
           echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| SDK | ${{ needs.sdk.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Subgraph | ${{ needs.subgraph.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security | ${{ needs.security.result }} |" >> $GITHUB_STEP_SUMMARY

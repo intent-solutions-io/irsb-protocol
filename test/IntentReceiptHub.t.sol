@@ -71,11 +71,13 @@ contract IntentReceiptHubTest is Test {
             solverSig: ""
         });
 
-        // Sign receipt (IRSB-SEC-001: includes chainId and hub address to prevent cross-chain replay)
+        // Sign receipt (IRSB-SEC-001 + IRSB-SEC-006: includes chainId, hub address, and nonce for replay protection)
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 address(hub),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -170,11 +172,13 @@ contract IntentReceiptHubTest is Test {
             solverSig: ""
         });
 
-        // Sign with wrong key (IRSB-SEC-001: includes chainId and hub address)
+        // Sign with wrong key (IRSB-SEC-001 + IRSB-SEC-006: includes chainId, hub address, and nonce)
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 address(hub),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -389,16 +393,28 @@ contract IntentReceiptHubTest is Test {
     function test_BatchPostReceipts() public {
         Types.IntentReceipt[] memory receipts = new Types.IntentReceipt[](3);
 
-        for (uint256 i = 0; i < 3; i++) {
-            receipts[i] = _createReceipt(keccak256(abi.encodePacked("intent", i)), uint64(block.timestamp + 1 hours));
-            // Need to update createdAt to make unique receipt IDs
-            receipts[i].createdAt = uint64(block.timestamp + i);
+        // IRSB-SEC-006: Each receipt in batch needs sequential nonce
+        uint256 baseNonce = hub.solverNonces(solverId);
 
-            // Re-sign with updated createdAt (IRSB-SEC-001: includes chainId and hub address)
+        for (uint256 i = 0; i < 3; i++) {
+            receipts[i] = Types.IntentReceipt({
+                intentHash: keccak256(abi.encodePacked("intent", i)),
+                constraintsHash: keccak256("constraints"),
+                routeHash: keccak256("route"),
+                outcomeHash: keccak256("outcome"),
+                evidenceHash: keccak256("evidence"),
+                createdAt: uint64(block.timestamp + i), // Unique timestamp for unique receipt ID
+                expiry: uint64(block.timestamp + 1 hours),
+                solverId: solverId,
+                solverSig: ""
+            });
+
+            // Sign with sequential nonce (IRSB-SEC-001 + IRSB-SEC-006)
             bytes32 messageHash = keccak256(
                 abi.encode(
                     block.chainid,
                     address(hub),
+                    baseNonce + i, // Sequential nonce for each receipt
                     receipts[i].intentHash,
                     receipts[i].constraintsHash,
                     receipts[i].routeHash,
@@ -671,10 +687,12 @@ contract IntentReceiptHubTest is Test {
 
         // Sign with WRONG chainId (simulating replay from another chain)
         uint256 wrongChainId = 999999;
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 wrongChainId, // Wrong chain!
                 address(hub),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -712,10 +730,12 @@ contract IntentReceiptHubTest is Test {
 
         // Sign with WRONG contract address
         address wrongHub = address(0xDEAD);
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 wrongHub, // Wrong contract address!
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,

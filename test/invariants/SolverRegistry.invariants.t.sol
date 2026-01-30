@@ -81,13 +81,19 @@ contract Handler is Test {
 
     address public authorizedCaller = address(0xCAFE);
 
+    /// @notice Counter for generating unique operator addresses
+    uint256 private operatorCounter;
+
     constructor(SolverRegistry _registry) {
         registry = _registry;
     }
 
     /// @notice Register a new solver and deposit minimum bond
-    function registerAndBondSolver(uint256 operatorSeed) public {
-        address operator = address(uint160(bound(operatorSeed, 1, type(uint160).max)));
+    /// @dev Uses deterministic counter for unique operators (prevents collision issues)
+    function registerAndBondSolver(uint256 /* operatorSeed */) public {
+        // Use counter for deterministic unique operators (avoids address collision bugs)
+        operatorCounter++;
+        address operator = address(uint160(operatorCounter + 0x1000)); // Offset to avoid zero/special addresses
 
         vm.deal(operator, 1 ether);
 

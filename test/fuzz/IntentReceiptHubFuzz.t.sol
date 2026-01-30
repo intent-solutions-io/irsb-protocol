@@ -303,10 +303,13 @@ contract IntentReceiptHubFuzz is Test {
         Types.IntentReceipt memory receipt = _createUnsignedReceipt(intentHash, expiry);
 
         // IRSB-SEC-001: Include chainId and hub address to prevent cross-chain replay
+        // IRSB-SEC-006: Include nonce for same-chain replay protection
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 address(hub),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,

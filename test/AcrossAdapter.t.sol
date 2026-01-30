@@ -104,11 +104,13 @@ contract AcrossAdapterTest is Test {
         // Get the receipt structure
         receipt = adapter.prepareReceipt(deposit, fill, solverId);
 
-        // IRSB-SEC-001: Compute message hash with chainId and hub address to prevent cross-chain replay
+        // IRSB-SEC-001 + IRSB-SEC-006: Compute message hash with chainId, hub address, and nonce for replay protection
+        uint256 currentNonce = hub.solverNonces(solverId);
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 address(hub),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,

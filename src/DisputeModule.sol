@@ -163,6 +163,13 @@ contract DisputeModule is IDisputeModule, Ownable, ReentrancyGuard {
             uint256 availableBond = solver.bondBalance + solver.lockedBalance;
             slashAmount = (availableBond * slashPercentage) / 100;
 
+            // IRSB-SEC-010: If slash rounds to zero, treat as no-fault to avoid meaningless punishment
+            if (slashAmount == 0) {
+                solverFault = false;
+            }
+        }
+
+        if (solverFault && slashAmount > 0) {
             // Execute slash: 70% to user, 20% to treasury, 10% to arbitrator
             uint256 userShare = (slashAmount * 70) / 100;
             uint256 treasuryShare = (slashAmount * 20) / 100;

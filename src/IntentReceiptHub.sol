@@ -73,6 +73,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @notice Minimum challenger bond (10% of minimum solver bond)
     uint256 public challengerBondMin;
 
+    /// @notice IRSB-SEC-006: Nonces for same-chain replay protection
+    /// @dev Each solver's nonce increments with each receipt posted
+    mapping(bytes32 => uint256) public solverNonces;
+
+    /// @notice IRSB-SEC-006: Nonce used for each receipt (for signature re-verification)
+    mapping(bytes32 => uint256) private _receiptNonces;
+
     // ============ Constructor ============
 
     constructor(address _solverRegistry) Ownable(msg.sender) {
@@ -116,11 +123,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         // Check for duplicates
         if (_receipts[receiptId].createdAt != 0) revert ReceiptAlreadyExists();
 
-        // Verify signature (IRSB-SEC-001: include chainId and contract address for replay protection)
+        // Verify signature (IRSB-SEC-001 + IRSB-SEC-006: chainId, contract address, and nonce for replay protection)
+        uint256 currentNonce = solverNonces[receipt.solverId];
         bytes32 messageHash = keccak256(
             abi.encode(
                 block.chainid,
                 address(this),
+                currentNonce,
                 receipt.intentHash,
                 receipt.constraintsHash,
                 receipt.routeHash,
@@ -134,6 +143,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
         address signer = ethSignedHash.recover(receipt.solverSig);
         if (signer != solver.operator) revert InvalidReceiptSignature();
+
+        // IRSB-SEC-006: Store nonce used and increment for next receipt
+        _receiptNonces[receiptId] = currentNonce;
+        solverNonces[receipt.solverId] = currentNonce + 1;
 
         // Store receipt
         _receipts[receiptId] = receipt;
@@ -217,11 +230,12 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
                 shouldSlash = true;
             }
         } else if (dispute.reason == Types.DisputeReason.InvalidSignature) {
-            // Re-verify signature (IRSB-SEC-001: must match postReceipt format)
+            // Re-verify signature (IRSB-SEC-001 + IRSB-SEC-006: must match postReceipt format with stored nonce)
             bytes32 messageHash = keccak256(
                 abi.encode(
                     block.chainid,
                     address(this),
+                    _receiptNonces[receiptId],
                     receipt.intentHash,
                     receipt.constraintsHash,
                     receipt.routeHash,
@@ -355,11 +369,15 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             // Skip duplicates
             if (_receipts[receiptId].createdAt != 0) continue;
 
-            // Verify signature (IRSB-SEC-001: include chainId and contract address)
+            // IRSB-SEC-006: Get current nonce for this solver
+            uint256 currentNonce = solverNonces[receipt.solverId];
+
+            // Verify signature (IRSB-SEC-001 + IRSB-SEC-006: chainId, contract address, and nonce)
             bytes32 messageHash = keccak256(
                 abi.encode(
                     block.chainid,
                     address(this),
+                    currentNonce,
                     receipt.intentHash,
                     receipt.constraintsHash,
                     receipt.routeHash,
@@ -373,6 +391,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
             address signer = ethSignedHash.recover(receipt.solverSig);
             if (signer != solver.operator) revert InvalidReceiptSignature();
+
+            // IRSB-SEC-006: Store nonce used and increment for next receipt
+            _receiptNonces[receiptId] = currentNonce;
+            solverNonces[receipt.solverId] = currentNonce + 1;
 
             // Store receipt
             _receipts[receiptId] = receipt;
@@ -513,6 +535,13 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @return bond Bond amount in wei
     function getChallengerBond(bytes32 receiptId) external view returns (uint256 bond) {
         return _challengerBonds[receiptId];
+    }
+
+    /// @notice IRSB-SEC-006: Get the nonce used for a receipt's signature
+    /// @param receiptId Receipt to query
+    /// @return nonce The nonce used when the receipt was posted
+    function getReceiptNonce(bytes32 receiptId) external view returns (uint256 nonce) {
+        return _receiptNonces[receiptId];
     }
 
     /// @notice Resolve an escalated dispute (DisputeModule only)
