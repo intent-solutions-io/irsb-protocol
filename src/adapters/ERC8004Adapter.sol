@@ -4,21 +4,26 @@ pragma solidity ^0.8.25;
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 import { IERC8004 } from "../interfaces/IERC8004.sol";
 import { IValidationRegistry } from "../interfaces/IValidationRegistry.sol";
+import { ICredibilityRegistry } from "../interfaces/ICredibilityRegistry.sol";
 
 /// @title ERC8004Adapter
 /// @notice Adapter that emits ERC-8004 validation signals for IRSB events
 /// @dev Acts as a Validation Provider, pushing signals to external registries
 /// @custom:security Non-critical module - failures should NOT revert core operations
+/// @custom:version 2.0.0 - Added CredibilityRegistry integration
 contract ERC8004Adapter is IERC8004, Ownable {
     // ============ Constants ============
 
     string public constant PROVIDER_NAME = "IRSB Protocol";
-    string public constant PROVIDER_VERSION = "1.0.0";
+    string public constant PROVIDER_VERSION = "2.0.0";
 
     // ============ State ============
 
-    /// @notice External validation registry (optional)
+    /// @notice External validation registry (optional, legacy)
     IValidationRegistry public registry;
+
+    /// @notice Credibility registry for rich reputation data (optional)
+    ICredibilityRegistry public credibilityRegistry;
 
     /// @notice Authorized hub addresses that can emit signals
     mapping(address => bool) public authorizedHubs;
@@ -36,6 +41,12 @@ contract ERC8004Adapter is IERC8004, Ownable {
 
     /// @notice Emitted when registry is updated
     event RegistryUpdated(address indexed oldRegistry, address indexed newRegistry);
+
+    /// @notice Emitted when credibility registry is updated
+    event CredibilityRegistryUpdated(address indexed oldRegistry, address indexed newRegistry);
+
+    /// @notice Emitted when rich validation is recorded to credibility registry
+    event CredibilityRecorded(bytes32 indexed taskId, bytes32 indexed solverId, ICredibilityRegistry.OutcomeSeverity severity);
 
     // ============ Errors ============
 
@@ -138,7 +149,7 @@ contract ERC8004Adapter is IERC8004, Ownable {
         // Emit the validation signal event with all data for off-chain consumers
         emit ValidationSignalEmitted(taskId, agentId, outcome, timestamp, evidenceHash, metadata);
 
-        // Try to record to registry (non-reverting)
+        // Try to record to legacy registry (non-reverting)
         if (address(registry) != address(0)) {
             bool success = outcome == ValidationOutcome.Finalized || outcome == ValidationOutcome.DisputeWon;
 
@@ -151,9 +162,55 @@ contract ERC8004Adapter is IERC8004, Ownable {
             }
         }
 
+        // Try to record to credibility registry with rich data (non-reverting)
+        if (address(credibilityRegistry) != address(0)) {
+            ICredibilityRegistry.OutcomeSeverity severity = _mapOutcomeToSeverity(outcome);
+            uint128 slashAmount = _extractSlashAmount(metadata);
+
+            ICredibilityRegistry.ValidationRecord memory record = ICredibilityRegistry.ValidationRecord({
+                taskId: taskId,
+                solverId: agentId,
+                intentHash: bytes32(0), // Set by caller if needed
+                evidenceHash: evidenceHash,
+                severity: severity,
+                disputeResult: ICredibilityRegistry.DisputeOutcome.Pending,
+                valueAtRisk: 0, // Set by caller if needed
+                slashAmount: slashAmount,
+                executedAt: uint64(timestamp),
+                finalizedAt: severity == ICredibilityRegistry.OutcomeSeverity.Success ? uint64(timestamp) : 0,
+                chainId: uint16(block.chainid)
+            });
+
+            try credibilityRegistry.recordValidation(record) {
+                emit CredibilityRecorded(taskId, agentId, severity);
+            } catch {
+                // Credibility registry call failed - don't revert
+            }
+        }
+
         // Update counters
         totalSignals++;
         signalsByOutcome[outcome]++;
+    }
+
+    /// @notice Map ValidationOutcome to OutcomeSeverity
+    function _mapOutcomeToSeverity(ValidationOutcome outcome) internal pure returns (ICredibilityRegistry.OutcomeSeverity) {
+        if (outcome == ValidationOutcome.Finalized || outcome == ValidationOutcome.DisputeWon) {
+            return ICredibilityRegistry.OutcomeSeverity.Success;
+        } else if (outcome == ValidationOutcome.Slashed) {
+            return ICredibilityRegistry.OutcomeSeverity.SevereFault;
+        } else if (outcome == ValidationOutcome.DisputeLost) {
+            return ICredibilityRegistry.OutcomeSeverity.ModerateFault;
+        }
+        return ICredibilityRegistry.OutcomeSeverity.MinorFault;
+    }
+
+    /// @notice Extract slash amount from metadata if present
+    function _extractSlashAmount(bytes memory metadata) internal pure returns (uint128) {
+        if (metadata.length >= 32) {
+            return uint128(abi.decode(metadata, (uint256)));
+        }
+        return 0;
     }
 
     // ============ IERC8004 Implementation ============
@@ -222,11 +279,63 @@ contract ERC8004Adapter is IERC8004, Ownable {
         emit HubAuthorizationChanged(hub, authorized);
     }
 
-    /// @notice Set validation registry
+    /// @notice Set validation registry (legacy)
     /// @param _registry New registry address (can be zero to disable)
     function setRegistry(address _registry) external onlyOwner {
         address oldRegistry = address(registry);
         registry = IValidationRegistry(_registry);
         emit RegistryUpdated(oldRegistry, _registry);
+    }
+
+    /// @notice Set credibility registry (v2)
+    /// @param _registry New credibility registry address (can be zero to disable)
+    function setCredibilityRegistry(address _registry) external onlyOwner {
+        address oldRegistry = address(credibilityRegistry);
+        credibilityRegistry = ICredibilityRegistry(_registry);
+        emit CredibilityRegistryUpdated(oldRegistry, _registry);
+    }
+
+    // ============ Credibility Query Functions ============
+
+    /// @notice Get solver's IntentScore from credibility registry
+    /// @param solverId Solver to query
+    /// @return score IntentScore (0-10000 basis points)
+    function getSolverIntentScore(bytes32 solverId) external view returns (uint256 score) {
+        if (address(credibilityRegistry) == address(0)) return 0;
+        return credibilityRegistry.getIntentScore(solverId);
+    }
+
+    /// @notice Get solver's success rate from credibility registry
+    /// @param solverId Solver to query
+    /// @return rate Success rate (0-10000 basis points)
+    function getSolverSuccessRate(bytes32 solverId) external view returns (uint256 rate) {
+        if (address(credibilityRegistry) == address(0)) return 0;
+        return credibilityRegistry.getSuccessRate(solverId);
+    }
+
+    /// @notice Check if solver meets credibility threshold
+    /// @param solverId Solver to check
+    /// @param minScore Minimum IntentScore required
+    /// @param maxSlashRate Maximum slash rate allowed (basis points)
+    /// @return meets True if solver meets threshold
+    function solverMeetsThreshold(
+        bytes32 solverId,
+        uint256 minScore,
+        uint256 maxSlashRate
+    ) external view returns (bool meets) {
+        if (address(credibilityRegistry) == address(0)) return false;
+        return credibilityRegistry.meetsCredibilityThreshold(solverId, minScore, maxSlashRate);
+    }
+
+    /// @notice Get full solver reputation from credibility registry
+    /// @param solverId Solver to query
+    /// @return snapshot Full reputation snapshot
+    function getSolverReputation(bytes32 solverId)
+        external view returns (ICredibilityRegistry.ReputationSnapshot memory snapshot)
+    {
+        if (address(credibilityRegistry) == address(0)) {
+            return snapshot; // Empty snapshot
+        }
+        return credibilityRegistry.getReputation(solverId);
     }
 }

@@ -65,7 +65,7 @@ contract ERC8004AdapterTest is Test {
     function test_GetProviderInfo() public view {
         (string memory name, string memory version, uint256 chainId) = adapter.getProviderInfo();
         assertEq(name, "IRSB Protocol");
-        assertEq(version, "1.0.0");
+        assertEq(version, "2.0.0");
         assertEq(chainId, block.chainid);
     }
 

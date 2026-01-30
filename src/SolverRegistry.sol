@@ -6,6 +6,7 @@ import { ReentrancyGuard } from "@openzeppelin/contracts/utils/ReentrancyGuard.s
 import { Pausable } from "@openzeppelin/contracts/utils/Pausable.sol";
 import { ISolverRegistry } from "./interfaces/ISolverRegistry.sol";
 import { Types } from "./libraries/Types.sol";
+import { IERC8004 } from "./interfaces/IERC8004.sol";
 
 /// @title SolverRegistry
 /// @notice Manages solver registration, bonds, and lifecycle
@@ -55,6 +56,14 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Total value bonded
     uint256 public totalBonded;
+
+    /// @notice ERC-8004 adapter for publishing validation signals
+    address public erc8004Adapter;
+
+    // ============ Events ============
+
+    /// @notice Emitted when ERC-8004 adapter is updated
+    event ERC8004AdapterUpdated(address indexed oldAdapter, address indexed newAdapter);
 
     // ============ Constructor ============
 
@@ -279,6 +288,9 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
 
         emit SolverSlashed(solverId, amount, receiptId, reason);
 
+        // Publish to ERC-8004 adapter (non-reverting)
+        _publishToERC8004(receiptId, solverId, amount);
+
         // Check if should be deactivated or jailed
         if (solver.bondBalance < MINIMUM_BOND && solver.status == Types.SolverStatus.Active) {
             solver.status = Types.SolverStatus.Inactive;
@@ -439,5 +451,35 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @notice Unpause
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    /// @notice Set ERC-8004 adapter for validation signals
+    /// @param _adapter New adapter address (can be zero to disable)
+    function setERC8004Adapter(address _adapter) external onlyOwner {
+        address oldAdapter = erc8004Adapter;
+        erc8004Adapter = _adapter;
+        emit ERC8004AdapterUpdated(oldAdapter, _adapter);
+    }
+
+    // ============ Internal Functions ============
+
+    /// @notice Publish slash event to ERC-8004 adapter
+    /// @dev Non-reverting - adapter failures don't block core slashing operations
+    function _publishToERC8004(bytes32 receiptId, bytes32 solverId, uint256 slashAmount) internal {
+        if (erc8004Adapter == address(0)) return;
+
+        try IERC8004(erc8004Adapter).emitValidationSignal(
+            IERC8004.ValidationSignal({
+                taskId: receiptId,
+                agentId: solverId,
+                outcome: IERC8004.ValidationOutcome.Slashed,
+                timestamp: block.timestamp,
+                evidenceHash: bytes32(0),
+                metadata: abi.encode(slashAmount)
+            })
+        ) {} catch {
+            // Adapter call failed - continue without reverting
+            // Core IRSB operations are never blocked by adapter issues
+        }
     }
 }

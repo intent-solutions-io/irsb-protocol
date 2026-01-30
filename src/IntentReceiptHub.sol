@@ -9,6 +9,7 @@ import { MessageHashUtils } from "@openzeppelin/contracts/utils/cryptography/Mes
 import { IIntentReceiptHub } from "./interfaces/IIntentReceiptHub.sol";
 import { ISolverRegistry } from "./interfaces/ISolverRegistry.sol";
 import { Types } from "./libraries/Types.sol";
+import { IERC8004 } from "./interfaces/IERC8004.sol";
 
 /// @title IntentReceiptHub
 /// @notice Core contract for posting and managing intent receipts
@@ -79,6 +80,14 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
     /// @notice IRSB-SEC-006: Nonce used for each receipt (for signature re-verification)
     mapping(bytes32 => uint256) private _receiptNonces;
+
+    /// @notice ERC-8004 adapter for publishing credibility signals (optional)
+    address public erc8004Adapter;
+
+    // ============ Events for ERC-8004 ============
+
+    /// @notice Emitted when ERC-8004 adapter is updated
+    event ERC8004AdapterUpdated(address indexed oldAdapter, address indexed newAdapter);
 
     // ============ Constructor ============
 
@@ -325,6 +334,9 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         // Update solver score
         solverRegistry.updateScore(receipt.solverId, true, 0); // TODO: calculate volume
 
+        // Publish to ERC-8004 adapter if configured (non-reverting)
+        _publishToERC8004(receiptId, receipt.solverId, true, 0);
+
         emit ReceiptFinalized(receiptId, receipt.solverId);
     }
 
@@ -568,6 +580,58 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
         Types.IntentReceipt storage receipt = _receipts[receiptId];
         emit DisputeResolved(receiptId, receipt.solverId, solverFault, 0);
+
+        // Publish to ERC-8004 adapter if configured
+        _publishToERC8004(receiptId, receipt.solverId, !solverFault, 0);
+    }
+
+    // ============ ERC-8004 Integration ============
+
+    /// @notice Set ERC-8004 adapter address
+    /// @param _adapter New adapter address (can be zero to disable)
+    function setERC8004Adapter(address _adapter) external onlyOwner {
+        address oldAdapter = erc8004Adapter;
+        erc8004Adapter = _adapter;
+        emit ERC8004AdapterUpdated(oldAdapter, _adapter);
+    }
+
+    /// @notice Internal function to publish signals to ERC-8004 adapter
+    /// @dev Non-reverting - adapter failures should not block core operations
+    function _publishToERC8004(
+        bytes32 receiptId,
+        bytes32 solverId,
+        bool success,
+        uint256 slashAmount
+    ) internal {
+        if (erc8004Adapter == address(0)) return;
+
+        // Determine outcome based on success and slash amount
+        IERC8004.ValidationOutcome outcome;
+        if (success) {
+            outcome = IERC8004.ValidationOutcome.Finalized;
+        } else if (slashAmount > 0) {
+            outcome = IERC8004.ValidationOutcome.Slashed;
+        } else {
+            outcome = IERC8004.ValidationOutcome.DisputeLost;
+        }
+
+        // Build metadata with slash amount if applicable
+        bytes memory metadata = slashAmount > 0 ? abi.encode(slashAmount) : bytes("");
+
+        // Try to call adapter - don't revert on failure
+        try IERC8004(erc8004Adapter).emitValidationSignal(
+            IERC8004.ValidationSignal({
+                taskId: receiptId,
+                agentId: solverId,
+                outcome: outcome,
+                timestamp: block.timestamp,
+                evidenceHash: bytes32(0),
+                metadata: metadata
+            })
+        ) {} catch {
+            // Adapter call failed - continue without reverting
+            // This ensures core IRSB operations are never blocked by adapter issues
+        }
     }
 
     /// @notice Receive ETH (for challenger bonds)
