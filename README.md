@@ -266,4 +266,4 @@ MIT - See [LICENSE](./LICENSE)
 
 ---
 
-**IRSB v1.0.0** | [ERC-7683](https://eips.ethereum.org/EIPS/eip-7683) | [Foundry](https://book.getfoundry.sh/)
+**IRSB v1.1.0** | [ERC-7683](https://eips.ethereum.org/EIPS/eip-7683) | [Foundry](https://book.getfoundry.sh/)

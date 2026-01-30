@@ -7,10 +7,41 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [1.1.0] - 2026-01-30
+
+ERC-8004 credibility publishing and security hardening release.
+
 ### Added
-- Community health files (CONTRIBUTING, SECURITY, SUPPORT, GOVERNANCE)
-- Issue templates (bug, feature, question, security)
-- GitHub Discussions setup guide
+
+#### ERC-8004 Credibility Publishing (Epic B)
+- **ERC8004Adapter v2.0**: Full implementation of ERC-8004 validation signals standard
+- **IntentReceiptHub hooks**: Non-reverting signal emission on finalize
+- **SolverRegistry hooks**: Non-reverting signal emission on slash
+- **Integration test suite**: 6 tests covering full signal flow
+- IntentScore algorithm: 40% success + 25% disputes + 20% stake + 15% longevity
+- Cross-chain reputation proofs via Merkle trees
+
+#### Security Hardening (PRs #17-19)
+- IRSB-SEC-006/010 implementation with economic invariants
+- CI hardening with security gates
+- Document filing system standard v4.2
+
+### Fixed
+- Broken documentation links in README
+- Security audit report organization
+- Mobile UX improvements in dashboard
+
+### Documentation
+- Comprehensive operator-grade system analysis (appaudit)
+- 6767 document filing system standard
+- Repository housekeeping and community health improvements
+
+### Technical
+- 355 tests passing (up from 325)
+- 4 economic invariant tests (256 runs, 128k calls each)
+- All lint checks passing
 
 ---
 
@@ -121,7 +152,8 @@ Project initialization.
 
 ---
 
-[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/intent-solutions-io/irsb-protocol/releases/tag/v1.0.0
 [0.9.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v0.5.0...v0.9.0
 [0.5.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v0.1.0...v0.5.0
