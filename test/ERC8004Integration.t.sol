@@ -104,10 +104,8 @@ contract ERC8004IntegrationTest is Test {
         vm.warp(1000);
 
         // Post a receipt with expiry at T+1800 (30 min)
-        Types.IntentReceipt memory receipt = _createSignedReceiptWithExpiry(
-            keccak256("intent_slash"),
-            uint64(block.timestamp + 30 minutes)
-        );
+        Types.IntentReceipt memory receipt =
+            _createSignedReceiptWithExpiry(keccak256("intent_slash"), uint64(block.timestamp + 30 minutes));
         vm.prank(operator);
         bytes32 receiptId = hub.postReceipt(receipt);
 
@@ -215,10 +213,10 @@ contract ERC8004IntegrationTest is Test {
         return _createSignedReceiptWithExpiry(intentHash, uint64(block.timestamp + 1 days));
     }
 
-    function _createSignedReceiptWithExpiry(
-        bytes32 intentHash,
-        uint64 expiry
-    ) internal returns (Types.IntentReceipt memory) {
+    function _createSignedReceiptWithExpiry(bytes32 intentHash, uint64 expiry)
+        internal
+        returns (Types.IntentReceipt memory)
+    {
         Types.IntentReceipt memory receipt = Types.IntentReceipt({
             intentHash: intentHash,
             constraintsHash: keccak256("constraints"),

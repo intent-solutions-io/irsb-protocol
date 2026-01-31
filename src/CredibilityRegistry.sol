@@ -86,7 +86,7 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
 
     // ============ Constructor ============
 
-    constructor() Ownable(msg.sender) {}
+    constructor() Ownable(msg.sender) { }
 
     // ============ Modifiers ============
 
@@ -100,11 +100,7 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     // ============ Identity Functions ============
 
     /// @inheritdoc ICredibilityRegistry
-    function registerSolver(
-        bytes32 solverId,
-        address operator,
-        bytes32 metadataHash
-    ) external onlyAuthorized {
+    function registerSolver(bytes32 solverId, address operator, bytes32 metadataHash) external onlyAuthorized {
         if (_identities[solverId].registeredAt != 0) {
             revert SolverAlreadyRegistered();
         }
@@ -127,9 +123,7 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     }
 
     /// @inheritdoc ICredibilityRegistry
-    function getSolverIdentity(bytes32 solverId)
-        external view returns (SolverIdentity memory identity)
-    {
+    function getSolverIdentity(bytes32 solverId) external view returns (SolverIdentity memory identity) {
         return _identities[solverId];
     }
 
@@ -139,11 +133,10 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     }
 
     /// @notice Update solver status
-    function updateSolverStatus(
-        bytes32 solverId,
-        RegistrationStatus newStatus,
-        bytes32 reason
-    ) external onlyAuthorized {
+    function updateSolverStatus(bytes32 solverId, RegistrationStatus newStatus, bytes32 reason)
+        external
+        onlyAuthorized
+    {
         SolverIdentity storage identity = _identities[solverId];
         if (identity.registeredAt == 0) revert SolverNotFound();
 
@@ -189,11 +182,7 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
         _updateLeaderboard(record.solverId);
 
         emit ValidationRecorded(
-            record.taskId,
-            record.solverId,
-            record.severity,
-            record.valueAtRisk,
-            uint64(block.timestamp)
+            record.taskId, record.solverId, record.severity, record.valueAtRisk, uint64(block.timestamp)
         );
 
         // Emit reputation update
@@ -207,18 +196,15 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     }
 
     /// @inheritdoc ICredibilityRegistry
-    function getValidation(bytes32 taskId)
-        external view returns (ValidationRecord memory record)
-    {
+    function getValidation(bytes32 taskId) external view returns (ValidationRecord memory record) {
         return _validations[taskId];
     }
 
     /// @inheritdoc ICredibilityRegistry
-    function recordDisputeResolution(
-        bytes32 taskId,
-        DisputeOutcome outcome,
-        uint128 slashAmount
-    ) external onlyAuthorized {
+    function recordDisputeResolution(bytes32 taskId, DisputeOutcome outcome, uint128 slashAmount)
+        external
+        onlyAuthorized
+    {
         ValidationRecord storage record = _validations[taskId];
         record.disputeResult = outcome;
         record.slashAmount = slashAmount;
@@ -253,9 +239,7 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     // ============ Reputation Functions ============
 
     /// @inheritdoc ICredibilityRegistry
-    function getReputation(bytes32 solverId)
-        external view returns (ReputationSnapshot memory snapshot)
-    {
+    function getReputation(bytes32 solverId) external view returns (ReputationSnapshot memory snapshot) {
         return _reputations[solverId];
     }
 
@@ -346,21 +330,15 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     // ============ Cross-Chain Functions ============
 
     /// @inheritdoc ICredibilityRegistry
-    function verifyCrossChainProof(ReputationProof calldata proof)
-        external view returns (bool valid)
-    {
+    function verifyCrossChainProof(ReputationProof calldata proof) external view returns (bool valid) {
         // Check proof not expired (max 1 hour old)
         if (block.timestamp > proof.proofTimestamp + 1 hours) {
             return false;
         }
 
         // Verify signature from authorized oracle
-        bytes32 messageHash = keccak256(abi.encode(
-            proof.solverId,
-            proof.snapshot,
-            proof.merkleRoot,
-            proof.proofTimestamp
-        ));
+        bytes32 messageHash =
+            keccak256(abi.encode(proof.solverId, proof.snapshot, proof.merkleRoot, proof.proofTimestamp));
 
         address signer = messageHash.toEthSignedMessageHash().recover(proof.signature);
         if (!oracleSigners[signer]) {
@@ -379,21 +357,15 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
         }
 
         // Store cross-chain reputation
-        _crossChainReputations[proof.solverId][proof.snapshot.snapshotAt > 0 ?
-            uint16(proof.snapshot.snapshotAt) : uint16(block.chainid)] = proof.snapshot;
+        _crossChainReputations[
+            proof.solverId
+        ][proof.snapshot.snapshotAt > 0 ? uint16(proof.snapshot.snapshotAt) : uint16(block.chainid)] = proof.snapshot;
 
-        emit CrossChainProofVerified(
-            proof.solverId,
-            uint16(block.chainid),
-            proof.merkleRoot,
-            proof.proofTimestamp
-        );
+        emit CrossChainProofVerified(proof.solverId, uint16(block.chainid), proof.merkleRoot, proof.proofTimestamp);
     }
 
     /// @inheritdoc ICredibilityRegistry
-    function generateReputationRoot(bytes32 solverId)
-        external view returns (bytes32 root)
-    {
+    function generateReputationRoot(bytes32 solverId) external view returns (bytes32 root) {
         ReputationSnapshot memory snapshot = _reputations[solverId];
         return keccak256(abi.encode(solverId, snapshot));
     }
@@ -402,7 +374,9 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
 
     /// @inheritdoc ICredibilityRegistry
     function getLeaderboard(uint256 offset, uint256 limit)
-        external view returns (bytes32[] memory solverIds, uint256[] memory scores)
+        external
+        view
+        returns (bytes32[] memory solverIds, uint256[] memory scores)
     {
         uint256 total = _leaderboard.length;
         if (offset >= total) {
@@ -423,11 +397,11 @@ contract CredibilityRegistry is ICredibilityRegistry, Ownable {
     }
 
     /// @inheritdoc ICredibilityRegistry
-    function meetsCredibilityThreshold(
-        bytes32 solverId,
-        uint256 minScore,
-        uint256 maxSlashRate
-    ) external view returns (bool meets) {
+    function meetsCredibilityThreshold(bytes32 solverId, uint256 minScore, uint256 maxSlashRate)
+        external
+        view
+        returns (bool meets)
+    {
         uint256 score = _calculateIntentScore(solverId);
         if (score < minScore) return false;
 

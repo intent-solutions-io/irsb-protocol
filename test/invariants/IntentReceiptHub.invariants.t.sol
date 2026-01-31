@@ -118,7 +118,9 @@ contract IntentReceiptHubInvariants is Test {
 
             // Locked balance is always <= bond balance at time of lock
             // This is enforced by lockBond requiring sufficient balance
-            assertTrue(solver.lockedBalance <= solver.bondBalance + solver.lockedBalance, "EC-4: Locked within total bond");
+            assertTrue(
+                solver.lockedBalance <= solver.bondBalance + solver.lockedBalance, "EC-4: Locked within total bond"
+            );
         }
     }
 }

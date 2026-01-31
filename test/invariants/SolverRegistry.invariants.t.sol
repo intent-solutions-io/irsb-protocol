@@ -51,8 +51,10 @@ contract SolverRegistryInvariants is Test {
             // If solver has locked balance, they must have registered (have some bond history)
             if (solver.lockedBalance > 0) {
                 // Locked balance can only exist for solvers that have/had bond
-                assertTrue(solver.status != Types.SolverStatus.Inactive || totalBond > 0,
-                    "SR-8: Locked bond on unregistered solver");
+                assertTrue(
+                    solver.status != Types.SolverStatus.Inactive || totalBond > 0,
+                    "SR-8: Locked bond on unregistered solver"
+                );
             }
 
             // Total bond should never be negative (Solidity prevents this, but logic check)
@@ -90,7 +92,11 @@ contract Handler is Test {
 
     /// @notice Register a new solver and deposit minimum bond
     /// @dev Uses deterministic counter for unique operators (prevents collision issues)
-    function registerAndBondSolver(uint256 /* operatorSeed */) public {
+    function registerAndBondSolver(
+        uint256 /* operatorSeed */
+    )
+        public
+    {
         // Use counter for deterministic unique operators (avoids address collision bugs)
         operatorCounter++;
         address operator = address(uint160(operatorCounter + 0x1000)); // Offset to avoid zero/special addresses
