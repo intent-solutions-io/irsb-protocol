@@ -103,7 +103,7 @@ Dashboard and subgraph release.
 ### Added
 - Solver reputation dashboard (Next.js + Firebase)
 - The Graph subgraph for indexing
-- TypeScript SDK (`@intentsolutionsio/irsb-sdk`)
+- TypeScript SDK (`irsb`)
 - Across Protocol pilot adapter
 - Firebase deployment with Workload Identity Federation
 
