@@ -2,6 +2,164 @@
 
 This document describes how to integrate x402 HTTP Payment Protocol with IRSB (Intent Receipts & Solver Bonds) for accountable paid API services.
 
+## Quickstart: Integrate in 30 Minutes
+
+### Prerequisites
+
+- Node.js 18+
+- Ethereum wallet with Sepolia ETH
+- Registered solver on IRSB (see below)
+
+### Step 1: Install Packages (2 min)
+
+```bash
+npm install irsb-x402 ethers express
+```
+
+### Step 2: Register as Solver (5 min)
+
+```bash
+# Set your private key and RPC
+export PRIVATE_KEY=0x...
+export RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY
+
+# Register with 0.1 ETH bond
+cast send 0xB6ab964832808E49635fF82D1996D6a888ecB745 \
+  "registerSolver(string,address)" \
+  "ipfs://metadata" \
+  $(cast wallet address $PRIVATE_KEY) \
+  --value 0.1ether \
+  --private-key $PRIVATE_KEY \
+  --rpc-url $RPC_URL
+
+# Get your solver ID
+cast call 0xB6ab964832808E49635fF82D1996D6a888ecB745 \
+  "getSolverByOperator(address)(bytes32)" \
+  $(cast wallet address $PRIVATE_KEY) \
+  --rpc-url $RPC_URL
+```
+
+### Step 3: Add x402 Middleware (10 min)
+
+```typescript
+// server.ts
+import express from 'express';
+import { Wallet, keccak256, toUtf8Bytes } from 'ethers';
+import {
+  createPayload,
+  buildReceiptV2WithConfig,
+  signAsService,
+  PrivacyLevel,
+} from 'irsb-x402';
+
+const app = express();
+app.use(express.json());
+
+// Config
+const PRICE_WEI = '1000000000000000'; // 0.001 ETH
+const SOLVER_ID = '0x...'; // From Step 2
+const HUB_ADDRESS = '0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c';
+const CHAIN_ID = 11155111; // Sepolia
+
+// x402 middleware
+app.use('/api/*', (req, res, next) => {
+  const paymentProof = req.headers['x-payment-proof'];
+
+  if (!paymentProof) {
+    return res.status(402).json({
+      error: 'Payment Required',
+      x402: {
+        amount: PRICE_WEI,
+        asset: 'ETH',
+        chainId: CHAIN_ID,
+        recipient: SOLVER_ID,
+      },
+    });
+  }
+
+  // TODO: Verify payment on-chain (see full example)
+  next();
+});
+
+// Protected endpoint
+app.post('/api/generate', async (req, res) => {
+  const requestId = crypto.randomUUID();
+  const result = { output: 'Generated content...', requestId };
+
+  // Build IRSB receipt
+  const payload = createPayload({
+    service: { serviceId: 'my-api', endpoint: '/api/generate', domain: 'localhost' },
+    payment: { paymentRef: req.headers['x-payment-proof'], asset: 'ETH', amount: PRICE_WEI, chainId: CHAIN_ID },
+    request: { requestId },
+    response: { resultPointer: '', resultDigest: keccak256(toUtf8Bytes(JSON.stringify(result))) },
+  });
+
+  const { receiptV2 } = buildReceiptV2WithConfig(
+    { payload, ciphertextPointer: '', solverId: SOLVER_ID, privacyLevel: PrivacyLevel.Public },
+    CHAIN_ID,
+    HUB_ADDRESS
+  );
+
+  const solverSig = await signAsService(receiptV2, process.env.PRIVATE_KEY!, CHAIN_ID, HUB_ADDRESS);
+
+  res.json({
+    result,
+    receipt: { ...receiptV2, solverSig },
+    signingPayload: { chainId: CHAIN_ID, hubAddress: HUB_ADDRESS },
+  });
+});
+
+app.listen(3000, () => console.log('x402 service running on :3000'));
+```
+
+### Step 4: Test It (5 min)
+
+```bash
+# Start server
+PRIVATE_KEY=0x... npx tsx server.ts
+
+# Request without payment → 402
+curl http://localhost:3000/api/generate
+
+# Request with mock payment → 200 + receipt
+curl -X POST http://localhost:3000/api/generate \
+  -H "Content-Type: application/json" \
+  -H "X-Payment-Proof: 0xmockpaymenthash" \
+  -d '{"prompt": "Hello"}'
+```
+
+### Step 5: Post Receipt On-Chain (optional, 8 min)
+
+```typescript
+import { IRSBClient } from 'irsb';
+
+const client = new IRSBClient({
+  rpcUrl: process.env.RPC_URL!,
+  hubAddress: HUB_ADDRESS,
+});
+
+// Post the receipt from Step 4
+const tx = await client.postReceiptV2(receipt, signer);
+console.log('Receipt posted:', tx.hash);
+```
+
+### Contract Addresses (Sepolia)
+
+| Contract | Address |
+|----------|---------|
+| SolverRegistry | `0xB6ab964832808E49635fF82D1996D6a888ecB745` |
+| IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
+| DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
+
+### Next Steps
+
+- Add real payment verification (query blockchain for tx)
+- Store receipts in IPFS for `ciphertextPointer`
+- Enable dual attestation (client signs too)
+- See [full example](../examples/x402-express-service/) for production patterns
+
+---
+
 ## Overview
 
 **x402** is an HTTP protocol for paid API access (HTTP 402 Payment Required). **IRSB** provides on-chain accountability through receipts, bonds, and disputes.
@@ -153,7 +311,7 @@ import {
   buildReceiptV2WithConfig,
   signAsService,
   validateReceiptV2,
-} from '@irsb/x402-irsb';
+} from 'irsb-x402';
 
 // 1. Create x402 payload after payment verification
 const payload = createPayload({
@@ -217,7 +375,7 @@ import {
   escrowIdFromPayment,
   calculateEscrowParams,
   createEscrowFromX402,
-} from '@irsb/x402-irsb';
+} from 'irsb-x402';
 
 // Generate escrow ID from payment
 const escrowId = escrowIdFromPayment(payment, chainId);
@@ -255,7 +413,7 @@ const result = buildReceiptV2WithConfig(
 For maximum accountability, both parties sign:
 
 ```typescript
-import { signReceiptDual } from '@irsb/x402-irsb';
+import { signReceiptDual } from 'irsb-x402';
 
 // Sign with both solver and client keys
 const dualSignedReceipt = await signReceiptDual(
@@ -276,7 +434,7 @@ console.log(dualSignedReceipt.clientSig); // Client's EIP-712 signature
 Verify payload matches on-chain commitment:
 
 ```typescript
-import { computePayloadCommitment, verifyCommitment } from '@irsb/x402-irsb';
+import { computePayloadCommitment, verifyCommitment } from 'irsb-x402';
 
 // Compute commitment
 const commitment = computePayloadCommitment(payload);
