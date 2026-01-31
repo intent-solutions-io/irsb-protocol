@@ -133,7 +133,7 @@ These risks are documented and require mitigation before mainnet:
 |----|---------|----------|----------|--------|
 | IRSB-SEC-006 | No nonce in receipt signature - same-chain replay | IntentReceiptHub | L120-131 | **OPEN** |
 | IRSB-SEC-007 | setSolverKey has no timelock | SolverRegistry | L209-226 | **DOCUMENTED** |
-| IRSB-SEC-008 | Arbitrator receives 10% - perverse incentive | DisputeModule | L162-173 | **DOCUMENTED** |
+| IRSB-SEC-008 | Arbitrator receives 10% - perverse incentive | DisputeModule | L162-173 | **ACCEPTED RISK** |
 | IRSB-SEC-009 | batchPostReceipts skips signature verification | IntentReceiptHub | L322-349 | **OPEN** |
 | IRSB-SEC-010 | No minimum slash amount validation | DisputeModule | L153-157 | **OPEN** |
 
@@ -146,6 +146,26 @@ These risks are documented and require mitigation before mainnet:
 | IRSB-SEC-013 | Forfeited bonds sweepable anytime | IntentReceiptHub | L461-469 | **DOCUMENTED** |
 | IRSB-SEC-014 | Duplicate slash calls to same recipient | IntentReceiptHub | L253-268 | **INFO** |
 | IRSB-SEC-015 | Evidence array unbounded growth | DisputeModule | L102-104 | **DOCUMENTED** |
+
+---
+
+## 3.4 Accepted Risks
+
+### IRSB-SEC-008: Arbitrator 10% Incentive
+
+**Status:** ACCEPTED RISK
+
+**Rationale:**
+- User still receives 70% majority of slashed funds
+- 10% incentive ensures timely dispute resolution
+- Without incentive, arbitrators may deprioritize disputes
+- v2 roadmap includes decentralized arbitration via Kleros/UMA integration
+- Economic analysis shows net positive for users vs no arbitration
+
+**Mitigations in place:**
+- Arbitrator must be approved by governance
+- 7-day timeout prevents indefinite delays
+- User can escalate to governance if arbitrator unresponsive
 
 ---
 
