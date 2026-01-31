@@ -46,7 +46,9 @@ contract ERC8004Adapter is IERC8004, Ownable {
     event CredibilityRegistryUpdated(address indexed oldRegistry, address indexed newRegistry);
 
     /// @notice Emitted when rich validation is recorded to credibility registry
-    event CredibilityRecorded(bytes32 indexed taskId, bytes32 indexed solverId, ICredibilityRegistry.OutcomeSeverity severity);
+    event CredibilityRecorded(
+        bytes32 indexed taskId, bytes32 indexed solverId, ICredibilityRegistry.OutcomeSeverity severity
+    );
 
     // ============ Errors ============
 
@@ -194,7 +196,11 @@ contract ERC8004Adapter is IERC8004, Ownable {
     }
 
     /// @notice Map ValidationOutcome to OutcomeSeverity
-    function _mapOutcomeToSeverity(ValidationOutcome outcome) internal pure returns (ICredibilityRegistry.OutcomeSeverity) {
+    function _mapOutcomeToSeverity(ValidationOutcome outcome)
+        internal
+        pure
+        returns (ICredibilityRegistry.OutcomeSeverity)
+    {
         if (outcome == ValidationOutcome.Finalized || outcome == ValidationOutcome.DisputeWon) {
             return ICredibilityRegistry.OutcomeSeverity.Success;
         } else if (outcome == ValidationOutcome.Slashed) {
@@ -318,11 +324,11 @@ contract ERC8004Adapter is IERC8004, Ownable {
     /// @param minScore Minimum IntentScore required
     /// @param maxSlashRate Maximum slash rate allowed (basis points)
     /// @return meets True if solver meets threshold
-    function solverMeetsThreshold(
-        bytes32 solverId,
-        uint256 minScore,
-        uint256 maxSlashRate
-    ) external view returns (bool meets) {
+    function solverMeetsThreshold(bytes32 solverId, uint256 minScore, uint256 maxSlashRate)
+        external
+        view
+        returns (bool meets)
+    {
         if (address(credibilityRegistry) == address(0)) return false;
         return credibilityRegistry.meetsCredibilityThreshold(solverId, minScore, maxSlashRate);
     }
@@ -331,7 +337,9 @@ contract ERC8004Adapter is IERC8004, Ownable {
     /// @param solverId Solver to query
     /// @return snapshot Full reputation snapshot
     function getSolverReputation(bytes32 solverId)
-        external view returns (ICredibilityRegistry.ReputationSnapshot memory snapshot)
+        external
+        view
+        returns (ICredibilityRegistry.ReputationSnapshot memory snapshot)
     {
         if (address(credibilityRegistry) == address(0)) {
             return snapshot; // Empty snapshot

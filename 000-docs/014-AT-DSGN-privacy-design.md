@@ -93,7 +93,7 @@ On-chain data contains only:
 To ensure deterministic commitments, payloads are **canonicalized** before hashing:
 
 ```typescript
-import { generateMetadataCommitment } from '@intentsolutionsio/irsb-sdk';
+import { generateMetadataCommitment } from 'irsb';
 
 // Build your metadata
 const metadata = {
@@ -184,7 +184,7 @@ This supports base58 (IPFS v0) and base32 (IPFS v1) CIDs.
 The SDK can extract CIDs from URLs:
 
 ```typescript
-import { formatCiphertextPointer } from '@intentsolutionsio/irsb-sdk';
+import { formatCiphertextPointer } from 'irsb';
 
 formatCiphertextPointer('ipfs://QmTest123456789');
 // → 'QmTest123456789'
@@ -202,7 +202,7 @@ For **SEMI_PUBLIC** and **PRIVATE** receipts, IRSB integrates with [Lit Protocol
 Define who can decrypt:
 
 ```typescript
-import { createReceiptAccessConditions } from '@intentsolutionsio/irsb-sdk';
+import { createReceiptAccessConditions } from 'irsb';
 
 // Create conditions allowing solver, client, or arbitrator
 const conditions = createReceiptAccessConditions(
@@ -232,7 +232,7 @@ createAddressCondition('sepolia', allowedAddress);
 ### Encryption Flow
 
 ```typescript
-import { encryptWithLit, createPrivacyConfig } from '@intentsolutionsio/irsb-sdk';
+import { encryptWithLit, createPrivacyConfig } from 'irsb';
 
 const config = createPrivacyConfig({
   encrypt: true,
@@ -271,7 +271,7 @@ interface EvidenceBundle {
 ### Evidence Commitment
 
 ```typescript
-import { generateEvidenceCommitment } from '@intentsolutionsio/irsb-sdk';
+import { generateEvidenceCommitment } from 'irsb';
 
 const evidence: EvidenceBundle = {
   txHash: '0x...',
@@ -369,7 +369,7 @@ await storage.save({
 ### 3. Validate Before Upload
 
 ```typescript
-import { validatePointer } from '@intentsolutionsio/irsb-sdk';
+import { validatePointer } from 'irsb';
 
 const validation = validatePointer(cid);
 if (!validation.isValid) {
@@ -382,7 +382,7 @@ if (!validation.isValid) {
 For any hash that goes on-chain, use the SDK helpers:
 
 ```typescript
-import { combineHashes, structHash } from '@intentsolutionsio/irsb-sdk';
+import { combineHashes, structHash } from 'irsb';
 
 // Combine multiple hashes
 const combined = combineHashes(hash1, hash2, hash3);

@@ -6,7 +6,12 @@
 
 import { Router, Response } from 'express';
 import { x402Middleware, getX402Config, X402Request } from '../middleware/x402.js';
-import { generateReceipt, formatReceiptForResponse } from '../services/irsbReceipt.js';
+import {
+  generateReceipt,
+  formatReceiptForResponse,
+  postReceiptOnChain,
+  isServerPostingEnabled,
+} from '../services/irsbReceipt.js';
 
 export const generateRouter = Router();
 
@@ -54,17 +59,43 @@ generateRouter.post('/generate', async (req: X402Request, res: Response) => {
 
     console.log(`[Generate] Complete. RequestID: ${receiptResult.requestId}`);
 
+    // Optionally post receipt on-chain (if enabled)
+    let postResult = null;
+    if (isServerPostingEnabled()) {
+      try {
+        postResult = await postReceiptOnChain(receiptResult.receipt);
+        console.log(`[Generate] Receipt posted on-chain: ${postResult.receiptId}`);
+      } catch (postError) {
+        console.error('[Generate] Failed to post receipt on-chain:', postError);
+        // Continue without posting - client can still post
+      }
+    }
+
     // Return result with receipt
     return res.status(200).json({
       success: true,
       result: generatedResult,
       ...formatReceiptForResponse(receiptResult),
-      instructions: {
-        clientAttestation:
-          'To complete dual attestation, sign the signingPayload with your wallet using EIP-712 signTypedData',
-        posting:
-          'Submit the receipt to IRSB IntentReceiptHub.postReceiptV2() to record on-chain',
-      },
+      // Include on-chain posting result if available
+      ...(postResult && {
+        posted: {
+          receiptId: postResult.receiptId,
+          txHash: postResult.txHash,
+          blockNumber: postResult.blockNumber,
+          explorerUrl: postResult.explorerUrl,
+        },
+      }),
+      instructions: postResult
+        ? {
+            status: 'Receipt already posted on-chain by service',
+            receiptId: postResult.receiptId,
+          }
+        : {
+            clientAttestation:
+              'To complete dual attestation, sign the signingPayload with your wallet using EIP-712 signTypedData',
+            posting:
+              'Submit the receipt to IRSB IntentReceiptHub.postReceiptV2() to record on-chain',
+          },
     });
   } catch (err) {
     console.error('[Generate] Error:', err);

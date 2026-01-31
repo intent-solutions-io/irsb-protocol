@@ -89,3 +89,16 @@ export {
   type EscrowInfo,
   type CreateEscrowResult,
 } from './escrow.js';
+
+// Network configuration
+export {
+  SEPOLIA_CONFIG,
+  getNetworkConfig,
+  requireNetworkConfig,
+  isSupportedChain,
+  getSupportedChainIds,
+  getTransactionUrl,
+  getAddressUrl,
+  getHubUrl,
+  type NetworkConfig,
+} from './config.js';

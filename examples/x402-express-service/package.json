@@ -7,10 +7,12 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
+    "client": "tsx scripts/client.ts",
+    "client:mock": "tsx scripts/client.ts --mock",
     "lint": "eslint src/"
   },
   "dependencies": {
-    "@irsb/x402-integration": "workspace:*",
+    "irsb-x402": "workspace:*",
     "express": "^4.18.2",
     "ethers": "^6.13.0",
     "uuid": "^9.0.1",

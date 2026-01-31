@@ -169,7 +169,7 @@ jobs:
 - **Tests:** Passes
 - **NPM:** Not yet published
 
-### @irsb/x402-integration
+### irsb-x402
 
 - **Location:** `packages/x402-irsb/`
 - **Build:** Passes

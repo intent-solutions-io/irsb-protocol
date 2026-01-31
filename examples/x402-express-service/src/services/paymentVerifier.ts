@@ -1,9 +1,11 @@
 /**
  * Payment Verifier
  *
- * Mock payment verification for demonstration.
- * In production, this would verify on-chain transactions or use a payment facilitator.
+ * Verifies ETH payments on-chain by querying the blockchain.
+ * Supports both real verification and mock mode for testing.
  */
+
+import { JsonRpcProvider, formatEther } from 'ethers';
 
 export interface PaymentProof {
   /** Transaction hash or payment reference */
@@ -17,9 +19,18 @@ export interface PaymentProof {
 }
 
 export interface VerificationOptions {
+  /** Expected payment amount in wei */
   expectedAmount: string;
+  /** Expected asset (ETH for native) */
   expectedAsset: string;
+  /** Expected chain ID */
   expectedChainId: number;
+  /** Expected recipient address (service wallet) */
+  expectedRecipient?: string;
+  /** Number of block confirmations required (default: 2) */
+  confirmations?: number;
+  /** Skip on-chain verification (for testing) */
+  skipOnChain?: boolean;
 }
 
 export interface VerificationResult {
@@ -27,17 +38,20 @@ export interface VerificationResult {
   reason?: string;
   confirmedAmount?: string;
   confirmedAsset?: string;
+  blockNumber?: number;
+  confirmations?: number;
 }
 
 /**
- * Verify a payment proof.
- *
- * NOTE: This is a MOCK implementation for demonstration.
- * In production, you would:
- * 1. Query the blockchain for the transaction
- * 2. Verify the recipient, amount, and asset
- * 3. Check block confirmations
- * 4. Or use a payment facilitator API (e.g., Coinbase Commerce, etc.)
+ * Get the Ethereum provider.
+ */
+function getProvider(): JsonRpcProvider {
+  const rpcUrl = process.env.RPC_URL || 'https://rpc.sepolia.org';
+  return new JsonRpcProvider(rpcUrl);
+}
+
+/**
+ * Verify a payment proof by querying the blockchain.
  *
  * @param proof - The payment proof from the client
  * @param options - Expected payment parameters
@@ -57,11 +71,11 @@ export async function verifyPayment(
   }
 
   // Validate paymentRef format (should be a transaction hash)
-  if (!/^0x[a-fA-F0-9]{64}$/.test(proof.paymentRef)) {
-    // Allow mock proof for testing
-    if (!proof.paymentRef.startsWith('mock-proof-')) {
-      return { valid: false, reason: 'Invalid paymentRef format' };
-    }
+  const isTxHash = /^0x[a-fA-F0-9]{64}$/.test(proof.paymentRef);
+  const isMockProof = proof.paymentRef.startsWith('mock-proof-');
+
+  if (!isTxHash && !isMockProof) {
+    return { valid: false, reason: 'Invalid paymentRef format' };
   }
 
   // Validate payer address format
@@ -69,36 +83,128 @@ export async function verifyPayment(
     return { valid: false, reason: 'Invalid payer address format' };
   }
 
-  // ============================================
-  // MOCK VERIFICATION
-  // In production, replace this with real verification:
-  //
-  // const provider = new JsonRpcProvider(process.env.RPC_URL);
-  // const tx = await provider.getTransaction(proof.paymentRef);
-  // if (!tx) return { valid: false, reason: 'Transaction not found' };
-  //
-  // const receipt = await tx.wait();
-  // if (!receipt) return { valid: false, reason: 'Transaction not confirmed' };
-  //
-  // // Verify recipient, amount, asset...
-  // ============================================
+  // Allow mock proofs for testing
+  if (isMockProof || options.skipOnChain) {
+    console.log(`[Payment Verifier] Mock/skip mode - accepting payment`);
+    return {
+      valid: true,
+      confirmedAmount: options.expectedAmount,
+      confirmedAsset: options.expectedAsset,
+    };
+  }
 
-  console.log(`[Payment Verifier] Verifying payment:`, {
+  // Real on-chain verification
+  console.log(`[Payment Verifier] Verifying on-chain:`, {
     paymentRef: proof.paymentRef,
     payer: proof.payer,
     expected: {
-      amount: options.expectedAmount,
+      amount: formatEther(options.expectedAmount),
       asset: options.expectedAsset,
-      chainId: options.expectedChainId,
+      recipient: options.expectedRecipient,
     },
   });
 
-  // For demonstration, accept all mock proofs and valid-looking tx hashes
-  return {
-    valid: true,
-    confirmedAmount: options.expectedAmount,
-    confirmedAsset: options.expectedAsset,
-  };
+  try {
+    const provider = getProvider();
+    const requiredConfirmations = options.confirmations ?? 2;
+
+    // Get transaction
+    const tx = await provider.getTransaction(proof.paymentRef);
+    if (!tx) {
+      return { valid: false, reason: 'Transaction not found on-chain' };
+    }
+
+    // Check payer matches
+    if (tx.from.toLowerCase() !== proof.payer.toLowerCase()) {
+      return {
+        valid: false,
+        reason: `Payer mismatch. Expected ${proof.payer}, got ${tx.from}`,
+      };
+    }
+
+    // Only verify native ETH transfers
+    if (options.expectedAsset === 'ETH') {
+      // Check recipient if specified
+      if (options.expectedRecipient) {
+        if (tx.to?.toLowerCase() !== options.expectedRecipient.toLowerCase()) {
+          return {
+            valid: false,
+            reason: `Recipient mismatch. Expected ${options.expectedRecipient}, got ${tx.to}`,
+          };
+        }
+      }
+
+      // Check amount
+      const expectedWei = BigInt(options.expectedAmount);
+      if (tx.value < expectedWei) {
+        return {
+          valid: false,
+          reason: `Insufficient amount. Expected ${formatEther(expectedWei)} ETH, got ${formatEther(tx.value)} ETH`,
+        };
+      }
+    }
+
+    // Wait for confirmations
+    console.log(`[Payment Verifier] Waiting for ${requiredConfirmations} confirmation(s)...`);
+    const receipt = await tx.wait(requiredConfirmations);
+
+    if (!receipt) {
+      return { valid: false, reason: 'Transaction not confirmed' };
+    }
+
+    // Get current block for confirmation count
+    const currentBlock = await provider.getBlockNumber();
+    const confirmationCount = currentBlock - receipt.blockNumber + 1;
+
+    console.log(`[Payment Verifier] Verified!`, {
+      blockNumber: receipt.blockNumber,
+      confirmations: confirmationCount,
+      amount: formatEther(tx.value),
+    });
+
+    return {
+      valid: true,
+      confirmedAmount: tx.value.toString(),
+      confirmedAsset: options.expectedAsset,
+      blockNumber: receipt.blockNumber,
+      confirmations: confirmationCount,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`[Payment Verifier] Error:`, message);
+    return { valid: false, reason: `Verification failed: ${message}` };
+  }
+}
+
+/**
+ * Verify payment without waiting for confirmations.
+ * Useful for quick checks, but less secure.
+ *
+ * @param proof - The payment proof from the client
+ * @param options - Expected payment parameters
+ * @returns Verification result
+ */
+export async function verifyPaymentQuick(
+  proof: PaymentProof,
+  options: VerificationOptions
+): Promise<VerificationResult> {
+  return verifyPayment(proof, { ...options, confirmations: 0 });
+}
+
+/**
+ * Check if a transaction exists and is pending.
+ *
+ * @param txHash - Transaction hash
+ * @returns true if transaction exists (pending or confirmed)
+ */
+export async function transactionExists(txHash: string): Promise<boolean> {
+  try {
+    const provider = getProvider();
+    const tx = await provider.getTransaction(txHash);
+    return tx !== null;
+  } catch {
+    return false;
+  }
 }
 
 /**

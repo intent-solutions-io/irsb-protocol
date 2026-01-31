@@ -15,7 +15,7 @@ import {
   PrivacyLevel,
   type X402ReceiptPayload,
   type IntentReceiptV2,
-} from '@irsb/x402-integration';
+} from 'irsb-x402';
 import { PaymentProof } from './paymentVerifier.js';
 
 export interface GenerateReceiptOptions {

@@ -24,7 +24,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Run Forge build
         run: forge build --sizes
@@ -70,7 +70,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Check formatting
         run: forge fmt --check
@@ -132,6 +132,31 @@ jobs:
         run: npm run build
 
   # ===========================================
+  # DASHBOARD BUILD
+  # ===========================================
+  dashboard:
+    name: Dashboard Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: dashboard/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build dashboard
+        run: npm run build
+
+  # ===========================================
   # SECURITY CHECKS
   # ===========================================
   security:
@@ -143,7 +168,7 @@ jobs:
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
         with:
-          version: nightly
+          version: stable
 
       - name: Install Slither
         run: pip3 install slither-analyzer
@@ -157,7 +182,7 @@ jobs:
   summary:
     name: CI Summary
     runs-on: ubuntu-latest
-    needs: [contracts, lint, sdk, subgraph, security]
+    needs: [contracts, lint, sdk, subgraph, dashboard, security]
     if: always()
     steps:
       - name: Check results

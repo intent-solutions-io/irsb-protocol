@@ -259,7 +259,7 @@ irsb-protocol/
 
 #### sdk/ - TypeScript SDK
 
-**Package**: `@intentsolutionsio/irsb-sdk` (npm public)
+**Package**: `irsb` (npm public)
 **Build**: tsup (ESM + CJS + DTS)
 **Dependencies**: ethers v6, graphql-request
 **Status**: v0.1.0, not yet published to npm
@@ -588,7 +588,7 @@ DisputeModule
 
 ⚠️ **No Timelock**: Parameter changes take effect immediately.
 
-⚠️ **SDK Not Published**: `@intentsolutionsio/irsb-sdk` not on npm yet.
+⚠️ **SDK Not Published**: `irsb` not on npm yet.
 
 ⚠️ **Slither Warnings**: Security scan runs but findings not triaged (continues on error).
 
@@ -696,7 +696,7 @@ DisputeModule
 - Slither output reviewed, 0 critical findings
 - Dashboard uptime monitoring active
 - DEPLOYMENT.md runbook created
-- SDK available at npmjs.com/@intentsolutionsio/irsb-sdk
+- SDK available at npmjs.com/irsb
 
 ### Month 1 – Foundation
 
