@@ -234,12 +234,12 @@ ETHERSCAN_API_KEY=...
 
 | Document | Purpose |
 |----------|---------|
-| `000-docs/X402-INTEGRATION.md` | x402 HTTP payment integration guide |
-| `000-docs/PRIVACY.md` | On-chain vs off-chain data model |
-| `000-docs/DEPLOYMENT.md` | Deployment runbook |
-| `000-docs/MONITORING.md` | Monitoring checklist |
-| `000-docs/INCIDENT_PLAYBOOK.md` | Emergency procedures |
-| `000-docs/MULTISIG_PLAN.md` | Gnosis Safe transition |
+| `000-docs/016-AT-INTG-x402-integration.md` | x402 HTTP payment integration guide |
+| `000-docs/014-AT-DSGN-privacy-design.md` | On-chain vs off-chain data model |
+| `000-docs/010-OD-GUID-deployment-guide.md` | Deployment runbook |
+| `000-docs/012-OD-GUID-monitoring-guide.md` | Monitoring checklist |
+| `000-docs/011-OD-GUID-incident-playbook.md` | Emergency procedures |
+| `000-docs/013-OD-GUID-multisig-plan.md` | Gnosis Safe transition |
 
 ## Strategic Context
 
