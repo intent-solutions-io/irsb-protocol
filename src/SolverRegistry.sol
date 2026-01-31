@@ -468,16 +468,18 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     function _publishToERC8004(bytes32 receiptId, bytes32 solverId, uint256 slashAmount) internal {
         if (erc8004Adapter == address(0)) return;
 
-        try IERC8004(erc8004Adapter).emitValidationSignal(
-            IERC8004.ValidationSignal({
-                taskId: receiptId,
-                agentId: solverId,
-                outcome: IERC8004.ValidationOutcome.Slashed,
-                timestamp: block.timestamp,
-                evidenceHash: bytes32(0),
-                metadata: abi.encode(slashAmount)
-            })
-        ) {} catch {
+        try IERC8004(erc8004Adapter)
+            .emitValidationSignal(
+                IERC8004.ValidationSignal({
+                    taskId: receiptId,
+                    agentId: solverId,
+                    outcome: IERC8004.ValidationOutcome.Slashed,
+                    timestamp: block.timestamp,
+                    evidenceHash: bytes32(0),
+                    metadata: abi.encode(slashAmount)
+                })
+            ) { }
+            catch {
             // Adapter call failed - continue without reverting
             // Core IRSB operations are never blocked by adapter issues
         }

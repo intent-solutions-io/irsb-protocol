@@ -12,13 +12,10 @@ import {
   signAsService,
   validateReceiptV2,
   computePayloadCommitment,
-  postReceiptV2,
-  getTransactionUrl,
   PrivacyLevel,
   type X402ReceiptPayload,
   type IntentReceiptV2,
-  type PostReceiptResult,
-} from '@irsb/x402-integration';
+} from 'irsb-x402';
 import { PaymentProof } from './paymentVerifier.js';
 
 export interface GenerateReceiptOptions {
@@ -208,68 +205,4 @@ export function formatReceiptForResponse(result: ReceiptGenerationResult) {
       },
     },
   };
-}
-
-/**
- * Post result for on-chain receipt posting
- */
-export interface PostResult {
-  txHash: string;
-  receiptId: string;
-  blockNumber: number;
-  gasUsed: string;
-  explorerUrl?: string;
-}
-
-/**
- * Post a receipt to the IntentReceiptHub on-chain.
- *
- * This is an optional step that can be triggered by the service
- * or left for the client to do with their signature.
- *
- * @param receipt - The signed receipt
- * @returns Post result with transaction details
- */
-export async function postReceiptOnChain(
-  receipt: IntentReceiptV2
-): Promise<PostResult> {
-  const chainId = parseInt(process.env.CHAIN_ID || '11155111', 10);
-  const hubAddress = process.env.IRSB_HUB_ADDRESS || '';
-  const solverPrivateKey = process.env.SERVICE_PRIVATE_KEY || '';
-  const rpcUrl = process.env.RPC_URL || 'https://rpc.sepolia.org';
-
-  if (!solverPrivateKey || !hubAddress) {
-    throw new Error(
-      'Missing required environment variables: SERVICE_PRIVATE_KEY, IRSB_HUB_ADDRESS'
-    );
-  }
-
-  console.log(`[IRSB Receipt] Posting receipt on-chain...`);
-
-  const result = await postReceiptV2(receipt, {
-    rpcUrl,
-    hubAddress,
-    solverSigner: solverPrivateKey,
-  });
-
-  console.log(`[IRSB Receipt] Posted!`, {
-    receiptId: result.receiptId,
-    txHash: result.txHash,
-    blockNumber: result.blockNumber,
-  });
-
-  return {
-    txHash: result.txHash,
-    receiptId: result.receiptId,
-    blockNumber: result.blockNumber,
-    gasUsed: result.gasUsed.toString(),
-    explorerUrl: getTransactionUrl(result.txHash, chainId),
-  };
-}
-
-/**
- * Check if server-side receipt posting is enabled.
- */
-export function isServerPostingEnabled(): boolean {
-  return process.env.POST_RECEIPTS_ON_CHAIN === 'true';
 }

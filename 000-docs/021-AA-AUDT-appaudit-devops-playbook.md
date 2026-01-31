@@ -168,7 +168,7 @@ irsb-protocol/
 │   ├── DeployAmoy.s.sol          # Polygon Amoy deployment
 │   ├── SeedTestData.s.sol        # Test data seeding
 │   └── VerifyAmoy.s.sol          # Verification script
-├── sdk/                          # TypeScript SDK (@intentsolutionsio/irsb-sdk)
+├── sdk/                          # TypeScript SDK (irsb)
 │   ├── src/                      # SDK source
 │   └── package.json              # npm package config
 ├── packages/

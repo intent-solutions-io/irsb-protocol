@@ -182,6 +182,68 @@ This ensures disputes cannot be held indefinitely.
 
 ---
 
+## Optimistic Dispute Resolution (V2)
+
+The `OptimisticDisputeModule` provides an alternative dispute mechanism with counter-bond economics:
+
+### Counter-Bond Window
+
+When a challenger opens a dispute, the solver has a **24-hour counter-bond window** to respond:
+
+```
+Dispute Opened → [24h Counter-Bond Window] → Resolution
+                         │
+                         ├─ Solver posts counter-bond → Escalate to arbitration
+                         │
+                         └─ No counter-bond → Challenger wins by timeout
+```
+
+### Flow
+
+1. **Challenger opens dispute** with bond (10% of solver's stake)
+2. **Counter-bond window opens** (24 hours)
+3. **Solver decision**:
+   - **Post counter-bond** → Dispute escalates to arbitration
+   - **No response** → Challenger wins automatically (timeout resolution)
+4. **Arbitration** (if counter-bond posted):
+   - Arbitrator reviews evidence
+   - Loser forfeits their bond
+
+### Why Counter-Bonds?
+
+| Benefit | Description |
+|---------|-------------|
+| **Filters frivolous disputes** | Solvers only fight disputes they believe they'll win |
+| **Fast resolution** | Obvious violations resolve in 24h without arbitration |
+| **Economic alignment** | Both parties have skin in the game |
+| **Reduces arbitrator load** | Most disputes never reach arbitration |
+
+### Counter-Bond Constants
+
+```solidity
+uint64 constant COUNTER_BOND_WINDOW = 24 hours;
+uint16 constant COUNTER_BOND_BPS = 1000;  // 10% of locked bond
+```
+
+### Timeout Resolution
+
+If solver doesn't post counter-bond:
+
+```solidity
+function resolveByTimeout(bytes32 disputeId) external {
+    require(block.timestamp >= dispute.openedAt + COUNTER_BOND_WINDOW);
+    require(!dispute.counterBondPosted);
+
+    // Challenger wins - solver bond slashed
+    _slashSolver(dispute.solverId, dispute.amount);
+
+    // Return challenger bond
+    _returnChallengerBond(disputeId);
+}
+```
+
+---
+
 ## Key Constants
 
 ```solidity

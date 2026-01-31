@@ -64,12 +64,8 @@ contract CredibilityRegistryTest is Test {
     function test_RecordValidation_Success() public {
         _registerSolver();
 
-        ICredibilityRegistry.ValidationRecord memory record = _createValidationRecord(
-            taskId,
-            solverId,
-            ICredibilityRegistry.OutcomeSeverity.Success,
-            0
-        );
+        ICredibilityRegistry.ValidationRecord memory record =
+            _createValidationRecord(taskId, solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0);
 
         vm.prank(provider);
         registry.recordValidation(record);
@@ -87,10 +83,7 @@ contract CredibilityRegistryTest is Test {
         // Record 5 successes
         for (uint256 i = 0; i < 5; i++) {
             ICredibilityRegistry.ValidationRecord memory record = _createValidationRecord(
-                keccak256(abi.encode("task", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.Success,
-                0
+                keccak256(abi.encode("task", i)), solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0
             );
             vm.prank(provider);
             registry.recordValidation(record);
@@ -105,12 +98,8 @@ contract CredibilityRegistryTest is Test {
     function test_RecordValidation_TracksSlashing() public {
         _registerSolver();
 
-        ICredibilityRegistry.ValidationRecord memory record = _createValidationRecord(
-            taskId,
-            solverId,
-            ICredibilityRegistry.OutcomeSeverity.SevereFault,
-            1 ether
-        );
+        ICredibilityRegistry.ValidationRecord memory record =
+            _createValidationRecord(taskId, solverId, ICredibilityRegistry.OutcomeSeverity.SevereFault, 1 ether);
 
         vm.prank(provider);
         registry.recordValidation(record);
@@ -165,10 +154,7 @@ contract CredibilityRegistryTest is Test {
         // Record 20 successes
         for (uint256 i = 0; i < 20; i++) {
             _recordValidation(
-                keccak256(abi.encode("task", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.Success,
-                0
+                keccak256(abi.encode("task", i)), solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0
             );
         }
 
@@ -183,18 +169,12 @@ contract CredibilityRegistryTest is Test {
         // Record 10 successes and 5 slashes
         for (uint256 i = 0; i < 10; i++) {
             _recordValidation(
-                keccak256(abi.encode("success", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.Success,
-                0
+                keccak256(abi.encode("success", i)), solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0
             );
         }
         for (uint256 i = 0; i < 5; i++) {
             _recordValidation(
-                keccak256(abi.encode("fail", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.SevereFault,
-                0.1 ether
+                keccak256(abi.encode("fail", i)), solverId, ICredibilityRegistry.OutcomeSeverity.SevereFault, 0.1 ether
             );
         }
 
@@ -209,18 +189,12 @@ contract CredibilityRegistryTest is Test {
         // 7 successes, 3 failures = 70%
         for (uint256 i = 0; i < 7; i++) {
             _recordValidation(
-                keccak256(abi.encode("success", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.Success,
-                0
+                keccak256(abi.encode("success", i)), solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0
             );
         }
         for (uint256 i = 0; i < 3; i++) {
             _recordValidation(
-                keccak256(abi.encode("fail", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.MinorFault,
-                0
+                keccak256(abi.encode("fail", i)), solverId, ICredibilityRegistry.OutcomeSeverity.MinorFault, 0
             );
         }
 
@@ -255,10 +229,7 @@ contract CredibilityRegistryTest is Test {
         // Build good reputation
         for (uint256 i = 0; i < 20; i++) {
             _recordValidation(
-                keccak256(abi.encode("task", i)),
-                solverId,
-                ICredibilityRegistry.OutcomeSeverity.Success,
-                0
+                keccak256(abi.encode("task", i)), solverId, ICredibilityRegistry.OutcomeSeverity.Success, 0
             );
         }
 
@@ -281,10 +252,7 @@ contract CredibilityRegistryTest is Test {
             // Each solver gets different number of successes
             for (uint256 j = 0; j <= i * 3; j++) {
                 _recordValidation(
-                    keccak256(abi.encode("task", i, j)),
-                    sid,
-                    ICredibilityRegistry.OutcomeSeverity.Success,
-                    0
+                    keccak256(abi.encode("task", i, j)), sid, ICredibilityRegistry.OutcomeSeverity.Success, 0
                 );
             }
         }
@@ -358,12 +326,8 @@ contract CredibilityRegistryTest is Test {
         ICredibilityRegistry.OutcomeSeverity severity,
         uint128 slashAmount
     ) internal {
-        ICredibilityRegistry.ValidationRecord memory record = _createValidationRecord(
-            _taskId,
-            _solverId,
-            severity,
-            slashAmount
-        );
+        ICredibilityRegistry.ValidationRecord memory record =
+            _createValidationRecord(_taskId, _solverId, severity, slashAmount);
         vm.prank(provider);
         registry.recordValidation(record);
     }

@@ -116,3 +116,11 @@ export {
   type RecentReceiptsResponse,
   type BondStatus,
 } from './api/walletApi';
+
+// Verification
+export {
+  verifyReceipt,
+  formatVerifyResult,
+  type VerifyResult,
+  type VerifyOptions,
+} from './verify';

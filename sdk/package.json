@@ -1,5 +1,5 @@
 {
-  "name": "@intentsolutionsio/irsb-sdk",
+  "name": "irsb",
   "version": "0.1.0",
   "description": "SDK for IRSB Protocol - Intent Receipts & Solver Bonds",
   "publishConfig": {
@@ -8,13 +8,16 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "bin": {
+    "irsb": "dist/cli.js"
+  },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts",
+    "dev": "tsup src/index.ts src/cli.ts --format cjs,esm --dts --watch",
     "lint": "eslint src/",
     "test": "vitest",
     "prepublishOnly": "npm run build"

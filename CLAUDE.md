@@ -57,6 +57,16 @@ IRSB fills that gap with:
 | IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
 | DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
 
+### Operational Accounts (Sepolia)
+
+| Account | Address | Purpose |
+|---------|---------|---------|
+| **Deployer/Operator** | `0x83A5F432f02B1503765bB61a9B358942d87c9dc0` | Signs receipts, pays gas |
+| **Solver ID** | `0xdf816d7b86303c3452e53d84aaa02c01b0de6ae23c1e518bd2642870f9f7603b` | Registered solver identifier |
+| **Safe (Owner)** | `0xBcA0c8d0B5ce874a9E3D84d49f3614bb79189959` | Owns all contracts (2/3 multisig) |
+
+**Note**: Safe needs ETH for admin operations (pause, parameter changes). Deployer wallet signs receipts.
+
 ## Repository Structure
 
 ```
@@ -206,10 +216,10 @@ vm.expectRevert(abi.encodeWithSignature("SolverNotActive()"));
 
 ## x402 Integration
 
-The `@irsb/x402-integration` package bridges HTTP 402 payments to IRSB:
+The `irsb-x402` package bridges HTTP 402 payments to IRSB:
 
 ```typescript
-import { buildReceiptV2FromX402, postReceiptV2FromX402 } from '@irsb/x402-integration';
+import { buildReceiptV2FromX402, postReceiptV2FromX402 } from 'irsb-x402';
 
 // After x402 payment verified
 const receipt = buildReceiptV2FromX402({
@@ -234,12 +244,12 @@ ETHERSCAN_API_KEY=...
 
 | Document | Purpose |
 |----------|---------|
-| `000-docs/X402-INTEGRATION.md` | x402 HTTP payment integration guide |
-| `000-docs/PRIVACY.md` | On-chain vs off-chain data model |
-| `000-docs/DEPLOYMENT.md` | Deployment runbook |
-| `000-docs/MONITORING.md` | Monitoring checklist |
-| `000-docs/INCIDENT_PLAYBOOK.md` | Emergency procedures |
-| `000-docs/MULTISIG_PLAN.md` | Gnosis Safe transition |
+| `000-docs/016-AT-INTG-x402-integration.md` | x402 HTTP payment integration guide |
+| `000-docs/014-AT-DSGN-privacy-design.md` | On-chain vs off-chain data model |
+| `000-docs/010-OD-GUID-deployment-guide.md` | Deployment runbook |
+| `000-docs/012-OD-GUID-monitoring-guide.md` | Monitoring checklist |
+| `000-docs/011-OD-GUID-incident-playbook.md` | Emergency procedures |
+| `000-docs/013-OD-GUID-multisig-plan.md` | Gnosis Safe transition |
 
 ## Strategic Context
 

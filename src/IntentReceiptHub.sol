@@ -597,12 +597,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
     /// @notice Internal function to publish signals to ERC-8004 adapter
     /// @dev Non-reverting - adapter failures should not block core operations
-    function _publishToERC8004(
-        bytes32 receiptId,
-        bytes32 solverId,
-        bool success,
-        uint256 slashAmount
-    ) internal {
+    function _publishToERC8004(bytes32 receiptId, bytes32 solverId, bool success, uint256 slashAmount) internal {
         if (erc8004Adapter == address(0)) return;
 
         // Determine outcome based on success and slash amount
@@ -619,16 +614,18 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         bytes memory metadata = slashAmount > 0 ? abi.encode(slashAmount) : bytes("");
 
         // Try to call adapter - don't revert on failure
-        try IERC8004(erc8004Adapter).emitValidationSignal(
-            IERC8004.ValidationSignal({
-                taskId: receiptId,
-                agentId: solverId,
-                outcome: outcome,
-                timestamp: block.timestamp,
-                evidenceHash: bytes32(0),
-                metadata: metadata
-            })
-        ) {} catch {
+        try IERC8004(erc8004Adapter)
+            .emitValidationSignal(
+                IERC8004.ValidationSignal({
+                    taskId: receiptId,
+                    agentId: solverId,
+                    outcome: outcome,
+                    timestamp: block.timestamp,
+                    evidenceHash: bytes32(0),
+                    metadata: metadata
+                })
+            ) { }
+            catch {
             // Adapter call failed - continue without reverting
             // This ensures core IRSB operations are never blocked by adapter issues
         }

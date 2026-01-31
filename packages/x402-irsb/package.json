@@ -1,5 +1,5 @@
 {
-  "name": "@irsb/x402-integration",
+  "name": "irsb-x402",
   "version": "0.1.0",
   "description": "x402 HTTP Payment Protocol integration for IRSB ReceiptV2",
   "type": "module",
