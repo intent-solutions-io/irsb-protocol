@@ -328,6 +328,15 @@ declare function createPayload(params: {
  */
 
 /**
+ * EIP-712 type definitions for ReceiptV2
+ */
+declare const RECEIPT_V2_TYPES: {
+    IntentReceiptV2: {
+        name: string;
+        type: string;
+    }[];
+};
+/**
  * Get EIP-712 domain for receipt signing.
  *
  * @param chainId - Chain ID for the domain
@@ -655,4 +664,86 @@ declare function calculateEscrowParams(payment: X402Payment, receiptId: string, 
  */
 declare function createEscrowFromX402(payment: X402Payment, receiptId: string, depositor: string, escrowAddress: string, rpcUrl: string, signerKey: string, targetChainId: number): Promise<CreateEscrowResult>;
 
-export { type CreateEscrowResult, type EIP712TypedData, type EscrowInfo, EscrowStatus, type IntentReceiptV2, type PostReceiptResult, type PostX402ReceiptOptions, PrivacyLevel, type X402EscrowParams, X402Mode, type X402Payment, type X402ReceiptPayload, type X402ReceiptResult, type X402Request, type X402Response, type X402Service, type X402Timing, type X402ToReceiptParams, X402_PAYLOAD_VERSION, approveERC20ForEscrow, buildReceiptV2FromX402, buildReceiptV2WithConfig, calculateEscrowParams, canCreateEscrow, canonicalize, computeEvidenceHash, computeIntentHash, computePayloadCommitment, computeReceiptV2Id, computeRequestFingerprint, computeRouteHash, computeTermsHash, createERC20Escrow, createEscrowFromX402, createNativeEscrow, createPayload, createSigningPayload, escrowIdFromPayment, estimatePostGas, formatCiphertextPointer, generateEscrowId, generateNonce, getEIP712Domain, getEscrowInfo, getPersonalSignHash, getReceiptTypedDataHash, isValidCID, postReceiptV2, postReceiptV2FromX402, receiptExists, recoverSigner, signAsClient, signAsService, signReceiptDual, validateReceiptV2, verifyClientSignature, verifyCommitment, verifySolverSignature };
+/**
+ * Network Configuration Helpers
+ *
+ * Pre-configured contract addresses for supported networks.
+ */
+/**
+ * Network configuration for IRSB contracts
+ */
+interface NetworkConfig {
+    /** Chain ID */
+    chainId: number;
+    /** Network name */
+    name: string;
+    /** IntentReceiptHub contract address */
+    hubAddress: string;
+    /** SolverRegistry contract address */
+    registryAddress: string;
+    /** DisputeModule contract address */
+    disputeModuleAddress: string;
+    /** EscrowVault contract address (if deployed) */
+    escrowAddress?: string;
+    /** Public RPC URL (for convenience, not for production) */
+    publicRpcUrl?: string;
+    /** Block explorer URL */
+    explorerUrl?: string;
+}
+/**
+ * Sepolia testnet configuration
+ */
+declare const SEPOLIA_CONFIG: NetworkConfig;
+/**
+ * Get network configuration by chain ID.
+ *
+ * @param chainId - The chain ID to look up
+ * @returns Network configuration or undefined if not supported
+ */
+declare function getNetworkConfig(chainId: number): NetworkConfig | undefined;
+/**
+ * Get network configuration by chain ID, throwing if not found.
+ *
+ * @param chainId - The chain ID to look up
+ * @returns Network configuration
+ * @throws Error if chain ID is not supported
+ */
+declare function requireNetworkConfig(chainId: number): NetworkConfig;
+/**
+ * Check if a chain ID is supported.
+ *
+ * @param chainId - The chain ID to check
+ * @returns true if supported
+ */
+declare function isSupportedChain(chainId: number): boolean;
+/**
+ * Get list of all supported chain IDs.
+ *
+ * @returns Array of supported chain IDs
+ */
+declare function getSupportedChainIds(): number[];
+/**
+ * Get Etherscan link for a transaction.
+ *
+ * @param txHash - Transaction hash
+ * @param chainId - Chain ID
+ * @returns Etherscan URL or undefined if chain not supported
+ */
+declare function getTransactionUrl(txHash: string, chainId: number): string | undefined;
+/**
+ * Get Etherscan link for a contract address.
+ *
+ * @param address - Contract address
+ * @param chainId - Chain ID
+ * @returns Etherscan URL or undefined if chain not supported
+ */
+declare function getAddressUrl(address: string, chainId: number): string | undefined;
+/**
+ * Get Etherscan link for the IntentReceiptHub on a given chain.
+ *
+ * @param chainId - Chain ID
+ * @returns Etherscan URL or undefined if chain not supported
+ */
+declare function getHubUrl(chainId: number): string | undefined;
+
+export { type CreateEscrowResult, type EIP712TypedData, type EscrowInfo, EscrowStatus, type IntentReceiptV2, type NetworkConfig, type PostReceiptResult, type PostX402ReceiptOptions, PrivacyLevel, RECEIPT_V2_TYPES, SEPOLIA_CONFIG, type X402EscrowParams, X402Mode, type X402Payment, type X402ReceiptPayload, type X402ReceiptResult, type X402Request, type X402Response, type X402Service, type X402Timing, type X402ToReceiptParams, X402_PAYLOAD_VERSION, approveERC20ForEscrow, buildReceiptV2FromX402, buildReceiptV2WithConfig, calculateEscrowParams, canCreateEscrow, canonicalize, computeEvidenceHash, computeIntentHash, computePayloadCommitment, computeReceiptV2Id, computeRequestFingerprint, computeRouteHash, computeTermsHash, createERC20Escrow, createEscrowFromX402, createNativeEscrow, createPayload, createSigningPayload, escrowIdFromPayment, estimatePostGas, formatCiphertextPointer, generateEscrowId, generateNonce, getAddressUrl, getEIP712Domain, getEscrowInfo, getHubUrl, getNetworkConfig, getPersonalSignHash, getReceiptTypedDataHash, getSupportedChainIds, getTransactionUrl, isSupportedChain, isValidCID, postReceiptV2, postReceiptV2FromX402, receiptExists, recoverSigner, requireNetworkConfig, signAsClient, signAsService, signReceiptDual, validateReceiptV2, verifyClientSignature, verifyCommitment, verifySolverSignature };

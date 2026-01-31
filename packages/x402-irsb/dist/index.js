@@ -1,10 +1,3 @@
-var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
-  get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
-}) : x)(function(x) {
-  if (typeof require !== "undefined") return require.apply(this, arguments);
-  throw Error('Dynamic require of "' + x + '" is not supported');
-});
-
 // src/types.ts
 var X402_PAYLOAD_VERSION = "1.0.0";
 var PrivacyLevel = /* @__PURE__ */ ((PrivacyLevel2) => {
@@ -121,7 +114,7 @@ function createPayload(params) {
 }
 
 // src/receipt.ts
-import { ZeroHash } from "ethers";
+import { ZeroHash, keccak256 as keccak2562, solidityPacked as solidityPacked2 } from "ethers";
 var RECEIPT_V2_TYPES = {
   IntentReceiptV2: [
     { name: "intentHash", type: "bytes32" },
@@ -216,8 +209,7 @@ function createSigningPayload(receipt, chainId, hubAddress) {
   };
 }
 function computeReceiptV2Id(receipt) {
-  const { keccak256: keccak2564, solidityPacked: solidityPacked2 } = __require("ethers");
-  return keccak2564(
+  return keccak2562(
     solidityPacked2(
       [
         "bytes32",
@@ -270,7 +262,7 @@ function validateReceiptV2(receipt) {
 }
 
 // src/signing.ts
-import { Wallet, TypedDataEncoder, keccak256 as keccak2562, recoverAddress } from "ethers";
+import { Wallet, TypedDataEncoder, keccak256 as keccak2563, recoverAddress } from "ethers";
 async function signAsService(receipt, privateKey, chainId, hubAddress) {
   const wallet = new Wallet(privateKey);
   const typedData = createSigningPayload(receipt, chainId, hubAddress);
@@ -334,7 +326,7 @@ function getReceiptTypedDataHash(receipt, chainId, hubAddress) {
   );
 }
 function getPersonalSignHash(receipt) {
-  return keccak2562(
+  return keccak2563(
     new TextEncoder().encode(
       JSON.stringify({
         intentHash: receipt.intentHash,
@@ -386,7 +378,8 @@ async function postReceiptV2(receipt, options) {
   const receiptPostedEvent = txReceipt.logs.map((log) => {
     try {
       return iface.parseLog(log);
-    } catch {
+    } catch (error) {
+      console.debug("[x402-irsb] Log parsing skipped:", error instanceof Error ? error.message : error);
       return null;
     }
   }).find((parsed) => parsed?.name === "ReceiptPosted");
@@ -455,13 +448,14 @@ async function receiptExists(receiptId, rpcUrl, hubAddress) {
   try {
     const [, status] = await hub.getReceipt(receiptId);
     return status !== 0;
-  } catch {
+  } catch (error) {
+    console.error("[x402-irsb] Failed to check receipt existence:", error instanceof Error ? error.message : error);
     return false;
   }
 }
 
 // src/escrow.ts
-import { JsonRpcProvider as JsonRpcProvider2, Wallet as Wallet3, Contract as Contract2, ZeroAddress, keccak256 as keccak2563, toUtf8Bytes as toUtf8Bytes2 } from "ethers";
+import { JsonRpcProvider as JsonRpcProvider2, Wallet as Wallet3, Contract as Contract2, ZeroAddress, keccak256 as keccak2564, toUtf8Bytes as toUtf8Bytes2 } from "ethers";
 var ESCROW_ABI = [
   "function createEscrow(bytes32 escrowId, bytes32 receiptId, address depositor) payable",
   "function createEscrowERC20(bytes32 escrowId, bytes32 receiptId, address depositor, address token, uint256 amount)",
@@ -483,7 +477,7 @@ var EscrowStatus = /* @__PURE__ */ ((EscrowStatus2) => {
   return EscrowStatus2;
 })(EscrowStatus || {});
 function generateEscrowId(paymentRef, chainId) {
-  return keccak2563(toUtf8Bytes2(`escrow:${chainId}:${paymentRef}`));
+  return keccak2564(toUtf8Bytes2(`escrow:${chainId}:${paymentRef}`));
 }
 function escrowIdFromPayment(payment, targetChainId) {
   return generateEscrowId(payment.paymentRef, targetChainId);
@@ -550,7 +544,8 @@ async function getEscrowInfo(escrowId, escrowAddress, rpcUrl) {
       createdAt: Number(createdAt),
       deadline: Number(deadline)
     };
-  } catch {
+  } catch (error) {
+    console.error("[x402-irsb] Failed to get escrow info:", error instanceof Error ? error.message : error);
     return null;
   }
 }
@@ -578,9 +573,57 @@ async function createEscrowFromX402(payment, receiptId, depositor, escrowAddress
     return createERC20Escrow(params, escrowAddress, rpcUrl, signerKey);
   }
 }
+
+// src/config.ts
+var SEPOLIA_CONFIG = {
+  chainId: 11155111,
+  name: "sepolia",
+  hubAddress: "0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c",
+  registryAddress: "0xB6ab964832808E49635fF82D1996D6a888ecB745",
+  disputeModuleAddress: "0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D",
+  publicRpcUrl: "https://rpc.sepolia.org",
+  explorerUrl: "https://sepolia.etherscan.io"
+};
+var NETWORK_CONFIGS = {
+  [SEPOLIA_CONFIG.chainId]: SEPOLIA_CONFIG
+};
+function getNetworkConfig(chainId) {
+  return NETWORK_CONFIGS[chainId];
+}
+function requireNetworkConfig(chainId) {
+  const config = getNetworkConfig(chainId);
+  if (!config) {
+    const supported = Object.keys(NETWORK_CONFIGS).join(", ");
+    throw new Error(`Unsupported chain ID: ${chainId}. Supported: ${supported}`);
+  }
+  return config;
+}
+function isSupportedChain(chainId) {
+  return chainId in NETWORK_CONFIGS;
+}
+function getSupportedChainIds() {
+  return Object.keys(NETWORK_CONFIGS).map(Number);
+}
+function getTransactionUrl(txHash, chainId) {
+  const config = getNetworkConfig(chainId);
+  if (!config?.explorerUrl) return void 0;
+  return `${config.explorerUrl}/tx/${txHash}`;
+}
+function getAddressUrl(address, chainId) {
+  const config = getNetworkConfig(chainId);
+  if (!config?.explorerUrl) return void 0;
+  return `${config.explorerUrl}/address/${address}`;
+}
+function getHubUrl(chainId) {
+  const config = getNetworkConfig(chainId);
+  if (!config?.explorerUrl) return void 0;
+  return `${config.explorerUrl}/address/${config.hubAddress}`;
+}
 export {
   EscrowStatus,
   PrivacyLevel,
+  RECEIPT_V2_TYPES,
+  SEPOLIA_CONFIG,
   X402Mode,
   X402_PAYLOAD_VERSION,
   approveERC20ForEscrow,
@@ -606,15 +649,22 @@ export {
   formatCiphertextPointer,
   generateEscrowId,
   generateNonce,
+  getAddressUrl,
   getEIP712Domain,
   getEscrowInfo,
+  getHubUrl,
+  getNetworkConfig,
   getPersonalSignHash,
   getReceiptTypedDataHash,
+  getSupportedChainIds,
+  getTransactionUrl,
+  isSupportedChain,
   isValidCID,
   postReceiptV2,
   postReceiptV2FromX402,
   receiptExists,
   recoverSigner,
+  requireNetworkConfig,
   signAsClient,
   signAsService,
   signReceiptDual,
