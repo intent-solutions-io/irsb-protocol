@@ -13,6 +13,10 @@ export interface X402Config {
   asset: string;
   chainId: number;
   serviceDomain: string;
+  /** Service wallet address for receiving payments */
+  serviceWallet?: string;
+  /** Skip on-chain verification (for testing) */
+  skipVerification?: boolean;
 }
 
 export interface X402Request extends Request {
@@ -39,7 +43,7 @@ export function x402Middleware(config: X402Config) {
           asset: config.asset,
           amount: config.priceWei,
           chainId: config.chainId,
-          recipient: process.env.SERVICE_SOLVER_ID,
+          recipient: config.serviceWallet || process.env.SERVICE_SOLVER_ID,
           methods: ['native-transfer', 'erc20-transfer'],
         },
         instructions: {
@@ -63,6 +67,8 @@ export function x402Middleware(config: X402Config) {
         expectedAmount: config.priceWei,
         expectedAsset: config.asset,
         expectedChainId: config.chainId,
+        expectedRecipient: config.serviceWallet,
+        skipOnChain: config.skipVerification,
       });
 
       if (!verificationResult.valid) {
@@ -98,5 +104,7 @@ export function getX402Config(): X402Config {
     asset: process.env.PAYMENT_ASSET || 'ETH',
     chainId: parseInt(process.env.CHAIN_ID || '11155111', 10),
     serviceDomain: process.env.SERVICE_DOMAIN || 'api.example.com',
+    serviceWallet: process.env.SERVICE_WALLET,
+    skipVerification: process.env.SKIP_PAYMENT_VERIFICATION === 'true',
   };
 }
