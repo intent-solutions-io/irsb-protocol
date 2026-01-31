@@ -7,6 +7,22 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+- `irsb verify <receipt-id>` CLI command for on-chain receipt verification
+- Receipt verification SDK module with V1/V2 support
+- npm provenance for all package releases
+- `RELEASING.md` release process documentation
+- CI guards to prevent publishing under wrong package names
+
+### Changed
+- **BREAKING**: SDK package renamed from `@intentsolutionsio/irsb-sdk` to `irsb`
+- **BREAKING**: x402 package renamed from `@irsb/x402-integration` to `irsb-x402`
+- Old package names deprecated on npm with redirect messages
+
+### Published
+- `irsb` v0.1.0 on npm
+- `irsb-x402` v0.1.0 on npm
+
 ---
 
 ## [1.1.0] - 2026-01-30
