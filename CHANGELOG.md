@@ -79,7 +79,7 @@ First production release on Sepolia testnet.
 - INCIDENT_PLAYBOOK.md, MONITORING.md, MULTISIG_PLAN.md
 
 #### x402 Integration (Phase 8)
-- `@irsb/x402-integration` package
+- `irsb-x402` package
 - Express example for HTTP 402 payments
 - EIP-712 signing helpers
 

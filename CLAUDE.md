@@ -206,10 +206,10 @@ vm.expectRevert(abi.encodeWithSignature("SolverNotActive()"));
 
 ## x402 Integration
 
-The `@irsb/x402-integration` package bridges HTTP 402 payments to IRSB:
+The `irsb-x402` package bridges HTTP 402 payments to IRSB:
 
 ```typescript
-import { buildReceiptV2FromX402, postReceiptV2FromX402 } from '@irsb/x402-integration';
+import { buildReceiptV2FromX402, postReceiptV2FromX402 } from 'irsb-x402';
 
 // After x402 payment verified
 const receipt = buildReceiptV2FromX402({

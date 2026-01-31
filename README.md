@@ -98,7 +98,7 @@ Client sends x402 payment → Service executes → IRSB receipt posted
                                             No dispute? → Reputation++
 ```
 
-The `@irsb/x402-integration` package handles this flow.
+The `irsb-x402` package handles this flow.
 
 ## Quick Start
 
