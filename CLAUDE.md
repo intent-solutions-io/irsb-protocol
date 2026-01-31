@@ -57,6 +57,16 @@ IRSB fills that gap with:
 | IntentReceiptHub | `0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c` |
 | DisputeModule | `0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D` |
 
+### Operational Accounts (Sepolia)
+
+| Account | Address | Purpose |
+|---------|---------|---------|
+| **Deployer/Operator** | `0x83A5F432f02B1503765bB61a9B358942d87c9dc0` | Signs receipts, pays gas |
+| **Solver ID** | `0xdf816d7b86303c3452e53d84aaa02c01b0de6ae23c1e518bd2642870f9f7603b` | Registered solver identifier |
+| **Safe (Owner)** | `0xBcA0c8d0B5ce874a9E3D84d49f3614bb79189959` | Owns all contracts (2/3 multisig) |
+
+**Note**: Safe needs ETH for admin operations (pause, parameter changes). Deployer wallet signs receipts.
+
 ## Repository Structure
 
 ```
