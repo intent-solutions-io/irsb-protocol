@@ -94,3 +94,51 @@ Recommended settings for `master`:
 | Slither high/critical | 0 | 0 |
 | Open issues (bugs) | < 10 | TBD |
 | PR merge time | < 1 week | TBD |
+
+---
+
+## V2 Roadmap Items
+
+### Arbitrator Decentralization
+
+**Current State (v1)**: Single trusted arbitrator address set by governance.
+
+**V2 Target**: Decentralized arbitration via integration with established protocols:
+
+| Option | Description | Pros | Cons |
+|--------|-------------|------|------|
+| **Kleros** | Decentralized court with juror staking | Battle-tested, large juror pool | Integration complexity, fees |
+| **UMA** | Optimistic oracle with DVM fallback | Fast resolution, low cost | Requires UMA token holders |
+| **Reality.eth** | Bond escalation game | Simple, no external token | Can be slow, bond requirements |
+
+**Implementation Plan**:
+1. Define `IArbitrator` interface (already exists)
+2. Create adapter contracts for each protocol
+3. Allow governance to set arbitrator address to adapter
+4. Maintain single-arbitrator fallback for edge cases
+
+**Timeline**: Q2 2026
+
+### Incident Response Automation
+
+**Current State**: Manual incident response per `011-OD-GUID-incident-playbook.md`.
+
+**Future Enhancements**:
+
+| Feature | Description | Priority |
+|---------|-------------|----------|
+| **Automated pause triggers** | Circuit breakers for unusual slashing volume | High |
+| **Monitoring alerts** | PagerDuty/Opsgenie integration for critical events | High |
+| **Auto-recovery** | Governance-approved auto-resume after cooldown | Medium |
+| **Incident dashboard** | Real-time protocol health visualization | Medium |
+| **Post-mortem automation** | Auto-generate incident reports from on-chain data | Low |
+
+**Key Metrics for Automation**:
+```
+- Slashing rate > 5% in 1 hour → Alert
+- Slashing rate > 20% in 1 hour → Auto-pause consideration
+- Gas price spike > 500 gwei → Delay non-critical operations
+- Solver registration spike > 100/day → Review for sybil attack
+```
+
+**Timeline**: Q3 2026
