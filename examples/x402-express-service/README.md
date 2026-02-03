@@ -187,26 +187,90 @@ await hub.postReceiptV2(receipt);
 
 ## Production Considerations
 
-### Payment Verification
-The included payment verifier is a **mock implementation**. For production:
+### Payment Verification (REQUIRED for Production)
 
-1. Query blockchain for transaction confirmation
-2. Verify recipient, amount, and asset
-3. Check sufficient block confirmations
-4. Or integrate with a payment facilitator (Coinbase Commerce, etc.)
+The included payment verifier is a **mock implementation** that accepts any valid-looking proof.
+
+**For production, you MUST implement real verification:**
+
+```typescript
+// Example: Real on-chain payment verification
+import { JsonRpcProvider } from 'ethers';
+
+async function verifyPaymentOnChain(
+  paymentRef: string,
+  expectedRecipient: string,
+  expectedAmount: string,
+  confirmations: number = 2
+): Promise<{ valid: boolean; reason?: string }> {
+  const provider = new JsonRpcProvider(process.env.RPC_URL);
+
+  // 1. Query the blockchain for the transaction
+  const tx = await provider.getTransaction(paymentRef);
+  if (!tx) return { valid: false, reason: 'Transaction not found' };
+
+  // 2. Wait for confirmations
+  const receipt = await tx.wait(confirmations);
+  if (!receipt) return { valid: false, reason: 'Not confirmed' };
+
+  // 3. Verify recipient matches service wallet
+  if (tx.to?.toLowerCase() !== expectedRecipient.toLowerCase()) {
+    return { valid: false, reason: 'Wrong recipient' };
+  }
+
+  // 4. Verify amount is sufficient
+  if (tx.value < BigInt(expectedAmount)) {
+    return { valid: false, reason: 'Insufficient amount' };
+  }
+
+  return { valid: true };
+}
+```
 
 ### Result Storage
+
 Currently, result data is hashed but not stored. For production:
 
 1. Upload results to IPFS/Arweave
 2. Use the CID as `ciphertextPointer`
-3. Optionally encrypt with Lit Protocol
+3. Optionally encrypt with Lit Protocol for `SemiPublic` privacy
+
+### On-Chain Receipt Posting
+
+This example generates receipts but does not post them on-chain. For full accountability:
+
+```typescript
+import { postReceiptV2, SEPOLIA_CONFIG } from '@irsb/x402-integration';
+
+// After generating the receipt, post it to the hub
+const result = await postReceiptV2(signedReceipt, {
+  rpcUrl: process.env.RPC_URL!,
+  hubAddress: SEPOLIA_CONFIG.hubAddress,
+  solverSigner: process.env.SERVICE_PRIVATE_KEY!,
+});
+
+console.log('Receipt posted:', result.receiptId);
+```
 
 ### Error Handling
+
 Add comprehensive error handling for:
-- RPC failures
+- RPC connection failures
 - Transaction verification timeouts
 - Contract interaction errors
+- Gas estimation failures
+- Nonce management
+
+### Security Checklist
+
+- [ ] Real payment verification (not mock)
+- [ ] Rate limiting on endpoints
+- [ ] Request body size limits
+- [ ] Input validation/sanitization
+- [ ] Secure key management (not .env in production)
+- [ ] HTTPS only
+- [ ] Proper CORS configuration
+- [ ] Logging and monitoring
 
 ## Related
 
