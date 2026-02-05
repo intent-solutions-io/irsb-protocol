@@ -119,6 +119,6 @@
 
 ---
 
-**Filing System:** v4.2 Standard (Flat 000-docs structure)
+**Filing System:** v4.3 Standard (000-* canonical prefix, flat 000-docs structure)
 **Project:** IRSB Protocol (Intent Receipts & Solver Bonds)
 **Repository:** github.com/intent-solutions-io/irsb-protocol
