@@ -135,6 +135,17 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
   },
 } as const
 
+// ─── Ecosystem Banner ───────────────────────────────────────────────────────
+
+export const ECOSYSTEM_SUMMARY = 'Four systems. One accountability layer.'
+
+export const ECOSYSTEM_COMPONENTS = [
+  { key: 'protocol', name: 'Protocol', role: 'Contracts', statusKey: 'protocol' },
+  { key: 'solver', name: 'Solver', role: 'Execution', statusKey: 'solver' },
+  { key: 'watchtower', name: 'Watchtower', role: 'Monitoring', statusKey: 'watchtower' },
+  { key: 'agentPasskey', name: 'Agent Passkey', role: 'Signing', statusKey: 'agentPasskey' },
+] as const
+
 // ─── IntentScore Algorithm ──────────────────────────────────────────────────
 
 export const INTENT_SCORE_WEIGHTS = {
