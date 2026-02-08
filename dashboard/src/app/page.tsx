@@ -11,13 +11,13 @@ export default function LandingPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-zinc-50 tracking-tight">
-              IRSB Protocol
+              IRSB
             </h1>
             <p className="mt-2 text-xl sm:text-2xl font-medium text-zinc-200">
               The accountability layer for intent-based transactions
             </p>
             <p className="mt-6 max-w-2xl mx-auto text-base text-zinc-400">
-              Today, solvers execute intents with no proof of what they did, no consequences when they fail, and no compensation for affected users. IRSB fixes that with on-chain receipts, slashable bonds, and deterministic dispute resolution.
+              Four systems that work together — on-chain contracts, a solver execution engine, an independent watchtower, and a policy-gated signing gateway — so every intent gets a receipt, every solver has skin in the game, and violations are caught automatically.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
