@@ -31,7 +31,7 @@ export default function RoadmapPage() {
       <section className="py-16 lg:py-24">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="space-y-8">
-            {ROADMAP.map((phase) => (
+            {ROADMAP.map((phase, index) => (
               <div key={phase.phase} className="relative flex gap-6">
                 {/* Phase indicator */}
                 <div className="flex-shrink-0">
@@ -44,7 +44,7 @@ export default function RoadmapPage() {
                   }`}>
                     <span className="text-lg font-bold text-zinc-200">{phase.phase}</span>
                   </div>
-                  {phase.phase < ROADMAP.length && (
+                  {index < ROADMAP.length - 1 && (
                     <div className="absolute left-6 top-14 bottom-0 w-px bg-zinc-700" style={{ transform: 'translateX(-0.5px)' }} />
                   )}
                 </div>

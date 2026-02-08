@@ -34,6 +34,7 @@ export default function DevelopersLayout({
                     <li key={item.href}>
                       <Link
                         href={item.href}
+                        aria-current={isActive ? 'page' : undefined}
                         className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                           isActive
                             ? 'bg-zinc-800 text-zinc-50 border-l-2 border-zinc-400'
@@ -57,6 +58,7 @@ export default function DevelopersLayout({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
                   className={`shrink-0 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                     isActive
                       ? 'bg-zinc-800 text-zinc-50'
