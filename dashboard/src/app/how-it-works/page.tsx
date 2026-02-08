@@ -75,8 +75,16 @@ export default function HowItWorksPage() {
             ))}
           </div>
 
+          {/* Status callout */}
+          <div className="mt-16 bg-blue-900/20 rounded-xl p-6 border border-blue-700/50">
+            <h3 className="text-lg font-semibold text-blue-200">Implementation Status</h3>
+            <p className="mt-2 text-blue-100/80 text-sm">
+              Protocol contracts are live on Sepolia testnet. Receipt posting and dispute resolution work on-chain today. Off-chain components (solver, watchtower, agent-passkey signing) are in active development.
+            </p>
+          </div>
+
           {/* Dispute flow detail */}
-          <div className="mt-16 bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
+          <div className="mt-8 bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
             <h3 className="text-lg font-semibold text-zinc-50">Dispute Resolution Paths</h3>
             <div className="mt-4 font-mono text-sm text-zinc-300 whitespace-pre overflow-x-auto">{`Receipt Posted
     |

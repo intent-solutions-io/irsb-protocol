@@ -18,6 +18,11 @@ export default function UseCasesPage() {
 
       <section className="py-16 lg:py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="mb-8 bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
+            <p className="text-sm text-zinc-400">
+              Protocol contracts are live on Sepolia. These use cases describe how the system works end-to-end once off-chain components (solver, watchtower, agent-passkey signing) are fully integrated.
+            </p>
+          </div>
           <div className="space-y-8">
             {USE_CASES.map((useCase) => (
               <div key={useCase.title} className="bg-zinc-800/60 rounded-xl p-6 lg:p-8 border border-zinc-700">

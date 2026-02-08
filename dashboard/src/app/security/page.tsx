@@ -110,7 +110,7 @@ export default function SecurityPage() {
                     <td className="px-6 py-4 text-sm font-bold text-zinc-200">L2</td>
                     <td className="px-6 py-4 text-sm text-zinc-200">Action Authorization</td>
                     <td className="px-6 py-4 text-sm text-zinc-400">Only allowed IRSB state transitions</td>
-                    <td className="px-6 py-4"><span className="text-xs px-2 py-0.5 rounded bg-green-900/50 text-green-300">Live</span></td>
+                    <td className="px-6 py-4"><span className="text-xs px-2 py-0.5 rounded bg-blue-900/50 text-blue-300">Code Complete</span></td>
                   </tr>
                   <tr>
                     <td className="px-6 py-4 text-sm font-bold text-zinc-200">L3</td>
@@ -127,7 +127,7 @@ export default function SecurityPage() {
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Typed Actions (No Arbitrary Signing)</h2>
             <p className="mt-3 text-zinc-300">
-              The Agent Passkey signing gateway rejects any request that is not one of these three typed actions:
+              The Agent Passkey signing gateway is designed to reject any request that is not one of these three typed actions. The policy engine and action schemas are implemented; Lit PKP signing integration is in progress.
             </p>
             <div className="mt-4 bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 font-mono text-sm text-zinc-300 whitespace-pre overflow-x-auto">{`SUBMIT_RECEIPT   { intentId, receiptHash, evidenceHash }
 OPEN_DISPUTE     { receiptId, evidenceHash, reasonCode }
@@ -141,7 +141,7 @@ SUBMIT_EVIDENCE  { disputeId, evidenceHash }`}</div>
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Key Management (Lit Protocol PKP)</h2>
             <p className="mt-3 text-zinc-300">
-              Agent Passkey uses Lit Protocol Programmable Key Pairs (PKP) for signing. Private keys are never stored in a single location.
+              Agent Passkey uses Lit Protocol Programmable Key Pairs (PKP) for signing. Private keys are never stored in a single location. PKP minted on Naga network; signing integration in progress.
             </p>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-zinc-800/60 rounded-lg p-5 border border-zinc-700">

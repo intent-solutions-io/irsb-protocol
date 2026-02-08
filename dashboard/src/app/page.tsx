@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { config, getEtherscanUrl, shortenAddress } from '@/lib/config'
+import { SYSTEM_STATUS } from '@/lib/content'
 
 export default function LandingPage() {
   return (
@@ -13,11 +14,10 @@ export default function LandingPage() {
               IRSB Protocol
             </h1>
             <p className="mt-2 text-xl sm:text-2xl font-medium text-zinc-200">
-              Receipts, bonds, and disputes for intent-based transactions
+              The accountability layer for intent-based transactions
             </p>
             <p className="mt-6 max-w-2xl mx-auto text-base text-zinc-400">
-              ERC-7683 standardizes intents. IRSB standardizes what happens when solvers fail.
-              On-chain proof of execution, slashable bonds, and deterministic dispute resolution.
+              Today, solvers execute intents with no proof of what they did, no consequences when they fail, and no compensation for affected users. IRSB fixes that with on-chain receipts, slashable bonds, and deterministic dispute resolution.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -37,65 +37,150 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* What IRSB Adds — 4 primitives */}
+      {/* Problem → Fix: 4 columns */}
       <section className="py-16 lg:py-24 bg-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
-              Four Primitives
+              What IRSB Adds
             </h2>
             <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              IRSB adds accountability to any intent execution system.
+              Four problems in today&apos;s intent ecosystem. Four on-chain fixes.
             </p>
           </div>
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Receipts</h3>
+              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Proof</p>
+              <h3 className="font-semibold text-zinc-50">Receipts</h3>
               <p className="mt-2 text-sm text-zinc-400">
                 On-chain cryptographic proof of intent execution. V1 single-sig, V2 dual attestation with EIP-712.
               </p>
             </div>
 
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Bonds</h3>
+              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Consequences</p>
+              <h3 className="font-semibold text-zinc-50">Bonds</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Solvers stake collateral (minimum 0.1 ETH). Slashable for violations. 80% goes to the affected user.
+                Solvers stake collateral (minimum 0.1 ETH). Slashable for violations. 3 strikes = permanent ban.
               </p>
             </div>
 
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Disputes</h3>
+              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Recourse</p>
+              <h3 className="font-semibold text-zinc-50">Disputes</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                1-hour challenge window. Deterministic auto-slash for timeouts. Optimistic resolution with counter-bonds.
+                1-hour challenge window. Deterministic auto-slash for timeouts. 80% of slashed bond goes to the user.
               </p>
             </div>
 
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Reputation</h3>
+              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Reputation</p>
+              <h3 className="font-semibold text-zinc-50">IntentScore</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                IntentScore: on-chain composite metric from execution history. Portable via ERC-8004 agent registry.
+                On-chain composite metric from execution history. Portable via ERC-8004 agent registry.
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works: 5 steps */}
+      <section className="py-16 lg:py-24 bg-zinc-900">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-zinc-50">
+              How It Works
+            </h2>
+            <p className="mt-4 text-lg text-zinc-300">
+              The intent lifecycle from submission to accountability.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-4">
+            {[
+              { step: '1', title: 'Submit Intent', desc: 'User expresses what they want (ERC-7683 format)' },
+              { step: '2', title: 'Solver Executes', desc: 'Bonded solver picks up and fills the intent' },
+              { step: '3', title: 'Receipt Posted', desc: 'Cryptographic proof of execution goes on-chain' },
+              { step: '4', title: 'Challenge Window', desc: '1 hour for anyone to dispute with evidence' },
+              { step: '5', title: 'Finalize', desc: 'No dispute = receipt finalizes, reputation updates' },
+            ].map((item) => (
+              <div key={item.step} className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 text-center">
+                <div className="w-8 h-8 rounded-full bg-zinc-700 border border-zinc-500 flex items-center justify-center mx-auto">
+                  <span className="text-sm font-bold text-zinc-200">{item.step}</span>
+                </div>
+                <h3 className="mt-3 text-sm font-semibold text-zinc-100">{item.title}</h3>
+                <p className="mt-1 text-xs text-zinc-400">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <Link
+              href="/how-it-works"
+              className="text-sm font-medium text-zinc-300 hover:text-zinc-100"
+            >
+              See full lifecycle with dispute paths &rarr;
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* The System: 4 repos with honest badges */}
+      <section className="py-16 lg:py-24 bg-zinc-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-zinc-50">
+              The System
+            </h2>
+            <p className="mt-4 text-lg text-zinc-300">
+              Four repositories that work together. Honest status for each.
+            </p>
+          </div>
+
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-zinc-100">Protocol</h3>
+                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.protocol.badgeClass}`}>
+                  {SYSTEM_STATUS.protocol.label}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400">On-chain contracts: receipts, bonds, disputes, escrow. 3 verified contracts, 308 tests.</p>
+              <p className="mt-3 text-xs font-mono text-zinc-500">Solidity 0.8.25, Foundry</p>
+            </div>
+
+            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-zinc-100">Solver</h3>
+                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.solver.badgeClass}`}>
+                  {SYSTEM_STATUS.solver.label}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400">Execute intents, produce evidence, submit receipts. 1 job type (SAFE_REPORT). Not yet deployed.</p>
+              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Express</p>
+            </div>
+
+            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-zinc-100">Watchtower</h3>
+                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.watchtower.badgeClass}`}>
+                  {SYSTEM_STATUS.watchtower.label}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400">Monitor receipts, detect violations, file disputes. Rule engine works. Worker uses mock data, not yet querying chain.</p>
+              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Fastify</p>
+            </div>
+
+            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-zinc-100">Agent Passkey</h3>
+                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.agentPasskey.badgeClass}`}>
+                  {SYSTEM_STATUS.agentPasskey.label}
+                </span>
+              </div>
+              <p className="text-sm text-zinc-400">Policy-gated signing via Lit Protocol PKP. Deployed to Cloud Run. Policy engine and typed actions complete.</p>
+              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Fastify</p>
             </div>
           </div>
         </div>
@@ -163,7 +248,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Audience Entry Points */}
+      {/* Where to Start */}
       <section className="py-16 lg:py-24 bg-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">

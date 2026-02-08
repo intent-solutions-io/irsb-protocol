@@ -1,7 +1,7 @@
 import { pageMetadata } from '@/lib/seo'
 import PageHeader from '@/components/PageHeader'
 import CodeBlock from '@/components/CodeBlock'
-import { CONTRACTS, OPERATIONAL_ACCOUNTS, EXPLORER_BASE } from '@/lib/content'
+import { CONTRACTS, OPERATIONAL_ACCOUNTS, EXPLORER_BASE, SYSTEM_STATUS } from '@/lib/content'
 
 export const metadata = pageMetadata({
   title: 'Deployments',
@@ -107,10 +107,36 @@ export default function DeploymentsPage() {
                     <h3 className="font-semibold text-zinc-100">Agent Passkey</h3>
                     <p className="text-xs text-zinc-500 mt-0.5">Policy-gated signing via Lit Protocol PKP</p>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded bg-green-900/50 text-green-300 w-fit">Live on Cloud Run</span>
+                  <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.agentPasskey.badgeClass} w-fit`}>{SYSTEM_STATUS.agentPasskey.label}</span>
                 </div>
                 <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
-                  Health: /health returns {`{"status":"ok"}`}
+                  Health: /health returns {`{"status":"ok"}`}. Policy engine and typed actions complete. Lit PKP signing integration in progress.
+                </p>
+              </div>
+
+              <div className="bg-zinc-800/60 rounded-xl p-5 border border-zinc-700">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100">Solver</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Execute intents, produce evidence, submit receipts</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.solver.badgeClass} w-fit`}>{SYSTEM_STATUS.solver.label}</span>
+                </div>
+                <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
+                  Local execution only. 1 job type (SAFE_REPORT). Evidence bundles work. Not yet deployed to infrastructure.
+                </p>
+              </div>
+
+              <div className="bg-zinc-800/60 rounded-xl p-5 border border-zinc-700">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100">Watchtower</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Monitor receipts, detect violations, file disputes</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.watchtower.badgeClass} w-fit`}>{SYSTEM_STATUS.watchtower.label}</span>
+                </div>
+                <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
+                  Rule engine and Receipt Stale Rule work. Worker uses mock data, not yet querying chain.
                 </p>
               </div>
             </div>
