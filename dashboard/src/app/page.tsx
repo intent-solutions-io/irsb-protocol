@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { config, getEtherscanUrl, shortenAddress } from '@/lib/config'
-import { SYSTEM_STATUS } from '@/lib/content'
+import { EcosystemCards } from '@/components/EcosystemCard'
 
 export default function LandingPage() {
   return (
@@ -37,50 +37,20 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Problem → Fix: 4 columns */}
+      {/* The Ecosystem: 4 expandable cards */}
       <section className="py-16 lg:py-24 bg-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
-              What IRSB Adds
+              The Ecosystem
             </h2>
             <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              Four problems in today&apos;s intent ecosystem. Four on-chain fixes.
+              Four systems. One accountability layer.
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Proof</p>
-              <h3 className="font-semibold text-zinc-50">Receipts</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                On-chain cryptographic proof of intent execution. V1 single-sig, V2 dual attestation with EIP-712.
-              </p>
-            </div>
-
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Consequences</p>
-              <h3 className="font-semibold text-zinc-50">Bonds</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                Solvers stake collateral (minimum 0.1 ETH). Slashable for violations. 3 strikes = permanent ban.
-              </p>
-            </div>
-
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Recourse</p>
-              <h3 className="font-semibold text-zinc-50">Disputes</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                1-hour challenge window. Deterministic auto-slash for timeouts. 80% of slashed bond goes to the user.
-              </p>
-            </div>
-
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <p className="text-sm font-medium text-red-400 uppercase tracking-wider mb-2">No Reputation</p>
-              <h3 className="font-semibold text-zinc-50">IntentScore</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                On-chain composite metric from execution history. Portable via ERC-8004 agent registry.
-              </p>
-            </div>
+          <div className="mt-12">
+            <EcosystemCards />
           </div>
         </div>
       </section>
@@ -122,66 +92,6 @@ export default function LandingPage() {
             >
               See full lifecycle with dispute paths &rarr;
             </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* The System: 4 repos with honest badges */}
-      <section className="py-16 lg:py-24 bg-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-zinc-50">
-              The System
-            </h2>
-            <p className="mt-4 text-lg text-zinc-300">
-              Four repositories that work together. Honest status for each.
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-zinc-100">Protocol</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.protocol.badgeClass}`}>
-                  {SYSTEM_STATUS.protocol.label}
-                </span>
-              </div>
-              <p className="text-sm text-zinc-400">On-chain contracts: receipts, bonds, disputes, escrow. 3 verified contracts, 308 tests.</p>
-              <p className="mt-3 text-xs font-mono text-zinc-500">Solidity 0.8.25, Foundry</p>
-            </div>
-
-            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-zinc-100">Solver</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.solver.badgeClass}`}>
-                  {SYSTEM_STATUS.solver.label}
-                </span>
-              </div>
-              <p className="text-sm text-zinc-400">Execute intents, produce evidence, submit receipts. 1 job type (SAFE_REPORT). Not yet deployed.</p>
-              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Express</p>
-            </div>
-
-            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-zinc-100">Watchtower</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.watchtower.badgeClass}`}>
-                  {SYSTEM_STATUS.watchtower.label}
-                </span>
-              </div>
-              <p className="text-sm text-zinc-400">Monitor receipts, detect violations, file disputes. Rule engine works. Worker uses mock data, not yet querying chain.</p>
-              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Fastify</p>
-            </div>
-
-            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-zinc-100">Agent Passkey</h3>
-                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.agentPasskey.badgeClass}`}>
-                  {SYSTEM_STATUS.agentPasskey.label}
-                </span>
-              </div>
-              <p className="text-sm text-zinc-400">Policy-gated signing via Lit Protocol PKP. Live on Cloud Run. Policy engine, typed actions, and PKP address resolution working.</p>
-              <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Fastify</p>
-            </div>
           </div>
         </div>
       </section>
