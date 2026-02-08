@@ -2,26 +2,20 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useMemo } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { NETWORKS, DEFAULT_NETWORK, type NetworkConfig } from '@/lib/config'
-
-const navItems = [
-  { name: 'Overview', href: '/' },
-  { name: 'Dashboard', href: '/dashboard' },
-  { name: 'Request Docs', href: '/request-docs' },
-  { name: 'Book a Call', href: '/go/book' },
-]
+import { NAV_GROUPS } from '@/lib/content'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
-// Network selector component
+// ─── Network Selector ───────────────────────────────────────────────────────
+
 function NetworkSelector() {
   const [selectedNetwork, setSelectedNetwork] = useState(DEFAULT_NETWORK)
   const [isOpen, setIsOpen] = useState(false)
 
   const currentNetwork = NETWORKS[selectedNetwork]
 
-  // Memoize network lists to avoid recomputing on every render
   const { availableNetworks, comingSoonNetworks } = useMemo(() => {
     const available: [string, NetworkConfig][] = []
     const comingSoon: [string, NetworkConfig][] = []
@@ -40,8 +34,6 @@ function NetworkSelector() {
   const handleNetworkChange = (networkKey: string) => {
     setSelectedNetwork(networkKey)
     setIsOpen(false)
-    // In a real app, you'd update the app state/context here
-    // For now, just update local state
   }
 
   return (
@@ -95,20 +87,19 @@ function NetworkSelector() {
                 </div>
               </button>
             ))}
-            {/* Show coming soon networks */}
             {comingSoonNetworks.map(([key, network]) => (
-                <div
-                  key={key}
-                  className="w-full px-3 py-2 text-left text-sm text-zinc-500 cursor-not-allowed"
-                >
-                  <div className="flex items-center justify-between">
-                    <span>{network.name}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400">
-                      Soon
-                    </span>
-                  </div>
+              <div
+                key={key}
+                className="w-full px-3 py-2 text-left text-sm text-zinc-500 cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between">
+                  <span>{network.name}</span>
+                  <span className="text-xs px-1.5 py-0.5 rounded bg-zinc-700 text-zinc-400">
+                    Soon
+                  </span>
                 </div>
-              ))}
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -116,9 +107,149 @@ function NetworkSelector() {
   )
 }
 
+// ─── Desktop Dropdown ───────────────────────────────────────────────────────
+
+function NavDropdown({ name, items, pathname, onNavigate }: {
+  name: string
+  items: { name: string; href: string; description?: string }[]
+  pathname: string
+  onNavigate?: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  const timeoutRef = useRef<NodeJS.Timeout>()
+
+  const isGroupActive = items.some((item) => pathname === item.href || pathname.startsWith(item.href + '/'))
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    setIsOpen(true)
+  }
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => setIsOpen(false), 150)
+  }
+
+  return (
+    <div
+      ref={ref}
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <button
+        className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+          isGroupActive
+            ? 'text-zinc-50'
+            : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
+        }`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        {name}
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 mt-1 w-56 rounded-lg bg-zinc-800 border border-zinc-700 shadow-xl z-50 py-1">
+          {items.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => { setIsOpen(false); onNavigate?.() }}
+                className={`block px-4 py-2.5 text-sm transition-colors ${
+                  isActive
+                    ? 'bg-zinc-700 text-zinc-50'
+                    : 'text-zinc-300 hover:bg-zinc-700/50 hover:text-zinc-50'
+                }`}
+              >
+                <span className="font-medium">{item.name}</span>
+                {item.description && (
+                  <span className="block text-xs text-zinc-500 mt-0.5">{item.description}</span>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Mobile Nav Accordion ───────────────────────────────────────────────────
+
+function MobileNavGroup({ name, items, pathname, onNavigate }: {
+  name: string
+  items: { name: string; href: string; description?: string }[]
+  pathname: string
+  onNavigate: () => void
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+
+  return (
+    <div>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between px-4 py-3 text-base font-medium text-zinc-300"
+      >
+        {name}
+        <svg
+          className={`w-4 h-4 text-zinc-500 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={2}
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="pl-4 pb-2 space-y-0.5">
+          {items.map((item) => {
+            const isActive = pathname === item.href
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onNavigate}
+                className={`block px-4 py-2.5 rounded-lg text-sm transition-colors ${
+                  isActive
+                    ? 'bg-zinc-700 text-zinc-50'
+                    : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
+                }`}
+              >
+                {item.name}
+              </Link>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Main Navigation ────────────────────────────────────────────────────────
+
 export default function Navigation() {
   const pathname = usePathname()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const closeMobile = () => setMobileMenuOpen(false)
 
   return (
     <nav className="bg-zinc-900 border-b border-zinc-700 overflow-x-hidden">
@@ -153,40 +284,42 @@ export default function Navigation() {
             </span>
           </Link>
 
-          {/* Desktop Navigation Links + Network Selector */}
-          <div className="hidden md:flex items-center space-x-4">
-            <div className="flex items-center space-x-1">
-              {navItems.map((item) => {
-                const isActive = pathname === item.href
-                const isBookCall = item.href === '/go/book'
-
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isBookCall
-                        ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-50'
-                        : isActive
-                          ? 'bg-zinc-700 text-zinc-50'
-                          : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                )
-              })}
-            </div>
-            <div className="border-l border-zinc-700 h-6 mx-2"></div>
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center space-x-1">
+            {NAV_GROUPS.map((group) => (
+              <NavDropdown
+                key={group.name}
+                name={group.name}
+                items={group.items}
+                pathname={pathname}
+              />
+            ))}
+            <Link
+              href="/dashboard"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === '/dashboard'
+                  ? 'bg-zinc-700 text-zinc-50'
+                  : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/get-started"
+              className="ml-2 px-4 py-2 rounded-lg text-sm font-medium bg-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"
+            >
+              Get Started
+            </Link>
+            <div className="border-l border-zinc-700 h-6 mx-3"></div>
             <NetworkSelector />
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="flex items-center space-x-3 md:hidden">
+          <div className="flex items-center space-x-3 lg:hidden">
             <NetworkSelector />
             <button
               type="button"
-              className="inline-flex items-center justify-center p-3 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 active:bg-zinc-700 transition-colors touch-target-min"
+              className="inline-flex items-center justify-center p-3 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 active:bg-zinc-700 transition-colors"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-expanded={mobileMenuOpen}
               aria-label="Toggle menu"
@@ -207,29 +340,35 @@ export default function Navigation() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-zinc-700">
+        <div className="lg:hidden border-t border-zinc-700">
           <div className="px-4 py-3 space-y-1">
-            {navItems.map((item) => {
-              const isActive = pathname === item.href
-              const isBookCall = item.href === '/go/book'
-
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
-                    isBookCall
-                      ? 'bg-zinc-200 text-zinc-900 hover:bg-zinc-50'
-                      : isActive
-                        ? 'bg-zinc-700 text-zinc-50'
-                        : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              )
-            })}
+            {NAV_GROUPS.map((group) => (
+              <MobileNavGroup
+                key={group.name}
+                name={group.name}
+                items={group.items}
+                pathname={pathname}
+                onNavigate={closeMobile}
+              />
+            ))}
+            <Link
+              href="/dashboard"
+              onClick={closeMobile}
+              className={`block px-4 py-3 rounded-lg text-base font-medium transition-colors ${
+                pathname === '/dashboard'
+                  ? 'bg-zinc-700 text-zinc-50'
+                  : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800'
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/get-started"
+              onClick={closeMobile}
+              className="block px-4 py-3 rounded-lg text-base font-medium bg-zinc-200 text-zinc-900 hover:bg-zinc-50 transition-colors"
+            >
+              Get Started
+            </Link>
           </div>
         </div>
       )}

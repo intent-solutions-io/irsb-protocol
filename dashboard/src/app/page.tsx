@@ -13,464 +13,103 @@ export default function LandingPage() {
               IRSB Protocol
             </h1>
             <p className="mt-2 text-xl sm:text-2xl font-medium text-zinc-200">
-              The accountability layer for intent-based transactions
-            </p>
-            <p className="mt-4 text-lg italic text-zinc-300">
-              "Intents need receipts. Solvers need skin in the game."
+              Receipts, bonds, and disputes for intent-based transactions
             </p>
             <p className="mt-6 max-w-2xl mx-auto text-base text-zinc-400">
               ERC-7683 standardizes intents. IRSB standardizes what happens when solvers fail.
+              On-chain proof of execution, slashable bonds, and deterministic dispute resolution.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
-                href="/go/request-docs"
+                href="/get-started"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium rounded-lg text-zinc-900 bg-zinc-200 hover:bg-zinc-50 transition-colors"
               >
-                Request Docs
+                Get Started
               </Link>
               <Link
-                href="/go/book"
+                href="/how-it-works"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3 text-base font-medium rounded-lg text-zinc-300 bg-zinc-800 border border-zinc-600 hover:bg-zinc-700 transition-colors"
               >
-                Book a Call
+                How It Works
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Problem Statement */}
+      {/* What IRSB Adds — 4 primitives */}
       <section className="py-16 lg:py-24 bg-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-zinc-50">
-              The Problem
-            </h2>
-            <p className="mt-6 text-2xl font-semibold text-red-400">
-              "What happens when the solver fails?"
-            </p>
-            <p className="mt-4 text-lg text-zinc-300">
-              Today: <span className="text-zinc-100">Nothing.</span> Users lose money. Solvers face no consequences. Trust is informal.
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-red-900/30 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Delegated Execution</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                Users express intent; solvers decide how to fulfill it. Outcomes are opaque.
-              </p>
-            </div>
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-red-900/30 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Opaque Routing</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                No standardized proof of execution. Users can't verify what actually happened.
-              </p>
-            </div>
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="w-10 h-10 bg-red-900/30 rounded-lg flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">Weak Enforcement</h3>
-              <p className="mt-2 text-sm text-zinc-400">
-                When solvers underperform or misbehave, there's no recourse mechanism.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* What IRSB Adds */}
-      <section className="py-16 lg:py-24 bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
-              What IRSB Adds
+              Four Primitives
             </h2>
             <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              Four primitives that bring accountability to intent execution.
+              IRSB adds accountability to any intent execution system.
             </p>
           </div>
 
           <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1 */}
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
               <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">
-                Verifiable Receipts
-              </h3>
+              <h3 className="mt-4 font-semibold text-zinc-50">Receipts</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Solvers post cryptographic receipts proving they executed an intent.
-                Receipts are on-chain, immutable, and auditable.
+                On-chain cryptographic proof of intent execution. V1 single-sig, V2 dual attestation with EIP-712.
               </p>
             </div>
 
-            {/* Card 2 */}
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
               <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">
-                Solver Bonds
-              </h3>
+              <h3 className="mt-4 font-semibold text-zinc-50">Bonds</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Solvers stake collateral that can be slashed for violations.
-                Economic skin-in-the-game aligns incentives.
+                Solvers stake collateral (minimum 0.1 ETH). Slashable for violations. 80% goes to the affected user.
               </p>
             </div>
 
-            {/* Card 3 */}
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
               <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">
-                Deterministic Enforcement
-              </h3>
+              <h3 className="mt-4 font-semibold text-zinc-50">Disputes</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Timeout, constraint violations, and signature failures trigger
-                automatic slashing. No manual intervention needed.
+                1-hour challenge window. Deterministic auto-slash for timeouts. Optimistic resolution with counter-bonds.
               </p>
             </div>
 
-            {/* Card 4 */}
             <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
               <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
                 <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                 </svg>
               </div>
-              <h3 className="mt-4 font-semibold text-zinc-50">
-                Portable Reputation
-              </h3>
+              <h3 className="mt-4 font-semibold text-zinc-50">Reputation</h3>
               <p className="mt-2 text-sm text-zinc-400">
-                IntentScore — a queryable on-chain signal derived from execution
-                history. Protocols can filter solvers by track record.
+                IntentScore: on-chain composite metric from execution history. Portable via ERC-8004 agent registry.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Standards Integration */}
-      <section className="py-16 lg:py-24 bg-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-zinc-50">
-              How IRSB Connects to Other Standards
-            </h2>
-            <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              IRSB is the accountability layer that makes other standards production-safe.
-            </p>
-          </div>
-
-          {/* Visual Flow */}
-          <div className="mt-12 max-w-4xl mx-auto">
-            <div className="bg-zinc-900/60 rounded-xl p-8 border border-zinc-700">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                {/* Standards */}
-                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Intent Format</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-100">ERC-7683</p>
-                </div>
-                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider">Agent Registry</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-100">ERC-8004</p>
-                </div>
-                <div className="bg-zinc-800/60 rounded-lg p-4 border border-zinc-600">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider">HTTP Payments</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-100">x402</p>
-                </div>
-              </div>
-
-              {/* Arrows */}
-              <div className="flex justify-center my-4">
-                <svg className="w-8 h-8 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </div>
-
-              {/* IRSB Core */}
-              <div className="bg-gradient-to-r from-zinc-700 to-zinc-600 rounded-lg p-6 border-2 border-zinc-500">
-                <p className="text-center text-xl font-bold text-zinc-50">IRSB Protocol</p>
-                <p className="text-center text-sm text-zinc-300 mt-1">Receipts + Bonds + Disputes</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Integration - Mobile Cards */}
-          <div className="mt-12 max-w-4xl mx-auto md:hidden space-y-4">
-            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-base font-semibold text-zinc-100">ERC-7683</h4>
-                <span className="text-xs text-zinc-500 uppercase">Intent Format</span>
-              </div>
-              <p className="text-sm text-zinc-400 mb-3">Defines cross-chain intent format</p>
-              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
-                <p className="text-sm text-zinc-300">
-                  Receipts reference <code className="code-mobile">intentHash</code> from ERC-7683 orders
-                </p>
-              </div>
-            </div>
-            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-base font-semibold text-zinc-100">ERC-8004</h4>
-                <span className="text-xs text-zinc-500 uppercase">Agent Registry</span>
-              </div>
-              <p className="text-sm text-zinc-400 mb-3">Agent identity & reputation registry</p>
-              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
-                <p className="text-sm text-zinc-300">
-                  IRSB is a <span className="font-semibold text-zinc-100">Validation Provider</span> — generates signals that feed the registry
-                </p>
-              </div>
-            </div>
-            <div className="bg-zinc-900/60 rounded-xl p-5 border border-zinc-700">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-base font-semibold text-zinc-100">x402</h4>
-                <span className="text-xs text-zinc-500 uppercase">HTTP Payments</span>
-              </div>
-              <p className="text-sm text-zinc-400 mb-3">HTTP 402 payment protocol</p>
-              <div className="bg-zinc-800/60 rounded-lg p-3 border-l-2 border-zinc-500">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">IRSB Connection</p>
-                <p className="text-sm text-zinc-300">
-                  Adds accountability to paid APIs — receipts prove service delivery
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Integration - Desktop Table */}
-          <div className="mt-12 max-w-4xl mx-auto hidden md:block">
-            <div className="overflow-hidden rounded-xl border border-zinc-700">
-              <table className="w-full">
-                <thead className="bg-zinc-800">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">Standard</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">What It Does</th>
-                    <th className="px-6 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider">How IRSB Connects</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-700 bg-zinc-800/40">
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-semibold text-zinc-200">ERC-7683</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">
-                      Defines cross-chain intent format
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-300">
-                      IRSB receipts reference <code className="code-mobile">intentHash</code> from ERC-7683 orders
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-semibold text-zinc-200">ERC-8004</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">
-                      Agent identity & reputation registry
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-300">
-                      IRSB is a <span className="font-semibold text-zinc-100">Validation Provider</span> — generates signals that feed the registry
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="font-semibold text-zinc-200">x402</span>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-400">
-                      HTTP 402 payment protocol
-                    </td>
-                    <td className="px-6 py-4 text-sm text-zinc-300">
-                      IRSB adds accountability to paid APIs — receipts prove service delivery
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Scoreboard vs Referee */}
-          <div className="mt-12 max-w-3xl mx-auto">
-            <div className="bg-zinc-900/60 rounded-xl p-6 border border-zinc-700">
-              <h3 className="text-lg font-semibold text-zinc-50 text-center">
-                IRSB + ERC-8004: The Scoreboard & The Referee
-              </h3>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="text-center p-4">
-                  <div className="w-12 h-12 bg-zinc-700 rounded-lg flex items-center justify-center mx-auto">
-                    <svg className="w-6 h-6 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                    </svg>
-                  </div>
-                  <p className="mt-2 font-semibold text-zinc-200">ERC-8004 = Scoreboard</p>
-                  <p className="text-sm text-zinc-400">Stores agent identities and reputation scores</p>
-                </div>
-                <div className="text-center p-4">
-                  <div className="w-12 h-12 bg-zinc-700 rounded-lg flex items-center justify-center mx-auto">
-                    <svg className="w-6 h-6 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                  </div>
-                  <p className="mt-2 font-semibold text-zinc-200">IRSB = Referee</p>
-                  <p className="text-sm text-zinc-400">Generates the validation signals that update those scores</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Developer Tools */}
+      {/* Deployed & Verifiable */}
       <section className="py-16 lg:py-24 bg-zinc-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
-              Developer Tools
-            </h2>
-            <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              TypeScript SDK, CLI tools, and npm packages to integrate IRSB in minutes.
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* SDK Installation */}
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-50">SDK Packages</h3>
-              </div>
-              <div className="bg-zinc-900 rounded-lg p-4 font-mono text-sm">
-                <p className="text-zinc-500"># Core SDK - receipts, signing, posting</p>
-                <p className="text-zinc-200">npm install irsb</p>
-                <p className="text-zinc-500 mt-3"># x402 integration - HTTP payments</p>
-                <p className="text-zinc-200">npm install irsb-x402</p>
-              </div>
-              <p className="mt-4 text-sm text-zinc-400">
-                Full TypeScript support with EIP-712 signatures, receipt validation, and on-chain posting.
-              </p>
-            </div>
-
-            {/* CLI Tools */}
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-50">Verify CLI</h3>
-              </div>
-              <div className="bg-zinc-900 rounded-lg p-4 font-mono text-sm">
-                <p className="text-zinc-500"># Verify any receipt on-chain</p>
-                <p className="text-zinc-200">npx irsb verify &lt;receipt-id&gt;</p>
-                <p className="text-zinc-500 mt-3"># Example</p>
-                <p className="text-zinc-200 break-all">npx irsb verify 0x1234...abcd</p>
-              </div>
-              <p className="mt-4 text-sm text-zinc-400">
-                Instant verification of receipt authenticity, solver signatures, and on-chain status.
-              </p>
-            </div>
-          </div>
-
-          {/* Quickstart Code */}
-          <div className="mt-8 max-w-5xl mx-auto">
-            <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-zinc-700 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-zinc-50">Quickstart</h3>
-              </div>
-              <div className="bg-zinc-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
-                <pre className="text-zinc-200">{`import { IRSBClient, buildReceiptV2 } from 'irsb';
-
-// Initialize client
-const client = new IRSBClient({
-  chainId: 11155111, // Sepolia
-  rpcUrl: process.env.RPC_URL,
-});
-
-// Build and post a receipt
-const receipt = buildReceiptV2({
-  intentHash: '0x...',
-  solverId: '0x...',
-  // ... other fields
-});
-
-const receiptId = await client.postReceipt(receipt, signer);
-console.log('Receipt posted:', receiptId);`}</pre>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
-                <a
-                  href="https://github.com/intent-solutions-io/irsb-protocol"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-zinc-200 bg-zinc-700 hover:bg-zinc-600 transition-colors"
-                >
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                  </svg>
-                  GitHub
-                </a>
-                <a
-                  href="https://www.npmjs.com/package/irsb"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-zinc-200 bg-zinc-700 hover:bg-zinc-600 transition-colors"
-                >
-                  npm: irsb
-                </a>
-                <a
-                  href="https://www.npmjs.com/package/irsb-x402"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg text-zinc-200 bg-zinc-700 hover:bg-zinc-600 transition-colors"
-                >
-                  npm: irsb-x402
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Proof of Work */}
-      <section className="py-16 lg:py-24 bg-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold text-zinc-50">
-              Proof of Work
+              Deployed on Sepolia
             </h2>
             <p className="mt-4 text-lg text-zinc-300">
-              Deployed and testable on Sepolia today.
+              3 contracts verified on Etherscan. 308 passing tests. Open source.
             </p>
           </div>
 
@@ -495,7 +134,7 @@ console.log('Receipt posted:', receiptId);`}</pre>
             >
               <p className="text-sm font-medium text-zinc-50">SolverRegistry</p>
               <p className="mt-1 font-mono text-xs text-zinc-400 group-hover:text-zinc-200">
-                {shortenAddress(config.contracts.solverRegistry)} ↗
+                {shortenAddress(config.contracts.solverRegistry)} &#8599;
               </p>
             </a>
             <a
@@ -506,7 +145,7 @@ console.log('Receipt posted:', receiptId);`}</pre>
             >
               <p className="text-sm font-medium text-zinc-50">IntentReceiptHub</p>
               <p className="mt-1 font-mono text-xs text-zinc-400 group-hover:text-zinc-200">
-                {shortenAddress(config.contracts.intentReceiptHub)} ↗
+                {shortenAddress(config.contracts.intentReceiptHub)} &#8599;
               </p>
             </a>
             <a
@@ -517,19 +156,19 @@ console.log('Receipt posted:', receiptId);`}</pre>
             >
               <p className="text-sm font-medium text-zinc-50">DisputeModule</p>
               <p className="mt-1 font-mono text-xs text-zinc-400 group-hover:text-zinc-200">
-                {shortenAddress(config.contracts.disputeModule)} ↗
+                {shortenAddress(config.contracts.disputeModule)} &#8599;
               </p>
             </a>
           </div>
         </div>
       </section>
 
-      {/* Who It's For */}
-      <section className="py-16 lg:py-24 bg-zinc-900">
+      {/* Audience Entry Points */}
+      <section className="py-16 lg:py-24 bg-zinc-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold text-zinc-50">
-              Who It's For
+              Where to Start
             </h2>
           </div>
 
@@ -537,43 +176,61 @@ console.log('Receipt posted:', receiptId);`}</pre>
             <div className="text-center">
               <div className="w-14 h-14 bg-zinc-700 rounded-2xl flex items-center justify-center mx-auto">
                 <svg className="w-7 h-7 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
               <h3 className="mt-4 text-lg font-semibold text-zinc-50">
-                Protocol Teams
+                Understand the Protocol
               </h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Add accountability to your intent system without building enforcement from scratch.
+                Read the one-pager, see what changes before vs after, review the roadmap.
               </p>
+              <Link
+                href="/one-pager"
+                className="mt-4 inline-block text-sm font-medium text-zinc-200 hover:text-zinc-50"
+              >
+                One-Pager &rarr;
+              </Link>
             </div>
 
             <div className="text-center">
               <div className="w-14 h-14 bg-zinc-700 rounded-2xl flex items-center justify-center mx-auto">
                 <svg className="w-7 h-7 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
               <h3 className="mt-4 text-lg font-semibold text-zinc-50">
-                Solver / Relayer Operators
+                Explore the Architecture
               </h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Build verifiable reputation. Stand out from anonymous competition.
+                Contracts, parameters, security model, deployed addresses, all 4 repos.
               </p>
+              <Link
+                href="/technical"
+                className="mt-4 inline-block text-sm font-medium text-zinc-200 hover:text-zinc-50"
+              >
+                Architecture &rarr;
+              </Link>
             </div>
 
             <div className="text-center">
               <div className="w-14 h-14 bg-zinc-700 rounded-2xl flex items-center justify-center mx-auto">
                 <svg className="w-7 h-7 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
               <h3 className="mt-4 text-lg font-semibold text-zinc-50">
-                Wallets & Agents
+                Build with IRSB
               </h3>
               <p className="mt-2 text-sm text-zinc-400">
-                Query solver reputation before routing. Protect users automatically.
+                Install the SDK, post your first receipt, integrate x402 payments.
               </p>
+              <Link
+                href="/developers/quickstart"
+                className="mt-4 inline-block text-sm font-medium text-zinc-200 hover:text-zinc-50"
+              >
+                Quickstart &rarr;
+              </Link>
             </div>
           </div>
         </div>
@@ -583,10 +240,10 @@ console.log('Receipt posted:', receiptId);`}</pre>
       <section className="py-16 lg:py-20 bg-zinc-900 border-y border-zinc-700">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-zinc-50">
-            Interested in piloting IRSB?
+            Interested in integrating IRSB?
           </h2>
           <p className="mt-4 text-lg text-zinc-300">
-            We're working with early partners to test integration patterns.
+            We are working with early partners to test integration patterns.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
@@ -604,85 +261,6 @@ console.log('Receipt posted:', receiptId);`}</pre>
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="bg-zinc-900 border-t border-zinc-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div>
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-zinc-200 rounded-lg flex items-center justify-center">
-                  <span className="text-zinc-900 font-bold text-sm">IR</span>
-                </div>
-                <span className="text-lg font-bold text-zinc-50">IRSB</span>
-              </div>
-              <p className="mt-4 text-sm text-zinc-400">
-                The accountability layer for intent-based transactions.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-50 uppercase tracking-wider">
-                Resources
-              </h3>
-              <ul className="mt-4 space-y-1">
-                <li>
-                  <Link href="/dashboard" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    Solver Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <a href="https://github.com/intent-solutions-io/irsb-protocol" target="_blank" rel="noopener noreferrer" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    GitHub
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.npmjs.com/package/irsb" target="_blank" rel="noopener noreferrer" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    npm: irsb
-                  </a>
-                </li>
-                <li>
-                  <a href="https://www.npmjs.com/package/irsb-x402" target="_blank" rel="noopener noreferrer" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    npm: irsb-x402
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-zinc-50 uppercase tracking-wider">
-                Legal
-              </h3>
-              <ul className="mt-4 space-y-1">
-                <li>
-                  <Link href="/privacy" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/terms" className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    Terms of Service
-                  </Link>
-                </li>
-                <li>
-                  <a href={`mailto:${config.email}`} className="block py-2 text-sm text-zinc-400 hover:text-zinc-200 active:text-zinc-50">
-                    {config.email}
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-zinc-700">
-            <p className="text-xs text-zinc-500 text-center">
-              This is experimental software on Sepolia testnet. Not audited. Do not use with mainnet funds.
-            </p>
-            <p className="mt-2 text-xs text-zinc-600 text-center">
-              © 2026 {config.company}
-            </p>
-          </div>
-        </div>
-      </footer>
     </main>
   )
 }
