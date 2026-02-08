@@ -173,7 +173,7 @@ Agent Passkey (agent-passkey/)
                   {[
                     { pattern: 'Config validation', impl: 'Zod schemas, fail-fast on startup' },
                     { pattern: 'Logging', impl: 'pino with structured JSON, correlation IDs (intentId, runId, receiptId)' },
-                    { pattern: 'Signing', impl: 'Designed for agent-passkey (Lit PKP). Signing integration in progress.' },
+                    { pattern: 'Signing', impl: 'Always via agent-passkey (Lit PKP). Live on Cloud Run.' },
                     { pattern: 'Determinism', impl: 'Canonical JSON serialization for hashing (sorted keys, no whitespace)' },
                     { pattern: 'CI/CD', impl: 'GitHub Actions + Workload Identity Federation (keyless GCP auth)' },
                     { pattern: 'Testing', impl: 'vitest for TypeScript, Foundry for Solidity' },

@@ -88,7 +88,7 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-agent-passkey',
     description: 'Policy-gated signing via Lit Protocol PKP',
     techStack: 'TypeScript, Fastify',
-    status: 'Deployed — signing in progress',
+    status: 'Live (Cloud Run)',
   },
 ]
 
@@ -119,9 +119,9 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
     badgeClass: 'bg-yellow-900/50 text-yellow-300',
   },
   agentPasskey: {
-    label: 'Deployed — signing in progress',
-    level: 'deployed',
-    badgeClass: 'bg-blue-900/50 text-blue-300',
+    label: 'Live on Cloud Run',
+    level: 'live',
+    badgeClass: 'bg-green-900/50 text-green-300',
   },
   erc8004Registration: {
     label: 'Registered (Agent ID: 967)',
@@ -277,7 +277,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   },
   {
     question: 'How does Agent Passkey work?',
-    answer: 'Agent Passkey is a policy-gated signing gateway using Lit Protocol PKP (Programmable Key Pairs). Keys are split across 2/3 TEE nodes — no single point of compromise. The policy engine and typed actions are implemented; Lit PKP signing integration is in progress.',
+    answer: 'Agent Passkey is a policy-gated signing gateway using Lit Protocol PKP (Programmable Key Pairs). Keys are split across 2/3 TEE nodes — no single point of compromise. It only signs typed actions (SUBMIT_RECEIPT, OPEN_DISPUTE, SUBMIT_EVIDENCE), never arbitrary data. Live on Cloud Run.',
     category: 'security',
   },
   {

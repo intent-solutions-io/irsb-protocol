@@ -110,7 +110,7 @@ export default function DeploymentsPage() {
                   <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.agentPasskey.badgeClass} w-fit`}>{SYSTEM_STATUS.agentPasskey.label}</span>
                 </div>
                 <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
-                  Health: /health returns {`{"status":"ok"}`}. Policy engine and typed actions complete. Lit PKP signing integration in progress.
+                  Health: /health returns {`{"status":"ok"}`}. /v1/address returns PKP address. Policy engine and typed actions complete.
                 </p>
               </div>
 

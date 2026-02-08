@@ -179,7 +179,7 @@ export default function LandingPage() {
                   {SYSTEM_STATUS.agentPasskey.label}
                 </span>
               </div>
-              <p className="text-sm text-zinc-400">Policy-gated signing via Lit Protocol PKP. Deployed to Cloud Run. Policy engine and typed actions complete.</p>
+              <p className="text-sm text-zinc-400">Policy-gated signing via Lit Protocol PKP. Live on Cloud Run. Policy engine, typed actions, and PKP address resolution working.</p>
               <p className="mt-3 text-xs font-mono text-zinc-500">TypeScript, Fastify</p>
             </div>
           </div>
