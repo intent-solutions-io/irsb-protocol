@@ -72,7 +72,7 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-solver',
     description: 'Execute intents, produce evidence, submit receipts',
     techStack: 'TypeScript, Express',
-    status: 'Development',
+    status: 'v0.1.0',
   },
   {
     name: 'Watchtower',
@@ -80,7 +80,7 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-watchtower',
     description: 'Monitor receipts, detect violations, file disputes',
     techStack: 'TypeScript, Fastify (pnpm monorepo)',
-    status: 'v0.3.0',
+    status: 'v0.3.0 — infrastructure',
   },
   {
     name: 'Agent Passkey',
@@ -88,9 +88,52 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-agent-passkey',
     description: 'Policy-gated signing via Lit Protocol PKP',
     techStack: 'TypeScript, Fastify',
-    status: 'Live (Cloud Run)',
+    status: 'Deployed — signing in progress',
   },
 ]
+
+// ─── System Status (single source of truth for badges) ──────────────────────
+
+export type StatusLevel = 'live' | 'deployed' | 'infrastructure' | 'development' | 'planned'
+
+export interface SystemStatus {
+  label: string
+  level: StatusLevel
+  badgeClass: string
+}
+
+export const SYSTEM_STATUS: Record<string, SystemStatus> = {
+  protocol: {
+    label: 'Live on Sepolia',
+    level: 'live',
+    badgeClass: 'bg-green-900/50 text-green-300',
+  },
+  solver: {
+    label: 'v0.1.0 — local execution',
+    level: 'development',
+    badgeClass: 'bg-zinc-700 text-zinc-400',
+  },
+  watchtower: {
+    label: 'v0.3.0 — infrastructure complete',
+    level: 'infrastructure',
+    badgeClass: 'bg-yellow-900/50 text-yellow-300',
+  },
+  agentPasskey: {
+    label: 'Deployed — signing in progress',
+    level: 'deployed',
+    badgeClass: 'bg-blue-900/50 text-blue-300',
+  },
+  erc8004Registration: {
+    label: 'Registered (Agent ID: 967)',
+    level: 'live',
+    badgeClass: 'bg-green-900/50 text-green-300',
+  },
+  erc8004Signals: {
+    label: 'Not yet enabled',
+    level: 'planned',
+    badgeClass: 'bg-zinc-700 text-zinc-400',
+  },
+} as const
 
 // ─── IntentScore Algorithm ──────────────────────────────────────────────────
 
@@ -234,7 +277,7 @@ export const FAQ_ITEMS: FAQItem[] = [
   },
   {
     question: 'How does Agent Passkey work?',
-    answer: 'Agent Passkey is a policy-gated signing gateway using Lit Protocol PKP (Programmable Key Pairs). Keys are split across 2/3 TEE nodes — no single point of compromise. It only signs typed actions (SUBMIT_RECEIPT, OPEN_DISPUTE, SUBMIT_EVIDENCE), never arbitrary data.',
+    answer: 'Agent Passkey is a policy-gated signing gateway using Lit Protocol PKP (Programmable Key Pairs). Keys are split across 2/3 TEE nodes — no single point of compromise. The policy engine and typed actions are implemented; Lit PKP signing integration is in progress.',
     category: 'security',
   },
   {
@@ -281,8 +324,8 @@ export const USE_CASES: UseCase[] = [
     title: 'AI Agent Accountability',
     category: 'AI Agents',
     problem: 'AI agents execute on-chain actions on behalf of users with no standardized audit trail or recourse mechanism.',
-    solution: 'Agent Passkey ensures only typed actions are signed. Every signing decision produces deterministic audit artifacts. IntentScore creates portable reputation across protocols.',
-    example: 'An AI trading agent uses IRSB receipts to prove every trade it executed. Its IntentScore lets new protocols trust it based on historical performance, not just identity.',
+    solution: 'Agent Passkey restricts signing to typed actions only. Every signing decision is designed to produce deterministic audit artifacts. IntentScore will create portable reputation across protocols.',
+    example: 'An AI trading agent would use IRSB receipts to prove every trade it executed. Its IntentScore would let new protocols trust it based on historical performance, not just identity.',
   },
   {
     title: 'x402 HTTP Payment Verification',

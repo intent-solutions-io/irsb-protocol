@@ -18,6 +18,13 @@ export default function BeforeAfterPage() {
 
       <section className="py-16 lg:py-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Design framing */}
+          <div className="mb-8 bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
+            <p className="text-sm text-zinc-400">
+              This compares the current intent ecosystem with the IRSB design. Protocol contracts are live on Sepolia. Off-chain integration (solver, watchtower, signing) is in progress.
+            </p>
+          </div>
+
           {/* Desktop table */}
           <div className="hidden md:block overflow-hidden rounded-xl border border-zinc-700">
             <table className="w-full">

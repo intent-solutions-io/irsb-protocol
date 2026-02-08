@@ -1,6 +1,6 @@
 import { pageMetadata } from '@/lib/seo'
 import PageHeader from '@/components/PageHeader'
-import { REPOS, STANDARDS } from '@/lib/content'
+import { REPOS, STANDARDS, SYSTEM_STATUS } from '@/lib/content'
 
 export const metadata = pageMetadata({
   title: 'Ecosystem',
@@ -64,11 +64,15 @@ Agent Passkey (agent-passkey/)
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-zinc-100">{repo.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded ${
-                      repo.status.includes('Live') || repo.status.includes('Deployed')
-                        ? 'bg-green-900/50 text-green-300'
-                        : repo.status.includes('v0')
-                          ? 'bg-blue-900/50 text-blue-300'
-                          : 'bg-zinc-700 text-zinc-400'
+                      repo.status.includes('Deployed') || repo.status.includes('Live')
+                        ? SYSTEM_STATUS.protocol.badgeClass
+                        : repo.status.includes('infrastructure')
+                          ? SYSTEM_STATUS.watchtower.badgeClass
+                          : repo.status.includes('signing')
+                            ? SYSTEM_STATUS.agentPasskey.badgeClass
+                            : repo.status.includes('v0')
+                              ? 'bg-zinc-700 text-zinc-400'
+                              : 'bg-zinc-700 text-zinc-400'
                     }`}>
                       {repo.status}
                     </span>
@@ -119,8 +123,14 @@ Agent Passkey (agent-passkey/)
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">ERC-8004 Signal Publishing</h2>
             <p className="mt-3 text-zinc-300">
-              IRSB acts as a Validation Provider for ERC-8004. These events generate reputation signals:
+              IRSB acts as a Validation Provider for ERC-8004. These events are designed to generate reputation signals:
             </p>
+            <div className="mt-3 bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
+              <p className="text-sm text-zinc-400">
+                <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.erc8004Signals.badgeClass} mr-2`}>{SYSTEM_STATUS.erc8004Signals.label}</span>
+                Agent registered (ID: 967). Signal publishing is not yet enabled in production.
+              </p>
+            </div>
             <div className="mt-6 overflow-hidden rounded-xl border border-zinc-700">
               <table className="w-full">
                 <thead className="bg-zinc-800">
@@ -165,7 +175,7 @@ Agent Passkey (agent-passkey/)
                   {[
                     { pattern: 'Config validation', impl: 'Zod schemas, fail-fast on startup' },
                     { pattern: 'Logging', impl: 'pino with structured JSON, correlation IDs (intentId, runId, receiptId)' },
-                    { pattern: 'Signing', impl: 'Always via agent-passkey, never local keys in production' },
+                    { pattern: 'Signing', impl: 'Designed for agent-passkey (Lit PKP). Signing integration in progress.' },
                     { pattern: 'Determinism', impl: 'Canonical JSON serialization for hashing (sorted keys, no whitespace)' },
                     { pattern: 'CI/CD', impl: 'GitHub Actions + Workload Identity Federation (keyless GCP auth)' },
                     { pattern: 'Testing', impl: 'vitest for TypeScript, Foundry for Solidity' },

@@ -93,8 +93,9 @@ export default function OnePagerPage() {
               <li>308 passing tests including fuzz tests</li>
               <li>4 open-source repositories (MIT license)</li>
               <li>TypeScript SDK + CLI tools (npm: irsb, irsb-x402)</li>
-              <li>Agent Passkey signing gateway live on Cloud Run</li>
-              <li>ERC-8004 agent registered (ID: 967)</li>
+              <li>Agent Passkey deployed to Cloud Run — policy engine complete, Lit PKP signing in progress</li>
+              <li>ERC-8004 agent registered (ID: 967) — signal publishing not yet enabled</li>
+              <li>Solver v0.1.0 (local execution). Watchtower v0.3.0 (infrastructure complete, not yet querying chain)</li>
             </ul>
           </div>
 

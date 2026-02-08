@@ -18,6 +18,13 @@ export default function X402Page() {
         </p>
       </div>
 
+      {/* Status note */}
+      <div className="bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
+        <p className="text-sm text-zinc-400">
+          The irsb-x402 package is published. In production, receipt signing requires agent-passkey integration, which is in progress.
+        </p>
+      </div>
+
       {/* How It Works */}
       <div>
         <h2 className="text-xl font-bold text-zinc-50">How It Works</h2>
