@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { pageMetadata } from '@/lib/seo'
 import CodeBlock from '@/components/CodeBlock'
 import { CONTRACTS } from '@/lib/content'
@@ -114,7 +115,7 @@ const receipt = buildReceiptV2({
   ),
 });
 
-const receiptId = await client.postReceipt(receipt, signer);
+const receiptId = await client.postReceiptV2(receipt, signer);
 console.log('Receipt posted:', receiptId);`}
           />
         </div>
@@ -139,10 +140,10 @@ npx irsb verify <receipt-id>
       <div className="bg-zinc-800/60 rounded-xl p-6 border border-zinc-700">
         <h2 className="text-xl font-bold text-zinc-50">Next Steps</h2>
         <ul className="mt-4 space-y-2 text-sm text-zinc-300">
-          <li>Read the <a href="/developers/sdk" className="text-zinc-100 hover:text-zinc-50 underline">SDK Reference</a> for the full API</li>
-          <li>See <a href="/developers/x402" className="text-zinc-100 hover:text-zinc-50 underline">x402 Guide</a> for HTTP payment integration</li>
-          <li>Review <a href="/developers/contracts" className="text-zinc-100 hover:text-zinc-50 underline">Contract Reference</a> for direct contract interaction</li>
-          <li>View live data on the <a href="/dashboard" className="text-zinc-100 hover:text-zinc-50 underline">Dashboard</a></li>
+          <li>Read the <Link href="/developers/sdk" className="text-zinc-100 hover:text-zinc-50 underline">SDK Reference</Link> for the full API</li>
+          <li>See <Link href="/developers/x402" className="text-zinc-100 hover:text-zinc-50 underline">x402 Guide</Link> for HTTP payment integration</li>
+          <li>Review <Link href="/developers/contracts" className="text-zinc-100 hover:text-zinc-50 underline">Contract Reference</Link> for direct contract interaction</li>
+          <li>View live data on the <Link href="/dashboard" className="text-zinc-100 hover:text-zinc-50 underline">Dashboard</Link></li>
         </ul>
       </div>
     </div>

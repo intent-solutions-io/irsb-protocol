@@ -1,5 +1,6 @@
 import { pageMetadata } from '@/lib/seo'
 import PageHeader from '@/components/PageHeader'
+import CodeBlock from '@/components/CodeBlock'
 import { CONTRACTS, OPERATIONAL_ACCOUNTS, EXPLORER_BASE } from '@/lib/content'
 
 export const metadata = pageMetadata({
@@ -121,7 +122,10 @@ export default function DeploymentsPage() {
             <p className="mt-3 text-zinc-300">
               To verify the deployed contracts independently:
             </p>
-            <div className="mt-4 bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 font-mono text-sm text-zinc-300 whitespace-pre overflow-x-auto">{`# Check solver registry minimum bond
+            <div className="mt-4">
+              <CodeBlock
+                language="bash"
+                code={`# Check solver registry minimum bond
 cast call ${CONTRACTS.solverRegistry} \\
   "minimumBond()" --rpc-url https://rpc.sepolia.org
 
@@ -130,7 +134,9 @@ cast call ${CONTRACTS.intentReceiptHub} \\
   "owner()" --rpc-url https://rpc.sepolia.org
 
 # View on Etherscan (source verified)
-# ${EXPLORER_BASE}/address/${CONTRACTS.solverRegistry}#code`}</div>
+# ${EXPLORER_BASE}/address/${CONTRACTS.solverRegistry}#code`}
+              />
+            </div>
           </div>
 
         </div>

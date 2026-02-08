@@ -11,10 +11,6 @@ export function formatTimeSince(date: Date): string {
   return `${Math.floor(seconds / 86400)}d ago`
 }
 
-export function formatAddress(address: string): string {
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
-}
-
 export function cn(...classes: (string | boolean | undefined | null)[]): string {
   return classes.filter(Boolean).join(' ')
 }
