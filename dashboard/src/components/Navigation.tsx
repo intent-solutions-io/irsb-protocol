@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { NETWORKS, DEFAULT_NETWORK, type NetworkConfig } from '@/lib/config'
-import { NAV_GROUPS } from '@/lib/content'
+import { NAV_GROUPS, ECOSYSTEM_COMPONENTS, ECOSYSTEM_SUMMARY, SYSTEM_STATUS } from '@/lib/content'
 
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000'
 
@@ -243,6 +243,57 @@ function MobileNavGroup({ name, items, pathname, onNavigate }: {
   )
 }
 
+// ─── Ecosystem Banner ──────────────────────────────────────────────────────
+
+function StatusDot({ statusKey }: { statusKey: string }) {
+  const status = SYSTEM_STATUS[statusKey]
+  const colorMap: Record<string, string> = {
+    live: 'bg-green-500',
+    deployed: 'bg-green-500',
+    infrastructure: 'bg-yellow-500',
+    development: 'bg-zinc-500',
+    planned: 'bg-zinc-600',
+  }
+  const color = status ? colorMap[status.level] || 'bg-zinc-500' : 'bg-zinc-500'
+
+  return <span className={`inline-block h-1.5 w-1.5 rounded-full ${color}`} />
+}
+
+function EcosystemBanner() {
+  return (
+    <Link href="/ecosystem" className="block bg-zinc-800/50 border-b border-zinc-700 hover:bg-zinc-800/80 transition-colors">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+        {/* Desktop: horizontal row with arrows */}
+        <div className="hidden sm:flex items-center justify-center gap-1.5">
+          {ECOSYSTEM_COMPONENTS.map((comp, i) => (
+            <span key={comp.key} className="contents">
+              <span className="flex items-center gap-1.5">
+                <StatusDot statusKey={comp.statusKey} />
+                <span className="text-sm font-medium text-zinc-200">{comp.name}</span>
+                <span className="text-xs text-zinc-500">{comp.role}</span>
+              </span>
+              {i < ECOSYSTEM_COMPONENTS.length - 1 && (
+                <span className="text-zinc-600 mx-2">&rarr;</span>
+              )}
+            </span>
+          ))}
+        </div>
+        {/* Mobile: 2x2 grid */}
+        <div className="sm:hidden grid grid-cols-2 gap-x-4 gap-y-1">
+          {ECOSYSTEM_COMPONENTS.map((comp) => (
+            <span key={comp.key} className="flex items-center gap-1.5">
+              <StatusDot statusKey={comp.statusKey} />
+              <span className="text-xs font-medium text-zinc-200">{comp.name}</span>
+              <span className="text-[10px] text-zinc-500">{comp.role}</span>
+            </span>
+          ))}
+        </div>
+        <p className="text-center text-[11px] text-zinc-500 mt-1">{ECOSYSTEM_SUMMARY}</p>
+      </div>
+    </Link>
+  )
+}
+
 // ─── Main Navigation ────────────────────────────────────────────────────────
 
 export default function Navigation() {
@@ -268,6 +319,9 @@ export default function Navigation() {
           </p>
         </div>
       </div>
+
+      {/* Ecosystem Banner */}
+      <EcosystemBanner />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">

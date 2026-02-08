@@ -135,6 +135,58 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
   },
 } as const
 
+// ─── Ecosystem Banner ───────────────────────────────────────────────────────
+
+export const ECOSYSTEM_SUMMARY = 'Four systems. One accountability layer.'
+
+export const ECOSYSTEM_COMPONENTS = [
+  { key: 'protocol', name: 'Protocol', role: 'Contracts', statusKey: 'protocol' },
+  { key: 'solver', name: 'Solver', role: 'Execution', statusKey: 'solver' },
+  { key: 'watchtower', name: 'Watchtower', role: 'Monitoring', statusKey: 'watchtower' },
+  { key: 'agentPasskey', name: 'Agent Passkey', role: 'Signing', statusKey: 'agentPasskey' },
+] as const
+
+// ─── Ecosystem Details (expandable cards on homepage) ───────────────────────
+
+export const ECOSYSTEM_DETAILS = [
+  {
+    key: 'protocol',
+    name: 'Protocol',
+    problem: 'No Proof or Consequences',
+    summary: 'On-chain contracts for receipts, bonds, disputes, and escrow. 3 verified contracts, 308 tests.',
+    detail: 'The protocol layer defines how intents become accountable. Solvers register and stake bonds (minimum 0.1 ETH). Every execution produces a cryptographic receipt — V1 with single attestation, V2 with dual EIP-712 signatures and privacy levels. A 1-hour challenge window allows disputes. Deterministic violations (timeouts, wrong amounts) auto-slash. 80% of slashed bonds go to the affected user. Three jailings means permanent ban.',
+    techStack: 'Solidity 0.8.25, Foundry',
+    statusKey: 'protocol',
+  },
+  {
+    key: 'solver',
+    name: 'Solver',
+    problem: 'No Execution Engine',
+    summary: 'Execute intents, produce evidence, submit receipts. Pluggable job types with CLI and HTTP interfaces.',
+    detail: 'The solver picks up intents, executes them, collects evidence of execution, and submits receipts to the protocol. It uses typed actions routed through Agent Passkey for signing — never holds private keys directly. Currently supports the SAFE_REPORT job type with plans for additional execution strategies.',
+    techStack: 'TypeScript, Express',
+    statusKey: 'solver',
+  },
+  {
+    key: 'watchtower',
+    name: 'Watchtower',
+    problem: 'No Independent Monitoring',
+    summary: 'Monitor receipts, detect violations, file disputes. Rule engine with configurable violation detection.',
+    detail: 'The watchtower independently scans on-chain receipts and evaluates them against a configurable rule engine. It detects stale receipts, missed deadlines, and suspicious patterns. When a violation is confirmed, it files a dispute on-chain with supporting evidence. Designed as a pnpm monorepo with separate packages for core logic, chain interaction, and evidence storage.',
+    techStack: 'TypeScript, Fastify',
+    statusKey: 'watchtower',
+  },
+  {
+    key: 'agentPasskey',
+    name: 'Agent Passkey',
+    problem: 'No Secure Signing',
+    summary: 'Policy-gated signing via Lit Protocol PKP. 2/3 threshold signatures across TEE nodes.',
+    detail: 'Agent Passkey is the identity and signing plane. Keys are split across Lit Protocol\'s 2/3 threshold TEE nodes — no single point of compromise, no extractable private keys. A policy engine restricts signing to three typed actions only: SUBMIT_RECEIPT, OPEN_DISPUTE, and SUBMIT_EVIDENCE. Everything else is rejected. Every signing decision produces an audit artifact. Live on Cloud Run.',
+    techStack: 'TypeScript, Fastify',
+    statusKey: 'agentPasskey',
+  },
+] as const
+
 // ─── IntentScore Algorithm ──────────────────────────────────────────────────
 
 export const INTENT_SCORE_WEIGHTS = {
@@ -404,6 +456,148 @@ export const COMPARISONS: ComparisonRow[] = [
   },
 ]
 
+// ─── Competitor Comparison ──────────────────────────────────────────────────
+
+export type FeatureSupport = 'yes' | 'partial' | 'no'
+
+export interface Competitor {
+  name: string
+  category: string
+  description: string
+  approach: string
+  irsbDiff: string
+  features: Record<string, FeatureSupport>
+}
+
+/**
+ * Feature keys used as comparison dimensions.
+ * Order here determines column order in the comparison table.
+ */
+export const COMPARISON_FEATURES = [
+  'Execution Proof',
+  'Bonds / Staking',
+  'Dispute Resolution',
+  'Reputation Portability',
+  'Cross-Protocol',
+  'Intent-Specific',
+] as const
+
+export type ComparisonFeature = (typeof COMPARISON_FEATURES)[number]
+
+export const IRSB_FEATURES: Record<ComparisonFeature, FeatureSupport> = {
+  'Execution Proof': 'yes',
+  'Bonds / Staking': 'yes',
+  'Dispute Resolution': 'yes',
+  'Reputation Portability': 'yes',
+  'Cross-Protocol': 'yes',
+  'Intent-Specific': 'yes',
+}
+
+export const COMPETITORS: Competitor[] = [
+  {
+    name: 'UniswapX',
+    category: 'Intent DEX',
+    description:
+      "Uniswap's intent-based evolution. Dutch auction orders with massive liquidity. Top 3 solvers handle 90% of volume.",
+    approach: 'Internal filler reputation based on fill rate and speed within the UniswapX system.',
+    irsbDiff:
+      'Internal filler reputation only — siloed within UniswapX. No standardized receipts, no dispute process, no portable score.',
+    features: {
+      'Execution Proof': 'partial',
+      'Bonds / Staking': 'no',
+      'Dispute Resolution': 'no',
+      'Reputation Portability': 'no',
+      'Cross-Protocol': 'no',
+      'Intent-Specific': 'yes',
+    },
+  },
+  {
+    name: 'CoW Protocol',
+    category: 'Intent DEX',
+    description:
+      'Pioneered batch auctions and MEV protection. Strong solver network with competitive order flow.',
+    approach: 'Internal solver scoring based on surplus delivered. Solvers compete in batch auctions.',
+    irsbDiff:
+      'Internal solver scoring only. No on-chain receipts. No formal dispute mechanism. Reputation stays within CoW.',
+    features: {
+      'Execution Proof': 'no',
+      'Bonds / Staking': 'no',
+      'Dispute Resolution': 'no',
+      'Reputation Portability': 'no',
+      'Cross-Protocol': 'no',
+      'Intent-Specific': 'yes',
+    },
+  },
+  {
+    name: '1inch Fusion',
+    category: 'Intent Aggregator',
+    description:
+      'Broadest cross-chain support (13+ networks). Gasless swaps since 2022. Top 4 solvers handle ~90% of volume.',
+    approach: 'Internal resolver scoring with delegation and staking within the Fusion system.',
+    irsbDiff:
+      'Internal resolver scoring. No receipts. No dispute resolution. No cross-protocol reputation portability.',
+    features: {
+      'Execution Proof': 'no',
+      'Bonds / Staking': 'no',
+      'Dispute Resolution': 'no',
+      'Reputation Portability': 'no',
+      'Cross-Protocol': 'no',
+      'Intent-Specific': 'yes',
+    },
+  },
+  {
+    name: 'Across Protocol',
+    category: 'Intent Bridge',
+    description:
+      '$20B+ transferred, 14M+ transactions. Leading intent-based cross-chain bridge with optimistic verification.',
+    approach: 'Relayer reputation tracked internally. UMA optimistic oracle for dispute resolution.',
+    irsbDiff:
+      'Relayer reputation is siloed. No standardized receipt format. Disputes use UMA oracle, not a general-purpose intent dispute system.',
+    features: {
+      'Execution Proof': 'partial',
+      'Bonds / Staking': 'no',
+      'Dispute Resolution': 'no',
+      'Reputation Portability': 'no',
+      'Cross-Protocol': 'no',
+      'Intent-Specific': 'yes',
+    },
+  },
+  {
+    name: 'Ethos Network',
+    category: 'On-chain Reputation',
+    description:
+      'First major on-chain credibility protocol. Live on Base. Vouching, reviews, slashing, and reputation markets.',
+    approach: 'Social/peer-based reputation from reviews, vouches, and attestations. Not tied to execution proof.',
+    irsbDiff:
+      'Reputation is social and peer-based — earned from reviews, not from provable on-chain execution. IRSB reputation comes from receipts, bonds, and dispute outcomes.',
+    features: {
+      'Execution Proof': 'no',
+      'Bonds / Staking': 'yes',
+      'Dispute Resolution': 'partial',
+      'Reputation Portability': 'yes',
+      'Cross-Protocol': 'yes',
+      'Intent-Specific': 'no',
+    },
+  },
+  {
+    name: 'EigenLayer',
+    category: 'Restaking / Slashing',
+    description:
+      '$18-20B TVL. Generic slashing infrastructure via restaked ETH for Actively Validated Services (AVSs).',
+    approach: 'General-purpose restaking and slashing. AVSs define their own validation conditions.',
+    irsbDiff:
+      'General-purpose slashing, not intent-specific. No receipt format, no intent dispute resolution, no solver reputation scoring.',
+    features: {
+      'Execution Proof': 'no',
+      'Bonds / Staking': 'yes',
+      'Dispute Resolution': 'no',
+      'Reputation Portability': 'no',
+      'Cross-Protocol': 'yes',
+      'Intent-Specific': 'no',
+    },
+  },
+]
+
 // ─── Company Info ───────────────────────────────────────────────────────────
 
 export const COMPANY = {
@@ -433,6 +627,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { name: 'How It Works', href: '/how-it-works', description: 'Visual intent lifecycle in 5 steps' },
       { name: 'Use Cases', href: '/use-cases', description: 'DeFi, AI agents, x402, reputation' },
       { name: 'Before vs After', href: '/before-after', description: 'Side-by-side comparison' },
+      { name: 'Comparison', href: '/comparison', description: 'IRSB vs alternatives' },
       { name: 'FAQ', href: '/faq', description: 'Common questions answered' },
       { name: 'One-Pager', href: '/one-pager', description: 'Executive summary' },
     ],
