@@ -64,15 +64,13 @@ Agent Passkey (agent-passkey/)
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-zinc-100">{repo.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded ${
-                      repo.status.includes('Deployed') || repo.status.includes('Live')
-                        ? SYSTEM_STATUS.protocol.badgeClass
+                      repo.status.includes('signing')
+                        ? SYSTEM_STATUS.agentPasskey.badgeClass
                         : repo.status.includes('infrastructure')
                           ? SYSTEM_STATUS.watchtower.badgeClass
-                          : repo.status.includes('signing')
-                            ? SYSTEM_STATUS.agentPasskey.badgeClass
-                            : repo.status.includes('v0')
-                              ? 'bg-zinc-700 text-zinc-400'
-                              : 'bg-zinc-700 text-zinc-400'
+                          : repo.status.includes('Deployed') || repo.status.includes('Live')
+                            ? SYSTEM_STATUS.protocol.badgeClass
+                            : 'bg-zinc-700 text-zinc-400'
                     }`}>
                       {repo.status}
                     </span>
