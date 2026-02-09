@@ -77,8 +77,7 @@ library TypesDelegation {
     );
 
     /// @notice EIP-712 type hash for ExecutionParams
-    bytes32 constant EXECUTION_TYPEHASH =
-        keccak256("ExecutionParams(address target,bytes callData,uint256 value)");
+    bytes32 constant EXECUTION_TYPEHASH = keccak256("ExecutionParams(address target,bytes callData,uint256 value)");
 
     /// @notice EIP-712 type hash for SettlementParams
     bytes32 constant SETTLEMENT_TYPEHASH = keccak256(

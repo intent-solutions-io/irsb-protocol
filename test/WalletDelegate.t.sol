@@ -66,11 +66,7 @@ contract WalletDelegateTest is Test {
         return keccak256(abi.encodePacked("\x19\x01", walletDelegate.DOMAIN_SEPARATOR(), structHash));
     }
 
-    function _buildNoCaveatDelegation(uint256 salt)
-        internal
-        view
-        returns (TypesDelegation.Delegation memory)
-    {
+    function _buildNoCaveatDelegation(uint256 salt) internal view returns (TypesDelegation.Delegation memory) {
         TypesDelegation.Caveat[] memory caveats = new TypesDelegation.Caveat[](0);
         return _buildDelegation(caveats, salt);
     }
@@ -82,8 +78,7 @@ contract WalletDelegateTest is Test {
     {
         TypesDelegation.Caveat[] memory caveats = new TypesDelegation.Caveat[](1);
         caveats[0] = TypesDelegation.Caveat({
-            enforcer: address(spendEnforcer),
-            terms: abi.encode(address(0), dailyCap, perTxCap)
+            enforcer: address(spendEnforcer), terms: abi.encode(address(0), dailyCap, perTxCap)
         });
         return _buildDelegation(caveats, salt);
     }
@@ -346,7 +341,7 @@ contract WalletDelegateTest is Test {
 
         TypesDelegation.Delegation memory delegation = _buildNoCaveatDelegation(1);
 
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         walletDelegate.setupDelegation(delegation);
     }
 

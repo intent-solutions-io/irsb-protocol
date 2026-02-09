@@ -17,7 +17,11 @@ contract TimeWindowEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external view override {
+    )
+        external
+        view
+        override
+    {
         (uint64 notBefore, uint64 notAfter) = abi.decode(terms, (uint64, uint64));
 
         if (block.timestamp < notBefore) {
@@ -37,7 +41,11 @@ contract TimeWindowEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        pure
+        override
+    {
         // No post-execution validation needed for time windows
     }
 }

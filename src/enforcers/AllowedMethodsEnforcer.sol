@@ -17,7 +17,11 @@ contract AllowedMethodsEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata callData,
         uint256 /* value */
-    ) external pure override {
+    )
+        external
+        pure
+        override
+    {
         bytes4[] memory allowedSelectors = abi.decode(terms, (bytes4[]));
 
         // Empty callData means plain ETH transfer — no selector to check
@@ -48,7 +52,11 @@ contract AllowedMethodsEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        pure
+        override
+    {
         // No post-execution validation needed for method allowlist
     }
 }

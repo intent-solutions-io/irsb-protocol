@@ -56,9 +56,7 @@ contract AllowedMethodsEnforcerTest is Test {
 
         bytes memory callData = abi.encodeWithSelector(APPROVE, address(0x3), 100);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Method selector not allowed")
-        );
+        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Method selector not allowed"));
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, callData, 0);
     }
 
@@ -86,9 +84,7 @@ contract AllowedMethodsEnforcerTest is Test {
 
         bytes memory callData = abi.encodeWithSelector(TRANSFER, address(0x3), 100);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Method selector not allowed")
-        );
+        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Method selector not allowed"));
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, callData, 0);
     }
 

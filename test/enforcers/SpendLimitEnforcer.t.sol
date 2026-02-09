@@ -46,7 +46,9 @@ contract SpendLimitEnforcerTest is Test {
     function test_BeforeHook_NativeETH_RevertPerTxExceeded() public {
         bytes memory terms = abi.encode(address(0), 10 ether, 5 ether);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Per-transaction spend limit exceeded"));
+        vm.expectRevert(
+            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Per-transaction spend limit exceeded")
+        );
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, "", 6 ether);
     }
 
@@ -111,7 +113,9 @@ contract SpendLimitEnforcerTest is Test {
 
         bytes memory callData = abi.encodeWithSelector(0xa9059cbb, address(0x3), 600e6);
 
-        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Per-transaction spend limit exceeded"));
+        vm.expectRevert(
+            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Per-transaction spend limit exceeded")
+        );
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, callData, 0);
     }
 

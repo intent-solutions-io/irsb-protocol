@@ -119,9 +119,8 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
 
         // WD-2: Run all beforeHooks
         for (uint256 i = 0; i < caveats.length; i++) {
-            ICaveatEnforcer(caveats[i].enforcer).beforeHook(
-                caveats[i].terms, delegationHash, delegator, target, callData, value
-            );
+            ICaveatEnforcer(caveats[i].enforcer)
+                .beforeHook(caveats[i].terms, delegationHash, delegator, target, callData, value);
         }
 
         // Execute call
@@ -133,9 +132,8 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
 
         // WD-2: Run all afterHooks
         for (uint256 i = 0; i < caveats.length; i++) {
-            ICaveatEnforcer(caveats[i].enforcer).afterHook(
-                caveats[i].terms, delegationHash, delegator, target, callData, value
-            );
+            ICaveatEnforcer(caveats[i].enforcer)
+                .afterHook(caveats[i].terms, delegationHash, delegator, target, callData, value);
         }
 
         emit DelegatedExecution(delegationHash, delegator, target, value);
@@ -147,7 +145,9 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
         uint256[] calldata modes,
         bytes[] calldata executionCalldata
     ) external payable whenNotPaused nonReentrant returns (bytes[] memory results) {
-        require(delegations.length == modes.length && modes.length == executionCalldata.length, "Length mismatch");
+        if (delegations.length != modes.length || modes.length != executionCalldata.length) {
+            revert LengthMismatch();
+        }
 
         results = new bytes[](delegations.length);
 
@@ -171,9 +171,10 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
 
             // Run all beforeHooks
             for (uint256 j = 0; j < caveats.length; j++) {
-                ICaveatEnforcer(caveats[j].enforcer).beforeHook(
-                    caveats[j].terms, delegationHash, delegator, params.target, params.callData, params.value
-                );
+                ICaveatEnforcer(caveats[j].enforcer)
+                    .beforeHook(
+                        caveats[j].terms, delegationHash, delegator, params.target, params.callData, params.value
+                    );
             }
 
             // Execute (mode 0 = call only — delegatecall disabled for safety)
@@ -186,9 +187,10 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
 
             // Run all afterHooks
             for (uint256 j = 0; j < caveats.length; j++) {
-                ICaveatEnforcer(caveats[j].enforcer).afterHook(
-                    caveats[j].terms, delegationHash, delegator, params.target, params.callData, params.value
-                );
+                ICaveatEnforcer(caveats[j].enforcer)
+                    .afterHook(
+                        caveats[j].terms, delegationHash, delegator, params.target, params.callData, params.value
+                    );
             }
 
             emit DelegatedExecution(delegationHash, delegator, params.target, params.value);
@@ -198,11 +200,7 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
     // ============ View Functions ============
 
     /// @inheritdoc IWalletDelegate
-    function getDelegation(bytes32 delegationHash)
-        external
-        view
-        returns (TypesDelegation.StoredDelegation memory)
-    {
+    function getDelegation(bytes32 delegationHash) external view returns (TypesDelegation.StoredDelegation memory) {
         return _delegations[delegationHash];
     }
 

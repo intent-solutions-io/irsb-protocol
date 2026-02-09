@@ -26,7 +26,10 @@ contract NonceEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        override
+    {
         uint256 startNonce = abi.decode(terms, (uint256));
 
         uint256 currentNonce = nonces[delegationHash];
@@ -50,7 +53,11 @@ contract NonceEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        pure
+        override
+    {
         // No post-execution validation needed for nonce tracking
     }
 

@@ -64,7 +64,11 @@ contract X402FacilitatorTest is Test {
 
     // ============ Helpers ============
 
-    function _makeParams(bytes32 paymentHash, uint256 amount) internal view returns (TypesDelegation.SettlementParams memory) {
+    function _makeParams(bytes32 paymentHash, uint256 amount)
+        internal
+        view
+        returns (TypesDelegation.SettlementParams memory)
+    {
         return TypesDelegation.SettlementParams({
             paymentHash: paymentHash,
             token: address(usdc),
@@ -84,8 +88,7 @@ contract X402FacilitatorTest is Test {
     {
         TypesDelegation.Caveat[] memory caveats = new TypesDelegation.Caveat[](1);
         caveats[0] = TypesDelegation.Caveat({
-            enforcer: address(spendEnforcer),
-            terms: abi.encode(address(usdc), dailyCap, perTxCap)
+            enforcer: address(spendEnforcer), terms: abi.encode(address(usdc), dailyCap, perTxCap)
         });
 
         TypesDelegation.Delegation memory delegation;
@@ -96,9 +99,7 @@ contract X402FacilitatorTest is Test {
         delegation.salt = salt;
 
         bytes32 structHash = TypesDelegation.hashDelegation(delegation);
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", walletDelegate.DOMAIN_SEPARATOR(), structHash)
-        );
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", walletDelegate.DOMAIN_SEPARATOR(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(delegatorKey, digest);
         delegation.signature = abi.encodePacked(r, s, v);
 
@@ -271,7 +272,7 @@ contract X402FacilitatorTest is Test {
         TypesDelegation.SettlementParams memory params = _makeParams(keccak256("pay1"), 100e6);
 
         vm.prank(buyer);
-        vm.expectRevert();
+        vm.expectRevert(abi.encodeWithSignature("EnforcedPause()"));
         facilitator.settlePayment(params);
     }
 

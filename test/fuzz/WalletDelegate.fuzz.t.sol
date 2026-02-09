@@ -5,14 +5,12 @@ import { Test } from "forge-std/Test.sol";
 import { WalletDelegate } from "../../src/delegation/WalletDelegate.sol";
 import { IWalletDelegate } from "../../src/interfaces/IWalletDelegate.sol";
 import { TypesDelegation } from "../../src/libraries/TypesDelegation.sol";
-import { SpendLimitEnforcer } from "../../src/enforcers/SpendLimitEnforcer.sol";
 import { MockTarget } from "../helpers/MockTarget.sol";
 
 /// @title WalletDelegate Fuzz Tests
 /// @notice Property-based tests for delegation invariants
 contract WalletDelegateFuzzTest is Test {
     WalletDelegate public walletDelegate;
-    SpendLimitEnforcer public spendEnforcer;
     MockTarget public mockTarget;
 
     uint256 public delegatorKey;
@@ -20,7 +18,6 @@ contract WalletDelegateFuzzTest is Test {
 
     function setUp() public {
         walletDelegate = new WalletDelegate();
-        spendEnforcer = new SpendLimitEnforcer();
         mockTarget = new MockTarget();
 
         delegatorKey = 0xA11CE;
@@ -37,8 +34,7 @@ contract WalletDelegateFuzzTest is Test {
         delegation.salt = salt;
 
         bytes32 structHash = TypesDelegation.hashDelegation(delegation);
-        bytes32 digest =
-            keccak256(abi.encodePacked("\x19\x01", walletDelegate.DOMAIN_SEPARATOR(), structHash));
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", walletDelegate.DOMAIN_SEPARATOR(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(delegatorKey, digest);
         delegation.signature = abi.encodePacked(r, s, v);
     }

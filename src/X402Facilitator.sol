@@ -63,10 +63,17 @@ contract X402Facilitator is Ownable, ReentrancyGuard, Pausable {
     error TransferFailed();
     error BatchLengthMismatch();
     error DelegationNotActive();
+    error InvalidWalletDelegate();
+    error BatchTooLarge();
+
+    // ============ Constants ============
+
+    uint256 private constant MAX_BATCH_SIZE = 50;
 
     // ============ Constructor ============
 
     constructor(address _walletDelegate, address _receiptHub) Ownable(msg.sender) {
+        if (_walletDelegate == address(0)) revert InvalidWalletDelegate();
         walletDelegate = IWalletDelegate(_walletDelegate);
         receiptHub = _receiptHub;
     }
@@ -75,11 +82,7 @@ contract X402Facilitator is Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Settle a direct payment (buyer pays directly)
     /// @param params Settlement parameters
-    function settlePayment(TypesDelegation.SettlementParams calldata params)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function settlePayment(TypesDelegation.SettlementParams calldata params) external whenNotPaused nonReentrant {
         _validateSettlement(params);
 
         // XF-1: Double-settlement prevention
@@ -136,11 +139,9 @@ contract X402Facilitator is Ownable, ReentrancyGuard, Pausable {
 
     /// @notice Settle multiple payments in a single transaction
     /// @param params Array of settlement parameters
-    function batchSettle(TypesDelegation.SettlementParams[] calldata params)
-        external
-        whenNotPaused
-        nonReentrant
-    {
+    function batchSettle(TypesDelegation.SettlementParams[] calldata params) external whenNotPaused nonReentrant {
+        if (params.length > MAX_BATCH_SIZE) revert BatchTooLarge();
+
         uint256 totalAmount;
 
         for (uint256 i = 0; i < params.length; i++) {
@@ -183,6 +184,7 @@ contract X402Facilitator is Ownable, ReentrancyGuard, Pausable {
     /// @notice Update the WalletDelegate contract address
     /// @param _walletDelegate New WalletDelegate address
     function setWalletDelegate(address _walletDelegate) external onlyOwner {
+        if (_walletDelegate == address(0)) revert InvalidWalletDelegate();
         walletDelegate = IWalletDelegate(_walletDelegate);
     }
 

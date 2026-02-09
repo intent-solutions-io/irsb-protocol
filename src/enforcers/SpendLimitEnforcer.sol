@@ -76,7 +76,11 @@ contract SpendLimitEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        pure
+        override
+    {
         // No post-execution validation needed for spend limits
     }
 

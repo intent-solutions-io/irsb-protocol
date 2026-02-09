@@ -60,9 +60,7 @@ contract AllowedTargetsEnforcerTest is Test {
         allowed[1] = TARGET_B;
         bytes memory terms = abi.encode(allowed);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Target contract not allowed")
-        );
+        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Target contract not allowed"));
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, DISALLOWED, "", 0);
     }
 
@@ -70,9 +68,7 @@ contract AllowedTargetsEnforcerTest is Test {
         address[] memory allowed = new address[](0);
         bytes memory terms = abi.encode(allowed);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Target contract not allowed")
-        );
+        vm.expectRevert(abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Target contract not allowed"));
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, TARGET_A, "", 0);
     }
 

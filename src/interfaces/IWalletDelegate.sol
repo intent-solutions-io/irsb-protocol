@@ -10,12 +10,7 @@ interface IWalletDelegate {
     // ============ Events ============
 
     /// @notice Emitted when a delegation is set up
-    event DelegationSetup(
-        bytes32 indexed delegationHash,
-        address indexed delegator,
-        uint256 caveatCount,
-        uint256 salt
-    );
+    event DelegationSetup(bytes32 indexed delegationHash, address indexed delegator, uint256 caveatCount, uint256 salt);
 
     /// @notice Emitted when a delegation is revoked
     event DelegationRevoked(bytes32 indexed delegationHash, address indexed delegator);
@@ -37,6 +32,7 @@ interface IWalletDelegate {
     error ExecutionFailed();
     error InvalidCaveat();
     error DelegateCodeMismatch();
+    error LengthMismatch();
 
     // ============ External Functions ============
 
@@ -61,7 +57,7 @@ interface IWalletDelegate {
 
     /// @notice ERC-7710 redemption interface for batch delegation execution
     /// @param delegations Array of delegations to redeem
-    /// @param modes Execution mode per delegation (0 = call, 1 = delegatecall)
+    /// @param modes Execution mode per delegation (0 = call only, delegatecall not supported)
     /// @param executionCalldata ABI-encoded ExecutionParams per delegation
     /// @return results Array of return data from each execution
     function redeemDelegations(

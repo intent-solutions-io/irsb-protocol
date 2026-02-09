@@ -17,7 +17,11 @@ contract AllowedTargetsEnforcer is ICaveatEnforcer {
         address target,
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external pure override {
+    )
+        external
+        pure
+        override
+    {
         address[] memory allowedTargets = abi.decode(terms, (address[]));
 
         bool allowed = false;
@@ -41,7 +45,11 @@ contract AllowedTargetsEnforcer is ICaveatEnforcer {
         address, /* target */
         bytes calldata, /* callData */
         uint256 /* value */
-    ) external override {
+    )
+        external
+        pure
+        override
+    {
         // No post-execution validation needed for target allowlist
     }
 }
