@@ -119,7 +119,7 @@ irsb-protocol/
 ```bash
 # Contracts
 forge build                     # Build (via_ir, optimizer 200 runs)
-forge test                      # All 308 tests
+forge test                      # All 426 tests
 forge test -vvv                 # Verbose
 forge test --gas-report         # Gas analysis
 forge fmt                       # Format
