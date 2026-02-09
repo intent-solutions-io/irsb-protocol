@@ -7,17 +7,59 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+---
+
+## [1.2.0] - 2026-02-08
+
+Website ecosystem hub, ERC-8004 agent registration, and SDK/x402 public release.
+
 ### Added
+
+#### Website Ecosystem Hub (#23, #24, #25)
+- 14 new website pages with grouped navigation and developer docs
+- Ecosystem banner showing all 4 IRSB components with status badges
+- Comparison page: IRSB vs UniswapX, CoW, 1inch, Across, Ethos, EigenLayer
+- Expandable EcosystemCards component on homepage
+- Developer quickstart, SDK reference, x402 guide, contract reference
+
+#### ERC-8004 Agent Registration
+- Registered IRSB solver on ERC-8004 IdentityRegistry (Agent ID: 967)
+- On-chain identity enabling cross-protocol reputation
+
+#### SDK & CLI
 - `irsb verify <receipt-id>` CLI command for on-chain receipt verification
 - Receipt verification SDK module with V1/V2 support
 - npm provenance for all package releases
 - `RELEASING.md` release process documentation
 - CI guards to prevent publishing under wrong package names
 
+#### x402 HTTP Payments (Epic C, #20)
+- Complete x402 integration package (`irsb-x402` v0.1.0)
+- 30-minute quickstart guide
+- Express example service with x402 payment flow
+- Client script for testing
+
 ### Changed
 - **BREAKING**: SDK package renamed from `@intentsolutionsio/irsb-sdk` to `irsb`
 - **BREAKING**: x402 package renamed from `@irsb/x402-integration` to `irsb-x402`
 - Old package names deprecated on npm with redirect messages
+
+### Fixed
+- Update badges to reflect agent-passkey now live on Cloud Run
+- Ecosystem accuracy sweep with honest status badges (#24)
+- CI using stable Foundry version instead of nightly
+- SDK package-lock.json regenerated for CI
+
+### Documentation
+- AI-CONTEXT.md cross-reference added to CLAUDE.md
+- Canonical standards synced from irsb-solver (#22)
+- ERC-8004 publishing guide
+- Adapter integration guide
+- Optimistic dispute and counter-bond documentation
+- Operational accounts documented in CLAUDE.md
+- Epics and tasks roadmap
+- LLM briefing document for external brainstorming
+- IRSB-SEC-008 marked as accepted risk
 
 ### Published
 - `irsb` v0.1.0 on npm
@@ -168,7 +210,8 @@ Project initialization.
 
 ---
 
-[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/intent-solutions-io/irsb-protocol/releases/tag/v1.0.0
 [0.9.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v0.5.0...v0.9.0
