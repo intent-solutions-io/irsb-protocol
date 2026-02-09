@@ -176,13 +176,10 @@ contract WalletDelegate is IWalletDelegate, Ownable, ReentrancyGuard, Pausable {
                 );
             }
 
-            // Execute (mode 0 = call, mode 1 = delegatecall)
+            // Execute (mode 0 = call only — delegatecall disabled for safety)
+            require(modes[i] == 0, "Only call mode (0) supported");
             bool success;
-            if (modes[i] == 0) {
-                (success, results[i]) = params.target.call{ value: params.value }(params.callData);
-            } else {
-                (success, results[i]) = params.target.delegatecall(params.callData);
-            }
+            (success, results[i]) = params.target.call{ value: params.value }(params.callData);
             if (!success) {
                 revert ExecutionFailed();
             }

@@ -19,6 +19,7 @@ contract DeployDelegation is Script {
 
         // Existing contract addresses
         address receiptHub = vm.envAddress("INTENT_RECEIPT_HUB");
+        require(receiptHub != address(0), "INTENT_RECEIPT_HUB must not be zero address");
 
         console.log("=== IRSB Delegation Deployment ===");
         console.log("Deployer:", deployer);

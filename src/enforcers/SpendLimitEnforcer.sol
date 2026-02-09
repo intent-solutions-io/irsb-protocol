@@ -109,13 +109,18 @@ contract SpendLimitEnforcer is ICaveatEnforcer {
             return value;
         }
 
-        // ERC20 transfer(address,uint256) or approve(address,uint256)
+        // ERC20 transfer/transferFrom/approve
         if (callData.length >= 68) {
             bytes4 selector = bytes4(callData[:4]);
             // transfer(address,uint256) = 0xa9059cbb
             // approve(address,uint256) = 0x095ea7b3
             if (selector == 0xa9059cbb || selector == 0x095ea7b3) {
                 (, uint256 amount) = abi.decode(callData[4:68], (address, uint256));
+                return amount;
+            }
+            // transferFrom(address,address,uint256) = 0x23b872dd
+            if (selector == 0x23b872dd && callData.length >= 100) {
+                (,, uint256 amount) = abi.decode(callData[4:100], (address, address, uint256));
                 return amount;
             }
         }

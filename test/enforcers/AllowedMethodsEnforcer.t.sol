@@ -62,25 +62,21 @@ contract AllowedMethodsEnforcerTest is Test {
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, callData, 0);
     }
 
-    function test_BeforeHook_RevertEmptyCallData() public {
+    function test_BeforeHook_EmptyCallData_Passes() public view {
         bytes4[] memory allowed = new bytes4[](1);
         allowed[0] = TRANSFER;
         bytes memory terms = abi.encode(allowed);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Call data too short for method check")
-        );
+        // Empty callData = plain ETH transfer, no selector to check — passes
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, "", 0);
     }
 
-    function test_BeforeHook_RevertShortCallData() public {
+    function test_BeforeHook_ShortCallData_Passes() public view {
         bytes4[] memory allowed = new bytes4[](1);
         allowed[0] = TRANSFER;
         bytes memory terms = abi.encode(allowed);
 
-        vm.expectRevert(
-            abi.encodeWithSelector(ICaveatEnforcer.CaveatViolation.selector, "Call data too short for method check")
-        );
+        // Short callData (< 4 bytes) = no selector to check — passes
         enforcer.beforeHook(terms, DELEGATION_HASH, delegator, target, hex"aabbcc", 0);
     }
 

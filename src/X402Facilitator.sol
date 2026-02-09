@@ -91,8 +91,9 @@ contract X402Facilitator is Ownable, ReentrancyGuard, Pausable {
         settledPayments[params.paymentHash] = true;
         totalSettlements++;
 
-        // Interactions: Transfer from buyer to seller
-        IERC20(params.token).safeTransferFrom(msg.sender, params.seller, params.amount);
+        // Interactions: Transfer from buyer to seller (caller must be buyer)
+        if (msg.sender != params.buyer) revert InvalidBuyer();
+        IERC20(params.token).safeTransferFrom(params.buyer, params.seller, params.amount);
 
         emit PaymentSettled(
             params.paymentHash, params.buyer, params.seller, params.token, params.amount, params.receiptId

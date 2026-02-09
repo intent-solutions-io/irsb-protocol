@@ -20,9 +20,9 @@ contract AllowedMethodsEnforcer is ICaveatEnforcer {
     ) external pure override {
         bytes4[] memory allowedSelectors = abi.decode(terms, (bytes4[]));
 
-        // If callData is empty (plain ETH transfer), selector check is skipped
+        // Empty callData means plain ETH transfer — no selector to check
         if (callData.length < 4) {
-            revert CaveatViolation("Call data too short for method check");
+            return;
         }
 
         bytes4 selector = bytes4(callData[:4]);
