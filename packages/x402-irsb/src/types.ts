@@ -234,3 +234,145 @@ export interface X402IRSBConfig {
   /** Default privacy level */
   defaultPrivacyLevel: PrivacyLevel;
 }
+
+// ============ Delegation Types (EIP-7702 / ERC-7710) ============
+
+/**
+ * Deployed enforcer contract addresses
+ */
+export interface EnforcerAddresses {
+  spendLimit: `0x${string}`;
+  timeWindow: `0x${string}`;
+  allowedTargets: `0x${string}`;
+  allowedMethods: `0x${string}`;
+  nonce: `0x${string}`;
+}
+
+/**
+ * High-level caveat configuration for buyer delegations
+ */
+export interface CaveatConfig {
+  enforcerAddresses: EnforcerAddresses;
+  spendLimit?: {
+    token: `0x${string}`;
+    dailyCap: bigint;
+    perTxCap: bigint;
+  };
+  timeWindow?: {
+    notBefore: bigint;
+    notAfter: bigint;
+  };
+  allowedTargets?: {
+    targets: `0x${string}`[];
+  };
+  allowedMethods?: {
+    selectors: `0x${string}`[];
+  };
+  nonce?: {
+    startNonce: bigint;
+  };
+}
+
+/**
+ * Configuration for setting up a buyer delegation
+ */
+export interface BuyerSetupConfig {
+  delegator: `0x${string}`;
+  walletDelegateAddress: `0x${string}`;
+  chainId: number;
+  caveats: CaveatConfig;
+  salt?: bigint;
+  nonce?: bigint;
+}
+
+/**
+ * Full delegation configuration (extends BuyerSetupConfig)
+ */
+export interface BuyerDelegationConfig extends BuyerSetupConfig {}
+
+/**
+ * EIP-7702 authorization for wallet signing
+ */
+export interface EIP7702Authorization {
+  chainId: number;
+  address: `0x${string}`;
+  nonce: bigint;
+}
+
+/**
+ * Result of building a delegation
+ */
+export interface DelegationResult {
+  delegation: {
+    delegator: `0x${string}`;
+    delegate: `0x${string}`;
+    authority: `0x${string}`;
+    caveats: Array<{ enforcer: `0x${string}`; terms: `0x${string}` }>;
+    salt: bigint;
+  };
+  typedData: EIP712TypedData;
+  delegationHash: `0x${string}`;
+}
+
+/**
+ * Result of making a delegated payment
+ */
+export interface PaymentResult {
+  delegationHash: `0x${string}`;
+  settlementParams: {
+    paymentHash: `0x${string}`;
+    token: `0x${string}`;
+    amount: bigint;
+    seller: `0x${string}`;
+    buyer: `0x${string}`;
+    receiptId: `0x${string}`;
+    intentHash: `0x${string}`;
+    proof: `0x${string}`;
+    expiry: bigint;
+  };
+  functionName: string;
+  args: unknown[];
+}
+
+/**
+ * Delegation status information
+ */
+export interface DelegationStatusInfo {
+  isValid: boolean;
+  timeValid: boolean;
+  issues: string[];
+  caveats: {
+    hasSpendLimit: boolean;
+    hasTimeWindow: boolean;
+    hasTargetAllowlist: boolean;
+    hasMethodAllowlist: boolean;
+    hasNonce: boolean;
+  };
+}
+
+/**
+ * ERC-7715 permission request
+ */
+export interface PermissionRequest {
+  chainId: number;
+  address: `0x${string}`;
+  permissions: Array<{
+    type: string;
+    data: Record<string, unknown>;
+  }>;
+  expiry: number;
+}
+
+/**
+ * ERC-7715 permission response from wallet
+ */
+export interface PermissionResponse {
+  grants: Array<{
+    type: string;
+    data: Record<string, unknown>;
+  }>;
+  context: {
+    account: `0x${string}`;
+    expiry: number;
+  };
+}

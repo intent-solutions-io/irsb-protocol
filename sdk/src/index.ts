@@ -124,3 +124,26 @@ export {
   type VerifyResult,
   type VerifyOptions,
 } from './verify';
+
+// Delegation Types (EIP-7702 / ERC-7710)
+export {
+  // Core types
+  type Caveat,
+  type Delegation,
+  type SettlementParams,
+  type ExecutionParams,
+  type StoredDelegation,
+  // Enums
+  DelegationStatus,
+  // Config types
+  type SpendLimitConfig,
+  type TimeWindowConfig,
+  type AllowedTargetsConfig,
+  type AllowedMethodsConfig,
+  type NonceConfig,
+  // EIP-712
+  DELEGATION_EIP712_TYPES,
+  DELEGATION_EIP712_DOMAIN,
+  // Contract addresses type
+  type DelegationContracts,
+} from './delegation/types';
