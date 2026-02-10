@@ -1,29 +1,32 @@
 # IRSB Protocol - Document Index
 
-**Last Updated:** 2026-01-29
-**Total Documents:** 25 files (24 documents + 1 index)
+**Last Updated:** 2026-02-10
+**Total Documents:** 32 files (31 documents + 1 index)
 **Status:** Active - v1.0.0 deployed on Sepolia
 
 ## Quick Reference
 
 | Code | Category | Count |
 |------|----------|-------|
-| AT | Architecture & Technical | 5 |
+| AT | Architecture & Technical | 6 |
 | PP | Product & Planning | 2 |
 | RL | Research & Learning | 1 |
 | MR | Mixed/Reports (Legacy) | 4 |
 | AA | After Action & Review | 3 |
 | OD | Operations & Deployment | 8 |
+| DR | Decision Records | 2 |
+| MK | Marketing & Go-to-Market | 4 |
 
 ## Documents by Category
 
-### AT - Architecture & Technical (5)
+### AT - Architecture & Technical (6)
 
 - `003-AT-SPEC-irsb-eip-spec.md` - IRSB EIP specification
 - `007-AT-SPEC-irsb-receipt-schema.md` - Receipt schema specification
 - `014-AT-DSGN-privacy-design.md` - Privacy architecture design
 - `015-AT-SPEC-validation-provider.md` - ERC-8004 validation provider spec
 - `016-AT-INTG-x402-integration.md` - x402 HTTP payment integration
+- `031-AT-SPEC-delegation-payment-flow.md` - Delegation payment flow specification
 
 ### PP - Product & Planning (2)
 
@@ -59,6 +62,18 @@
 - `019-OD-GUID-repo-gaps.md` - Repository gaps and improvements
 - `020-OD-GUID-custom-properties.md` - GitHub custom properties guide
 
+### DR - Decision Records (2)
+
+- `030-DR-ARCH-eip7702-delegation-architecture.md` - EIP-7702 delegation architecture decision
+- `036-DR-STND-mapi-adoption.md` - MAPI adoption for agent-facing API surfaces
+
+### MK - Marketing & Go-to-Market (4)
+
+- `032-MK-PITC-eip7702-for-ai-agents.md` - EIP-7702 for AI agents pitch
+- `033-MK-TARG-agent-framework-targets.md` - Agent framework target analysis
+- `034-MK-CONT-twitter-thread-ai-agents.md` - Twitter thread: AI agents narrative
+- `035-MK-CONT-ethresearch-eip7702-ai-agents.md` - EthResearch post: EIP-7702 for AI agents
+
 ## Chronological List
 
 | # | Date | Category | Type | Title |
@@ -87,6 +102,13 @@
 | 019 | 2026-01-29 | OD | GUID | Repository Gaps |
 | 020 | 2026-01-29 | OD | GUID | Custom Properties Guide |
 | 021 | 2026-01-29 | AA | AUDT | Operator-Grade System Analysis |
+| 030 | 2026-02-09 | DR | ARCH | EIP-7702 Delegation Architecture |
+| 031 | 2026-02-09 | AT | SPEC | Delegation Payment Flow |
+| 032 | 2026-02-09 | MK | PITC | EIP-7702 for AI Agents Pitch |
+| 033 | 2026-02-09 | MK | TARG | Agent Framework Targets |
+| 034 | 2026-02-09 | MK | CONT | Twitter Thread: AI Agents |
+| 035 | 2026-02-09 | MK | CONT | EthResearch: EIP-7702 AI Agents |
+| 036 | 2026-02-10 | DR | STND | MAPI Adoption for Agent-Facing APIs |
 
 ## Legacy Files (Outside Numbering System)
 
@@ -101,6 +123,8 @@
 - **MR** - Mixed/Reports (legacy category for multi-faceted documents)
 - **AA** - After Action & Review
 - **OD** - Operations & Deployment
+- **DR** - Decision Records
+- **MK** - Marketing & Go-to-Market
 
 ## Document Type Reference
 
@@ -116,6 +140,11 @@
 - **DSGN** - Design Document
 - **INTG** - Integration Guide
 - **SEC** - Security Audit
+- **ARCH** - Architecture Decision
+- **STND** - Standards Adoption
+- **PITC** - Pitch/Deck
+- **TARG** - Target Analysis
+- **CONT** - Content/Publication
 
 ---
 
