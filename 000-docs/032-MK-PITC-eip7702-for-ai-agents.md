@@ -15,7 +15,7 @@ Today, the answer is: nothing. There are no on-chain spending limits. No verifia
 
 This is not a theoretical risk. Agent wallets face the same attack surfaces as any EOA — prompt injection, key compromise, logic bugs in agent code — but with a critical difference: agents operate autonomously. A compromised agent can drain funds before a human notices.
 
-The first major "AI agent drains wallet" incident has not happened yet. When it does, the industry will need an answer that already exists.
+As agent wallet usage scales, the absence of on-chain constraints becomes a systemic risk.
 
 ## Current State of Agent Wallet Security
 
