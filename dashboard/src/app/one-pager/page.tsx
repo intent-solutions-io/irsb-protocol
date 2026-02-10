@@ -93,7 +93,7 @@ export default function OnePagerPage() {
               <li>308 passing tests including fuzz tests</li>
               <li>4 open-source repositories (MIT license)</li>
               <li>TypeScript SDK + CLI tools (npm: irsb, irsb-x402)</li>
-              <li>Agent Passkey live on Cloud Run — policy engine, typed actions, PKP address resolution working</li>
+              <li>Cloud KMS + EIP-7702 delegation live — WalletDelegate with 5 caveat enforcers. Agent-passkey deprecated.</li>
               <li>ERC-8004 agent registered (ID: 967) — signal publishing not yet enabled</li>
               <li>Solver v0.1.0 (local execution). Watchtower v0.3.0 (infrastructure complete, not yet querying chain)</li>
             </ul>

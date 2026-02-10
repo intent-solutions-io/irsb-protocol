@@ -21,7 +21,7 @@ export default function BeforeAfterPage() {
           {/* Design framing */}
           <div className="mb-8 bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
             <p className="text-sm text-zinc-400">
-              This compares the current intent ecosystem with the IRSB design. Protocol contracts are live on Sepolia. Off-chain integration (solver, watchtower, signing) is in progress.
+              This compares the current intent ecosystem with the IRSB design. Protocol contracts are live on Sepolia. Off-chain integration (solver, watchtower, Cloud KMS signing + EIP-7702 delegation) is in progress.
             </p>
           </div>
 

@@ -101,16 +101,29 @@ export default function DeploymentsPage() {
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Services</h2>
             <div className="mt-6 space-y-4">
-              <div className="bg-zinc-800/60 rounded-xl p-5 border border-zinc-700">
+              <div className="bg-zinc-800/60 rounded-xl p-5 border border-green-700/50">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
-                    <h3 className="font-semibold text-zinc-100">Agent Passkey</h3>
-                    <p className="text-xs text-zinc-500 mt-0.5">Policy-gated signing via Lit Protocol PKP</p>
+                    <h3 className="font-semibold text-zinc-100">Cloud KMS + EIP-7702 Delegation</h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Primary signing — HSM-backed keys + on-chain WalletDelegate policy</p>
+                  </div>
+                  <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.delegation.badgeClass} w-fit`}>{SYSTEM_STATUS.delegation.label}</span>
+                </div>
+                <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
+                  Cloud KMS signing (&lt;100ms). WalletDelegate with 5 caveat enforcers: SpendLimit, TimeWindow, AllowedTargets, AllowedMethods, Nonce.
+                </p>
+              </div>
+
+              <div className="bg-zinc-800/60 rounded-xl p-5 border border-zinc-700 opacity-75">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-zinc-100">Agent Passkey <span className="text-xs text-amber-400">(Deprecated)</span></h3>
+                    <p className="text-xs text-zinc-500 mt-0.5">Legacy signing via Lit Protocol PKP — replaced by Cloud KMS + EIP-7702</p>
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.agentPasskey.badgeClass} w-fit`}>{SYSTEM_STATUS.agentPasskey.label}</span>
                 </div>
                 <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
-                  Health: /health returns {`{"status":"ok"}`}. /v1/address returns PKP address. Policy engine and typed actions complete.
+                  Still running on Cloud Run. Health: /health returns {`{"status":"ok"}`}. Not recommended for new integrations.
                 </p>
               </div>
 
