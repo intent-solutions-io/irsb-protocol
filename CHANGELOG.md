@@ -9,6 +9,53 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.3.0] - 2026-02-10
+
+EIP-7702 delegation system, AI agent guardrails pivot, and smart contract security exercise.
+
+### Added
+
+#### EIP-7702 Delegation System (#26)
+- **WalletDelegate**: EIP-7702 wallet delegation with ERC-7710 caveat redemption
+- **DelegationLib**: EIP-712 hashing and verification helpers
+- **Caveat Enforcers**: SpendLimit, TimeWindow, AllowedTargets, AllowedMethods, Nonce
+- **X402Facilitator**: Direct and delegated payment settlement for AI agents
+- 21 new tests for WalletDelegate, 3 fuzz tests, 16 tests for X402Facilitator
+
+#### Smart Contract Security Exercise (#28)
+- Educational exercise covering 4 vulnerability classes (reentrancy, flash loan, overflow, access control)
+- VulnerableVault with deliberately insecure patterns
+- SecureVault with IRSB production patterns (CEI + nonReentrant, internal accounting, checked arithmetic, onlyOwner)
+- 11 Foundry tests demonstrating exploits and fixes
+- Comprehensive documentation (037-AT-GUID)
+
+#### AI Agent Guardrails Positioning
+- Reframed protocol messaging: "On-chain guardrails for AI agents"
+- WalletDelegate = agent wallet policy, enforcers = spending limits
+- Target market: AI agent frameworks (Olas, Coinbase AgentKit, Brian AI, Virtuals, ElizaOS)
+
+### Changed
+- Dashboard status badges updated for delegation contract deployment
+- Protocol README and landing page reframed for AI agent narrative
+
+### Fixed
+- CI dashboard deploy switched to Workload Identity Federation
+
+### Documentation
+- EIP-7702 delegation architecture decision record (030-DR-ARCH)
+- Delegation payment flow specification (031-AT-SPEC)
+- AI agent pitch deck (032-MK-PITC)
+- Agent framework target analysis (033-MK-TARG)
+- Twitter thread and EthResearch post drafts (034, 035-MK-CONT)
+- MAPI adoption for agent-facing APIs (036-DR-STND)
+- Smart contract security exercise guide (037-AT-GUID)
+
+### Technical
+- 448 tests passing (up from 426)
+- Delegation contracts deployed to Sepolia
+
+---
+
 ## [1.2.0] - 2026-02-08
 
 Website ecosystem hub, ERC-8004 agent registration, and SDK/x402 public release.
@@ -210,7 +257,8 @@ Project initialization.
 
 ---
 
-[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/intent-solutions-io/irsb-protocol/releases/tag/v1.0.0
