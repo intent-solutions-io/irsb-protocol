@@ -14,10 +14,10 @@ export default function LandingPage() {
               IRSB
             </h1>
             <p className="mt-2 text-xl sm:text-2xl font-medium text-zinc-200">
-              The accountability layer for intent-based transactions
+              On-chain guardrails for AI agents
             </p>
             <p className="mt-6 max-w-2xl mx-auto text-base text-zinc-400">
-              Four systems that work together — on-chain contracts, a solver execution engine, an independent watchtower, and a policy-gated signing gateway — so every intent gets a receipt, every solver has skin in the game, and violations are caught automatically.
+              EIP-7702 delegation with five caveat enforcers — spend limits, time windows, contract and method whitelists, replay prevention — so every agent action is policy-enforced, receipted, and monitored. The same infrastructure secures intent-based DeFi solvers.
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link
@@ -45,7 +45,7 @@ export default function LandingPage() {
               The Ecosystem
             </h2>
             <p className="mt-4 text-lg text-zinc-300 max-w-2xl mx-auto">
-              Four systems. One accountability layer.
+              Four systems. On-chain guardrails for AI agents.
             </p>
           </div>
 
@@ -235,10 +235,10 @@ export default function LandingPage() {
       <section className="py-16 lg:py-20 bg-zinc-900 border-y border-zinc-700">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-2xl sm:text-3xl font-bold text-zinc-50">
-            Interested in integrating IRSB?
+            Building an AI agent with wallet access?
           </h2>
           <p className="mt-4 text-lg text-zinc-300">
-            We are working with early partners to test integration patterns.
+            We are working with agent frameworks and DeFi protocols to integrate on-chain guardrails.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link

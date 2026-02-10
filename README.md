@@ -1,62 +1,80 @@
 # IRSB Protocol
 
-**The accountability layer for intent-based transactions.**
+**On-chain guardrails for AI agents and intent-based transactions.**
 
-> Intents need receipts. Solvers need skin in the game.
+> Your AI agent has wallet access. IRSB ensures it stays within bounds.
 
 ---
 
 ## The Problem
 
-[ERC-7683](https://eips.ethereum.org/EIPS/eip-7683) standardizes how users express cross-chain intents. But it doesn't answer:
+AI agents are gaining wallet access through frameworks like AgentKit, ElizaOS, and Olas — but there are no on-chain mechanisms to enforce spending limits, prove what agents did, or provide recourse when they act outside their mandate. The same gap exists for DeFi solvers executing user intents.
 
-**"What happens when the solver fails?"**
+**"What happens when the agent overspends, calls the wrong contract, or goes rogue?"**
 
-Today: Nothing. Users lose money. Solvers face no consequences. Trust is informal.
+Today: Nothing. No spend limits. No audit trail. No recourse.
 
 ## The Solution
 
-IRSB (Intent Receipts & Solver Bonds) adds the missing accountability layer:
+IRSB provides on-chain policy enforcement, cryptographic receipts, and automated dispute resolution:
 
 | Component | What It Does |
 |-----------|--------------|
-| **Receipts** | On-chain proof that a solver executed an intent |
-| **Bonds** | Staked collateral that can be slashed for violations |
-| **Disputes** | Automated enforcement for timeouts, wrong outputs, fraud |
-| **Reputation** | Portable trust scores that follow solvers across protocols |
+| **WalletDelegate + Enforcers** | On-chain spending limits, time windows, contract/method whitelists via EIP-7702 |
+| **Receipts** | Cryptographic proof of every on-chain action |
+| **Bonds** | Staked collateral slashable for violations |
+| **Disputes** | Automated enforcement with watchtower monitoring |
+| **Reputation** | Portable trust scores via ERC-8004 registry |
+
+### Caveat Enforcers
+
+Five on-chain enforcers validate every delegated transaction before execution:
+
+| Enforcer | Purpose |
+|----------|---------|
+| **SpendLimitEnforcer** | Daily and per-transaction spending caps |
+| **TimeWindowEnforcer** | Restrict agent signing to defined time windows |
+| **AllowedTargetsEnforcer** | Whitelist of approved contract addresses |
+| **AllowedMethodsEnforcer** | Whitelist of approved function selectors |
+| **NonceEnforcer** | Replay prevention for each delegated action |
 
 ```mermaid
 flowchart LR
-    A[User Intent] --> B[Solver Executes]
-    B --> C[Posts Receipt]
-    C --> D{Challenge Window}
-    D -->|No Dispute| E[✓ Finalized]
-    D -->|Disputed| F[Evidence Review]
-    F -->|Solver Fault| G[Slash Bond → Compensate User]
-    F -->|No Fault| E
+    A[Agent Action] --> B[WalletDelegate]
+    B --> C{Enforcers}
+    C -->|Pass| D[Execute + Receipt]
+    C -->|Fail| E[Rejected On-Chain]
+    D --> F{Challenge Window}
+    F -->|No Dispute| G[Finalized]
+    F -->|Disputed| H[Evidence Review]
+    H -->|Fault| I[Slash Bond]
+    H -->|No Fault| G
 ```
 
 ## Why IRSB?
 
-- **ERC-7683 compatible** - Works with the emerging intent standard
-- **Protocol-agnostic** - One accountability layer for all intent systems
-- **Economically enforced** - Bonds ensure solvers have skin in the game
-- **Portable reputation** - Solver track records move across protocols
+- **On-chain policy enforcement** — Spend limits, time windows, and contract whitelists enforced at the EVM level
+- **Verifiable execution** — Every action produces a cryptographic receipt
+- **Framework-agnostic** — Works with any agent or solver that holds wallet keys
+- **ERC-7683 compatible** — Native support for the cross-chain intent standard
+- **Portable reputation** — Agent track records move across protocols via ERC-8004
 
 ## How IRSB Connects to Other Standards
 
 ```mermaid
 flowchart TB
     subgraph Standards
+        EIP7702[EIP-7702<br/>Account Delegation]
         ERC7683[ERC-7683<br/>Intent Format]
         ERC8004[ERC-8004<br/>Agent Registry]
         X402[x402<br/>HTTP Payments]
     end
 
     subgraph IRSB[IRSB Protocol]
-        Core[Receipts + Bonds + Disputes]
+        Core[Enforcers + Receipts + Bonds + Disputes]
     end
 
+    EIP7702 -->|"delegate to WalletDelegate"| Core
     ERC7683 -->|"intentHash"| Core
     Core -->|"validation signals"| ERC8004
     X402 -->|"payment proof"| Core
@@ -68,18 +86,18 @@ flowchart TB
 
 | Standard | What It Does | How IRSB Connects |
 |----------|--------------|-------------------|
+| **EIP-7702** | EOA delegates execution to contract code | Agents delegate to WalletDelegate for policy-enforced transactions |
 | **ERC-7683** | Defines intent format | IRSB receipts reference `intentHash` from ERC-7683 orders |
-| **ERC-8004** | Agent identity & reputation registry | IRSB is a **Validation Provider** - generates signals that feed the registry |
-| **x402** | HTTP 402 payment protocol | IRSB adds accountability to paid APIs - receipts prove service delivery |
+| **ERC-8004** | Agent identity & reputation registry | IRSB is a **Validation Provider** — generates signals that feed the registry |
+| **x402** | HTTP 402 payment protocol | IRSB adds accountability to paid APIs — receipts prove service delivery |
 
-### IRSB + ERC-8004: The Scoreboard & The Referee
+### IRSB + ERC-8004: Reputation from Execution
 
-ERC-8004 is the **scoreboard** - it stores agent identities and reputation scores.
-
-IRSB is the **referee** - it generates the validation signals that update those scores.
+ERC-8004 stores agent identities and reputation scores. IRSB generates the validation signals that update those scores based on actual on-chain execution.
 
 ```
-Agent executes intent
+Agent executes action through WalletDelegate
+    → Enforcers validate caveats
     → IRSB receipt posted
     → Challenge window passes
     → finalize() called
@@ -92,7 +110,7 @@ Agent executes intent
 When AI agents pay for services via x402, IRSB ensures accountability:
 
 ```
-Client sends x402 payment → Service executes → IRSB receipt posted
+Agent sends x402 payment → Service executes → IRSB receipt posted
                                                     ↓
                                             Dispute? → Slash bond
                                             No dispute? → Reputation++
@@ -254,7 +272,7 @@ slither . --config-file slither.config.json
 
 ## Contributing
 
-IRSB aims to be the standard accountability layer for intents. Contributions welcome:
+IRSB aims to be the standard on-chain guardrail layer for AI agents and intent-based transactions. Contributions welcome:
 
 1. Open an issue to discuss changes
 2. Fork and create a feature branch

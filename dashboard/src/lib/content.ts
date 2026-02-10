@@ -149,7 +149,7 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
 
 // ─── Ecosystem Banner ───────────────────────────────────────────────────────
 
-export const ECOSYSTEM_SUMMARY = 'Four systems. One accountability layer.'
+export const ECOSYSTEM_SUMMARY = 'Four systems. On-chain guardrails for AI agents.'
 
 export const ECOSYSTEM_COMPONENTS = [
   { key: 'protocol', name: 'Protocol', role: 'Contracts', statusKey: 'protocol' },
@@ -318,7 +318,7 @@ export interface FAQItem {
 export const FAQ_ITEMS: FAQItem[] = [
   {
     question: 'What is IRSB?',
-    answer: 'IRSB (Intent Receipts & Solver Bonds) is the accountability layer for intent-based transactions. It provides on-chain receipts, solver bonds, and dispute resolution to answer the question: "What happens when the solver fails?"',
+    answer: 'IRSB (Intent Receipts & Solver Bonds) provides on-chain guardrails for AI agents and intent-based transactions. It uses EIP-7702 delegation with five caveat enforcers to restrict agent actions, produces cryptographic receipts for every on-chain action, and provides automated dispute resolution through a watchtower monitoring system.',
     category: 'general',
   },
   {
@@ -390,18 +390,18 @@ export interface UseCase {
 
 export const USE_CASES: UseCase[] = [
   {
+    title: 'AI Agent Guardrails',
+    category: 'AI Agents',
+    problem: 'AI agents execute on-chain transactions with wallet access but no spend limits, no audit trail, and no recourse when they act outside their mandate.',
+    solution: 'EIP-7702 WalletDelegate with five caveat enforcers restricts agent actions on-chain. Spend limits, time windows, contract and method whitelists are enforced at the EVM level. Every action produces a cryptographic receipt.',
+    example: 'An AI trading agent delegates its wallet to WalletDelegate with a 0.01 ETH per-transaction limit and a whitelist of approved DEX contracts. The watchtower monitors receipts and files disputes automatically if violations occur.',
+  },
+  {
     title: 'DeFi Intent Execution',
     category: 'DeFi',
     problem: 'Users submit swap intents but have no proof solvers executed them correctly. Bad fills go unpunished.',
     solution: 'Solvers post receipts proving execution. Bonds ensure economic accountability. Disputes catch violations automatically.',
     example: 'A user submits a cross-chain swap intent. The solver executes it, posts a V2 receipt with dual attestation, and the receipt finalizes after the 1-hour challenge window.',
-  },
-  {
-    title: 'AI Agent Accountability',
-    category: 'AI Agents',
-    problem: 'AI agents execute on-chain actions on behalf of users with no standardized audit trail or recourse mechanism.',
-    solution: 'Cloud KMS + EIP-7702 WalletDelegate restrict signing to typed actions. Caveat enforcers enforce spend limits, time windows, and allowed targets on-chain. IntentScore will create portable reputation across protocols.',
-    example: 'An AI trading agent would use IRSB receipts to prove every trade it executed. Its IntentScore would let new protocols trust it based on historical performance, not just identity.',
   },
   {
     title: 'x402 HTTP Payment Verification',
@@ -411,11 +411,11 @@ export const USE_CASES: UseCase[] = [
     example: 'A developer pays for an AI inference API call via x402. The irsb-x402 middleware automatically posts a receipt linking the payment to the response hash.',
   },
   {
-    title: 'Portable Solver Reputation',
+    title: 'Portable Agent Reputation',
     category: 'Reputation',
-    problem: 'Solver reputation is siloed within individual protocols. A solver with 10,000 successful fills on UniswapX starts at zero on Across.',
-    solution: 'IRSB publishes validation signals to ERC-8004, creating portable reputation. Any protocol can query a solver\'s IntentScore before routing intents.',
-    example: 'A solver registers on ERC-8004 (Agent ID: 967), executes intents through IRSB, and builds a queryable on-chain track record visible across all integrated protocols.',
+    problem: 'Agent reputation is siloed within individual frameworks. An agent with thousands of successful executions starts at zero on a new platform.',
+    solution: 'IRSB publishes validation signals to ERC-8004, creating portable reputation. Any protocol can query an agent\'s IntentScore before granting access.',
+    example: 'An agent registers on ERC-8004 (Agent ID: 967), executes actions through IRSB, and builds a queryable on-chain track record visible across all integrated protocols.',
   },
 ]
 
