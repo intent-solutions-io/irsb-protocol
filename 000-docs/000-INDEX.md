@@ -1,14 +1,14 @@
 # IRSB Protocol - Document Index
 
 **Last Updated:** 2026-02-10
-**Total Documents:** 32 files (31 documents + 1 index)
+**Total Documents:** 33 files (32 documents + 1 index)
 **Status:** Active - v1.0.0 deployed on Sepolia
 
 ## Quick Reference
 
 | Code | Category | Count |
 |------|----------|-------|
-| AT | Architecture & Technical | 6 |
+| AT | Architecture & Technical | 7 |
 | PP | Product & Planning | 2 |
 | RL | Research & Learning | 1 |
 | MR | Mixed/Reports (Legacy) | 4 |
@@ -27,6 +27,7 @@
 - `015-AT-SPEC-validation-provider.md` - ERC-8004 validation provider spec
 - `016-AT-INTG-x402-integration.md` - x402 HTTP payment integration
 - `031-AT-SPEC-delegation-payment-flow.md` - Delegation payment flow specification
+- `037-AT-GUID-smart-contract-security-exercise.md` - Smart contract security exercise (4 vulnerability classes)
 
 ### PP - Product & Planning (2)
 
@@ -109,6 +110,7 @@
 | 034 | 2026-02-09 | MK | CONT | Twitter Thread: AI Agents |
 | 035 | 2026-02-09 | MK | CONT | EthResearch: EIP-7702 AI Agents |
 | 036 | 2026-02-10 | DR | STND | MAPI Adoption for Agent-Facing APIs |
+| 037 | 2026-02-10 | AT | GUID | Smart Contract Security Exercise |
 
 ## Legacy Files (Outside Numbering System)
 
