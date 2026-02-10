@@ -79,7 +79,7 @@ export default function HowItWorksPage() {
           <div className="mt-16 bg-blue-900/20 rounded-xl p-6 border border-blue-700/50">
             <h3 className="text-lg font-semibold text-blue-200">Implementation Status</h3>
             <p className="mt-2 text-blue-100/80 text-sm">
-              Protocol contracts are live on Sepolia testnet. Receipt posting and dispute resolution work on-chain today. Off-chain components (solver, watchtower, Cloud KMS signing + EIP-7702 delegation) are in active development.
+              Protocol contracts and EIP-7702 delegation contracts are live on Sepolia testnet. Solver and watchtower are chain-connected with Cloud KMS signing and real on-chain data queries. Receipt posting, dispute resolution, and automated monitoring work end-to-end.
             </p>
           </div>
 

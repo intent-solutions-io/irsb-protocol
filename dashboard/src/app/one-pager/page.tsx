@@ -95,7 +95,7 @@ export default function OnePagerPage() {
               <li>TypeScript SDK + CLI tools (npm: irsb, irsb-x402)</li>
               <li>Cloud KMS + EIP-7702 delegation live — WalletDelegate with 5 caveat enforcers. Agent-passkey deprecated.</li>
               <li>ERC-8004 agent registered (ID: 967) — signal publishing not yet enabled</li>
-              <li>Solver v0.1.0 (local execution). Watchtower v0.3.0 (infrastructure complete, not yet querying chain)</li>
+              <li>Solver v0.1.0 (chain-connected, Cloud KMS signing, receipt submission). Watchtower v0.3.0 (chain-connected, real on-chain data, dispute filing)</li>
             </ul>
           </div>
 

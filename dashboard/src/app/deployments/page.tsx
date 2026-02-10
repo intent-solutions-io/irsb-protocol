@@ -136,7 +136,7 @@ export default function DeploymentsPage() {
                   <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.solver.badgeClass} w-fit`}>{SYSTEM_STATUS.solver.label}</span>
                 </div>
                 <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
-                  Local execution only. 1 job type (SAFE_REPORT). Evidence bundles work. Not yet deployed to infrastructure.
+                  Chain-connected with Cloud KMS signing. Submits receipts to IntentReceiptHub on Sepolia. 1 job type (SAFE_REPORT). Evidence bundles work.
                 </p>
               </div>
 
@@ -149,7 +149,7 @@ export default function DeploymentsPage() {
                   <span className={`text-xs px-2 py-0.5 rounded ${SYSTEM_STATUS.watchtower.badgeClass} w-fit`}>{SYSTEM_STATUS.watchtower.label}</span>
                 </div>
                 <p className="mt-3 font-mono text-sm text-zinc-400 break-all">
-                  Rule engine and Receipt Stale Rule work. Worker uses mock data, not yet querying chain.
+                  Chain-connected with Cloud KMS signing. Worker queries real on-chain events. Rule engine detects stale receipts. API can file disputes on-chain.
                 </p>
               </div>
             </div>

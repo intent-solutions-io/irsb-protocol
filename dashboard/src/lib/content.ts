@@ -35,6 +35,13 @@ export const CONTRACTS = {
   intentReceiptHub: '0xD66A1e880AA3939CA066a9EA1dD37ad3d01D977c',
   disputeModule: '0x144DfEcB57B08471e2A75E78fc0d2A74A89DB79D',
   erc8004Registry: '0x8004A818BFB912233c491871b3d84c89A494BD9e',
+  walletDelegate: '0x6e7262bA8eE3e722aD5f83Ad793f3c071A3769cB',
+  x402Facilitator: '0x0CDf48B293cdee132918cFb3a976aA6da59f4E6F',
+  spendLimitEnforcer: '0x8eBAF3db4785C3E8DFABa1A77Ee6373eD5D38F8D',
+  timeWindowEnforcer: '0x51DF412e99E9066B1B3Cab81a1756239659207B4',
+  allowedTargetsEnforcer: '0x80a18b93014E0a2A3Af025C7Fa2213E24e9E2A2b',
+  allowedMethodsEnforcer: '0x633aC1d114e18d1F1fC1De30a6aF37fe1AE91ddf',
+  nonceEnforcer: '0x02962c406A7a29adF26F40657b111B90c236DbF1',
 } as const
 
 export const OPERATIONAL_ACCOUNTS = {
@@ -72,7 +79,7 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-solver',
     description: 'Execute intents, produce evidence, submit receipts',
     techStack: 'TypeScript, Express',
-    status: 'v0.1.0',
+    status: 'v0.1.0 — chain-connected',
   },
   {
     name: 'Watchtower',
@@ -80,7 +87,7 @@ export const REPOS: RepoInfo[] = [
     github: 'https://github.com/intent-solutions-io/irsb-watchtower',
     description: 'Monitor receipts, detect violations, file disputes',
     techStack: 'TypeScript, Fastify (pnpm monorepo)',
-    status: 'v0.3.0 — infrastructure',
+    status: 'v0.3.0 — chain-connected',
   },
   {
     name: 'Agent Passkey',
@@ -109,14 +116,14 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
     badgeClass: 'bg-green-900/50 text-green-300',
   },
   solver: {
-    label: 'v0.1.0 — local execution',
-    level: 'development',
-    badgeClass: 'bg-zinc-700 text-zinc-400',
+    label: 'v0.1.0 — chain-connected (Cloud KMS)',
+    level: 'deployed',
+    badgeClass: 'bg-blue-900/50 text-blue-300',
   },
   watchtower: {
-    label: 'v0.3.0 — infrastructure complete',
-    level: 'infrastructure',
-    badgeClass: 'bg-yellow-900/50 text-yellow-300',
+    label: 'v0.3.0 — chain-connected (Cloud KMS)',
+    level: 'deployed',
+    badgeClass: 'bg-blue-900/50 text-blue-300',
   },
   agentPasskey: {
     label: 'Deprecated (Cloud KMS primary)',
