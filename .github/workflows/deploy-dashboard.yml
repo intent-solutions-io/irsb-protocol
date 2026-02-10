@@ -8,6 +8,10 @@ on:
       - '.github/workflows/deploy-dashboard.yml'
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   deploy:
     name: Deploy to Firebase
@@ -15,6 +19,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/308207955734/locations/global/workloadIdentityPools/github-actions-pool/providers/github-oidc
+          service_account: github-actions-deploy@irsb-protocol.iam.gserviceaccount.com
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,10 +42,5 @@ jobs:
         run: npm run build
 
       - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          channelId: live
-          projectId: irsb-protocol
-          entryPoint: dashboard
+        working-directory: dashboard
+        run: npx firebase-tools deploy --only hosting --project irsb-protocol
