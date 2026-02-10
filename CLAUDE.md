@@ -77,6 +77,16 @@ irsb-protocol/
 ├── src/                        # Solidity contracts
 │   ├── SolverRegistry.sol      # Solver lifecycle, bonding, slashing
 │   ├── IntentReceiptHub.sol    # Receipt posting, disputes, finalization
+│   ├── X402Facilitator.sol     # x402 payment settlement (direct + delegated)
+│   ├── delegation/
+│   │   ├── WalletDelegate.sol  # EIP-7702 delegation + ERC-7710 redemption
+│   │   └── DelegationLib.sol   # EIP-712 hashing and verification helpers
+│   ├── enforcers/
+│   │   ├── SpendLimitEnforcer.sol     # Daily + per-tx spend limits
+│   │   ├── TimeWindowEnforcer.sol     # Session time bounds
+│   │   ├── AllowedTargetsEnforcer.sol # Approved contracts
+│   │   ├── AllowedMethodsEnforcer.sol # Approved selectors
+│   │   └── NonceEnforcer.sol          # Replay prevention
 │   ├── DisputeModule.sol       # Arbitration for complex disputes
 │   ├── EscrowVault.sol         # ETH + ERC20 escrow
 │   ├── extensions/
@@ -109,7 +119,7 @@ irsb-protocol/
 ```bash
 # Contracts
 forge build                     # Build (via_ir, optimizer 200 runs)
-forge test                      # All 308 tests
+forge test                      # All 426 tests
 forge test -vvv                 # Verbose
 forge test --gas-report         # Gas analysis
 forge fmt                       # Format

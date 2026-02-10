@@ -21,7 +21,7 @@ export default function X402Page() {
       {/* Status note */}
       <div className="bg-zinc-800/60 rounded-lg px-4 py-3 border border-zinc-600">
         <p className="text-sm text-zinc-400">
-          The irsb-x402 package is published. In production, receipt signing requires agent-passkey integration, which is in progress.
+          The irsb-x402 package is published. Receipt signing uses Cloud KMS. Buyer-side payments use EIP-7702 delegated signing via X402Facilitator.
         </p>
       </div>
 

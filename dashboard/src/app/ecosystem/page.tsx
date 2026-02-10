@@ -4,7 +4,7 @@ import { REPOS, STANDARDS, SYSTEM_STATUS } from '@/lib/content'
 
 export const metadata = pageMetadata({
   title: 'Ecosystem',
-  description: 'The IRSB ecosystem: 4 repositories (protocol, solver, watchtower, agent-passkey) and standards integration with ERC-7683, ERC-8004, and x402.',
+  description: 'The IRSB ecosystem: 4 repositories (protocol, solver, watchtower, delegation) and standards integration with ERC-7683, ERC-8004, EIP-7702, and x402.',
   path: '/ecosystem',
 })
 
@@ -29,19 +29,19 @@ export default function EcosystemPage() {
   v
 IRSB Protocol (protocol/)
   Intent receipts, solver bonds, disputes, escrow
+  WalletDelegate (EIP-7702) + 5 caveat enforcers
+  X402Facilitator (direct + delegated settlement)
   |                              |
   v                              v
 Solver (solver/)            Watchtower (watchtower/)
   Execute intents             Monitor receipts
   Submit receipts             File disputes
-  Produce evidence            Submit evidence
+  Cloud KMS signing           Cloud KMS signing
   |                              |
-  +--------- typed actions ------+
+  +-- on-chain policy via -------+
+  |   WalletDelegate (EIP-7702)
   |
-  v
-Agent Passkey (agent-passkey/)
-  Lit Protocol PKP (2/3 threshold signatures)
-  Policy engine, session capabilities, audit artifacts`}</div>
+  [Legacy: agent-passkey on Cloud Run — deprecated]`}</div>
           </div>
 
           {/* Dependency Order */}
@@ -51,7 +51,7 @@ Agent Passkey (agent-passkey/)
               When contract interfaces change, update in this order:
             </p>
             <div className="mt-4 bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 font-mono text-sm text-zinc-300">
-              protocol (ABI/types) → agent-passkey (signing interface) → solver, watchtower
+              protocol (ABI/types + delegation contracts) → solver, watchtower (Cloud KMS direct)
             </div>
           </div>
 
@@ -64,7 +64,7 @@ Agent Passkey (agent-passkey/)
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-lg font-semibold text-zinc-100">{repo.name}</h3>
                     <span className={`text-xs px-2 py-0.5 rounded ${
-                      repo.status.includes('signing')
+                      repo.status.includes('Deprecated')
                         ? SYSTEM_STATUS.agentPasskey.badgeClass
                         : repo.status.includes('infrastructure')
                           ? SYSTEM_STATUS.watchtower.badgeClass
@@ -173,7 +173,7 @@ Agent Passkey (agent-passkey/)
                   {[
                     { pattern: 'Config validation', impl: 'Zod schemas, fail-fast on startup' },
                     { pattern: 'Logging', impl: 'pino with structured JSON, correlation IDs (intentId, runId, receiptId)' },
-                    { pattern: 'Signing', impl: 'Always via agent-passkey (Lit PKP). Live on Cloud Run.' },
+                    { pattern: 'Signing', impl: 'Cloud KMS direct signing + EIP-7702 WalletDelegate on-chain policy. Agent-passkey deprecated.' },
                     { pattern: 'Determinism', impl: 'Canonical JSON serialization for hashing (sorted keys, no whitespace)' },
                     { pattern: 'CI/CD', impl: 'GitHub Actions + Workload Identity Federation (keyless GCP auth)' },
                     { pattern: 'Testing', impl: 'vitest for TypeScript, Foundry for Solidity' },

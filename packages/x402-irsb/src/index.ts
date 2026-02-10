@@ -102,3 +102,40 @@ export {
   getHubUrl,
   type NetworkConfig,
 } from './config.js';
+
+// Delegation helpers (EIP-7702)
+export {
+  buildDelegationAuthorization,
+  buildDelegation,
+  buildCaveats,
+  computeDelegationHash,
+  isDelegationTimeValid,
+} from './delegation.js';
+
+// ERC-7715 Permission helpers
+export {
+  buildPermissionRequest,
+  parsePermissionResponse,
+  setupFromPermissions,
+} from './permissions.js';
+
+// Buyer SDK (high-level)
+export {
+  setupBuyerDelegation,
+  makeDelegatedPayment,
+  getDelegationStatus,
+} from './buyer.js';
+
+// Delegation types
+export {
+  type CaveatConfig,
+  type BuyerSetupConfig,
+  type BuyerDelegationConfig,
+  type EIP7702Authorization,
+  type DelegationResult,
+  type PaymentResult,
+  type DelegationStatusInfo,
+  type PermissionRequest,
+  type PermissionResponse,
+  type EnforcerAddresses,
+} from './types.js';

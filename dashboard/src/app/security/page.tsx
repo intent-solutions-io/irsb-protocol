@@ -4,7 +4,7 @@ import { PROTOCOL_PARAMS, SLASHING_STANDARD } from '@/lib/content'
 
 export const metadata = pageMetadata({
   title: 'Security Model',
-  description: 'IRSB security: solver bonds, slashing mechanics, dispute resolution, three-level identity assurance, and Lit Protocol PKP signing.',
+  description: 'IRSB security: solver bonds, slashing mechanics, dispute resolution, three-level identity assurance, and Cloud KMS + EIP-7702 delegation.',
   path: '/security',
 })
 
@@ -13,7 +13,7 @@ export default function SecurityPage() {
     <main className="min-h-screen bg-zinc-900">
       <PageHeader
         title="Security Model"
-        subtitle="How IRSB enforces accountability through economic bonds, deterministic slashing, and threshold-signature key management."
+        subtitle="How IRSB enforces accountability through economic bonds, deterministic slashing, and Cloud KMS + EIP-7702 delegation."
       />
 
       <section className="py-16 lg:py-24">
@@ -127,39 +127,41 @@ export default function SecurityPage() {
           <div>
             <h2 className="text-2xl font-bold text-zinc-50">Typed Actions (No Arbitrary Signing)</h2>
             <p className="mt-3 text-zinc-300">
-              The Agent Passkey signing gateway rejects any request that is not one of these three typed actions:
+              Cloud KMS + WalletDelegate restrict signing to these typed actions only. The AllowedMethodsEnforcer rejects any selector not on the allowlist:
             </p>
-            <div className="mt-4 bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 font-mono text-sm text-zinc-300 whitespace-pre overflow-x-auto">{`SUBMIT_RECEIPT   { intentId, receiptHash, evidenceHash }
-OPEN_DISPUTE     { receiptId, evidenceHash, reasonCode }
-SUBMIT_EVIDENCE  { disputeId, evidenceHash }`}</div>
+            <div className="mt-4 bg-zinc-800/60 rounded-lg p-4 border border-zinc-700 font-mono text-sm text-zinc-300 whitespace-pre overflow-x-auto">{`SUBMIT_RECEIPT      { intentId, receiptHash, evidenceHash }
+OPEN_DISPUTE        { receiptId, evidenceHash, reasonCode }
+SUBMIT_EVIDENCE     { disputeId, evidenceHash }
+REDEEM_DELEGATION   { delegation, permissionContext, executionCalldata }
+SET_DELEGATION      { delegations[] }`}</div>
             <p className="mt-4 text-sm text-zinc-400">
-              There is no &quot;sign this arbitrary digest&quot; API. Every signing decision produces a deterministic audit artifact with request hash, policy decision hash, and signature hash.
+              There is no &quot;sign this arbitrary digest&quot; API. Cloud KMS keys never leave HSM hardware. On-chain, the WalletDelegate enforces caveats before any delegated call executes.
             </p>
           </div>
 
           {/* Key Management */}
           <div>
-            <h2 className="text-2xl font-bold text-zinc-50">Key Management (Lit Protocol PKP)</h2>
+            <h2 className="text-2xl font-bold text-zinc-50">Key Management (Cloud KMS + EIP-7702)</h2>
             <p className="mt-3 text-zinc-300">
-              Agent Passkey uses Lit Protocol Programmable Key Pairs (PKP) for signing. Private keys are never stored in a single location. PKP minted on Naga network, address resolution live on Cloud Run.
+              Signing uses Google Cloud KMS with on-chain policy enforcement via EIP-7702 WalletDelegate. Private keys never leave HSM hardware. Five caveat enforcers restrict all delegated transactions.
             </p>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-zinc-800/60 rounded-lg p-5 border border-zinc-700">
-                <h3 className="font-semibold text-zinc-100">2/3 Threshold</h3>
+                <h3 className="font-semibold text-zinc-100">Cloud KMS</h3>
                 <p className="mt-2 text-sm text-zinc-400">
-                  Key shares distributed across TEE nodes. 2 of 3 nodes must agree to produce a valid signature.
+                  HSM-backed keys. Non-extractable. Sub-100ms signing latency. Solver and watchtower sign directly via KMS.
                 </p>
               </div>
               <div className="bg-zinc-800/60 rounded-lg p-5 border border-zinc-700">
-                <h3 className="font-semibold text-zinc-100">Non-Extractable</h3>
+                <h3 className="font-semibold text-zinc-100">WalletDelegate</h3>
                 <p className="mt-2 text-sm text-zinc-400">
-                  Private key material never leaves TEE environments. No single node has the full key.
+                  EIP-7702 on-chain policy via 5 caveat enforcers: SpendLimit, TimeWindow, AllowedTargets, AllowedMethods, Nonce. All enforced before execution.
                 </p>
               </div>
               <div className="bg-zinc-800/60 rounded-lg p-5 border border-zinc-700">
-                <h3 className="font-semibold text-zinc-100">Session Scoped</h3>
+                <h3 className="font-semibold text-zinc-100">Legacy (Deprecated)</h3>
                 <p className="mt-2 text-sm text-zinc-400">
-                  Session capabilities are scoped to specific actions and time-limited (max 24h TTL).
+                  Agent-passkey (Lit Protocol PKP, 2/3 threshold) still running on Cloud Run. Not recommended for new integrations.
                 </p>
               </div>
             </div>

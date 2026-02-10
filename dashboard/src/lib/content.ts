@@ -86,9 +86,9 @@ export const REPOS: RepoInfo[] = [
     name: 'Agent Passkey',
     slug: 'irsb-agent-passkey',
     github: 'https://github.com/intent-solutions-io/irsb-agent-passkey',
-    description: 'Policy-gated signing via Lit Protocol PKP',
+    description: 'Policy-gated signing via Lit Protocol PKP (deprecated — replaced by Cloud KMS + EIP-7702 delegation)',
     techStack: 'TypeScript, Fastify',
-    status: 'Live (Cloud Run)',
+    status: 'Deprecated',
   },
 ]
 
@@ -119,7 +119,12 @@ export const SYSTEM_STATUS: Record<string, SystemStatus> = {
     badgeClass: 'bg-yellow-900/50 text-yellow-300',
   },
   agentPasskey: {
-    label: 'Live on Cloud Run',
+    label: 'Deprecated (Cloud KMS primary)',
+    level: 'development',
+    badgeClass: 'bg-amber-900/50 text-amber-300',
+  },
+  delegation: {
+    label: 'EIP-7702 WalletDelegate',
     level: 'live',
     badgeClass: 'bg-green-900/50 text-green-300',
   },
@@ -143,7 +148,7 @@ export const ECOSYSTEM_COMPONENTS = [
   { key: 'protocol', name: 'Protocol', role: 'Contracts', statusKey: 'protocol' },
   { key: 'solver', name: 'Solver', role: 'Execution', statusKey: 'solver' },
   { key: 'watchtower', name: 'Watchtower', role: 'Monitoring', statusKey: 'watchtower' },
-  { key: 'agentPasskey', name: 'Agent Passkey', role: 'Signing', statusKey: 'agentPasskey' },
+  { key: 'delegation', name: 'Delegation', role: 'Policy Enforcement', statusKey: 'delegation' },
 ] as const
 
 // ─── Ecosystem Details (expandable cards on homepage) ───────────────────────
@@ -163,7 +168,7 @@ export const ECOSYSTEM_DETAILS = [
     name: 'Solver',
     problem: 'No Execution Engine',
     summary: 'Execute intents, produce evidence, submit receipts. Pluggable job types with CLI and HTTP interfaces.',
-    detail: 'The solver picks up intents, executes them, collects evidence of execution, and submits receipts to the protocol. It uses typed actions routed through Agent Passkey for signing — never holds private keys directly. Currently supports the SAFE_REPORT job type with plans for additional execution strategies.',
+    detail: 'The solver picks up intents, executes them, collects evidence of execution, and submits receipts to the protocol. Transactions are signed via Cloud KMS with on-chain policy enforcement through EIP-7702 WalletDelegate — never holds private keys directly. Currently supports the SAFE_REPORT job type with plans for additional execution strategies.',
     techStack: 'TypeScript, Express',
     statusKey: 'solver',
   },
@@ -177,13 +182,13 @@ export const ECOSYSTEM_DETAILS = [
     statusKey: 'watchtower',
   },
   {
-    key: 'agentPasskey',
-    name: 'Agent Passkey',
-    problem: 'No Secure Signing',
-    summary: 'Policy-gated signing via Lit Protocol PKP. 2/3 threshold signatures across TEE nodes.',
-    detail: 'Agent Passkey is the identity and signing plane. Keys are split across Lit Protocol\'s 2/3 threshold TEE nodes — no single point of compromise, no extractable private keys. A policy engine restricts signing to three typed actions only: SUBMIT_RECEIPT, OPEN_DISPUTE, and SUBMIT_EVIDENCE. Everything else is rejected. Every signing decision produces an audit artifact. Live on Cloud Run.',
-    techStack: 'TypeScript, Fastify',
-    statusKey: 'agentPasskey',
+    key: 'delegation',
+    name: 'Delegation (EIP-7702)',
+    problem: 'No On-Chain Policy',
+    summary: 'Cloud KMS signing with on-chain policy enforcement via EIP-7702 WalletDelegate and 5 caveat enforcers.',
+    detail: 'Signing uses Google Cloud KMS — keys never leave HSM hardware (<100ms signing). On-chain policy enforcement uses EIP-7702 WalletDelegate with 5 caveat enforcers: SpendLimitEnforcer (daily + per-tx limits), TimeWindowEnforcer (session time bounds), AllowedTargetsEnforcer (approved contracts), AllowedMethodsEnforcer (approved selectors), and NonceEnforcer (replay prevention). Buyer-side payments flow through ERC-7715 permissions → EIP-7702 authorization → WalletDelegate → X402Facilitator. Legacy agent-passkey (Lit Protocol PKP) is deprecated but still running on Cloud Run.',
+    techStack: 'Solidity, Cloud KMS',
+    statusKey: 'delegation',
   },
 ] as const
 
@@ -230,7 +235,7 @@ export const ROADMAP: RoadmapPhase[] = [
       'EscrowVault for ETH + ERC20',
       'Privacy levels (public, semi-public, private)',
       'x402 HTTP payment integration package',
-      'Agent Passkey signing gateway (Lit Protocol PKP)',
+      'EIP-7702 delegation (WalletDelegate + 5 caveat enforcers)',
     ],
   },
   {
@@ -281,6 +286,18 @@ export const STANDARDS = [
     description: 'HTTP 402 payment protocol',
     connection: 'IRSB adds accountability to paid APIs — receipts prove service delivery',
   },
+  {
+    name: 'EIP-7702',
+    role: 'Account Delegation',
+    description: 'Allows EOAs to delegate to smart contract code',
+    connection: 'IRSB uses EIP-7702 to delegate EOA signing to WalletDelegate, enabling on-chain caveat enforcement for solver and buyer transactions',
+  },
+  {
+    name: 'ERC-7710',
+    role: 'Delegation Redemption',
+    description: 'Standard for redeeming delegated permissions',
+    connection: 'WalletDelegate implements ERC-7710 so delegatees (solvers, facilitators) can redeem delegations with caveat enforcement',
+  },
 ] as const
 
 // ─── FAQ Items ──────────────────────────────────────────────────────────────
@@ -328,8 +345,8 @@ export const FAQ_ITEMS: FAQItem[] = [
     category: 'integration',
   },
   {
-    question: 'How does Agent Passkey work?',
-    answer: 'Agent Passkey is a policy-gated signing gateway using Lit Protocol PKP (Programmable Key Pairs). Keys are split across 2/3 TEE nodes — no single point of compromise. It only signs typed actions (SUBMIT_RECEIPT, OPEN_DISPUTE, SUBMIT_EVIDENCE), never arbitrary data. Live on Cloud Run.',
+    question: 'How does signing work?',
+    answer: 'Signing uses Google Cloud KMS — private keys never leave HSM hardware. On-chain policy enforcement uses EIP-7702 WalletDelegate with 5 caveat enforcers: SpendLimitEnforcer, TimeWindowEnforcer, AllowedTargetsEnforcer, AllowedMethodsEnforcer, and NonceEnforcer. Buyer-side payments flow through ERC-7715 permissions to the X402Facilitator. The legacy agent-passkey service (Lit Protocol PKP) is deprecated but still available on Cloud Run.',
     category: 'security',
   },
   {
@@ -376,7 +393,7 @@ export const USE_CASES: UseCase[] = [
     title: 'AI Agent Accountability',
     category: 'AI Agents',
     problem: 'AI agents execute on-chain actions on behalf of users with no standardized audit trail or recourse mechanism.',
-    solution: 'Agent Passkey restricts signing to typed actions only. Every signing decision is designed to produce deterministic audit artifacts. IntentScore will create portable reputation across protocols.',
+    solution: 'Cloud KMS + EIP-7702 WalletDelegate restrict signing to typed actions. Caveat enforcers enforce spend limits, time windows, and allowed targets on-chain. IntentScore will create portable reputation across protocols.',
     example: 'An AI trading agent would use IRSB receipts to prove every trade it executed. Its IntentScore would let new protocols trust it based on historical performance, not just identity.',
   },
   {
@@ -447,12 +464,12 @@ export const COMPARISONS: ComparisonRow[] = [
   {
     aspect: 'Key Security',
     before: 'Hot wallets with private keys. Single point of compromise.',
-    after: 'Lit Protocol PKP: 2/3 threshold signatures across TEE nodes. No extractable keys.',
+    after: 'Cloud KMS + EIP-7702 WalletDelegate: keys never leave HSM hardware, on-chain caveat enforcers (spend limits, time windows, allowed targets, allowed methods, nonce).',
   },
   {
     aspect: 'Signing Policy',
     before: 'Sign anything requested. No typed action constraints.',
-    after: 'Only 3 typed actions allowed: SUBMIT_RECEIPT, OPEN_DISPUTE, SUBMIT_EVIDENCE. Everything else rejected.',
+    after: 'EIP-7702 WalletDelegate with 5 caveat enforcers restricts all delegated transactions. SpendLimitEnforcer, TimeWindowEnforcer, AllowedTargetsEnforcer, AllowedMethodsEnforcer, NonceEnforcer.',
   },
 ]
 
