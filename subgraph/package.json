@@ -17,5 +17,8 @@
   },
   "devDependencies": {
     "matchstick-as": "^0.6.0"
+  },
+  "overrides": {
+    "axios": "^1.13.5"
   }
 }
