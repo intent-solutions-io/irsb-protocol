@@ -100,7 +100,7 @@ irsb-protocol/
 │       ├── Types.sol           # V1 structs, enums, constants
 │       ├── TypesV2.sol         # V2 structs, PrivacyLevel
 │       └── Events.sol          # Shared events
-├── test/                       # Foundry tests (308 passing)
+├── test/                       # Foundry tests (448 passing)
 │   └── fuzz/                   # Fuzz tests (10k runs)
 ├── script/                     # Deployment scripts
 ├── sdk/                        # TypeScript SDK
@@ -119,7 +119,7 @@ irsb-protocol/
 ```bash
 # Contracts
 forge build                     # Build (via_ir, optimizer 200 runs)
-forge test                      # All 426 tests
+forge test                      # All 448 tests
 forge test -vvv                 # Verbose
 forge test --gas-report         # Gas analysis
 forge fmt                       # Format

@@ -127,7 +127,7 @@ forge install
 # Build
 forge build
 
-# Test (308 tests)
+# Test (448 tests)
 forge test
 ```
 
