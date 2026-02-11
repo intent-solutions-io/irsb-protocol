@@ -9,6 +9,23 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.3.1] - 2026-02-11
+
+Maintenance release: automated security audit report and dependency fixes.
+
+### Added
+- SolidityGuard v1.2.0 automated audit report (038-AA-AUDT) - 36 contracts, 6,976 lines scanned, 0 actionable critical findings
+
+### Fixed
+- Axios DoS vulnerability patched in subgraph dependencies (axios override to 1.13.5)
+
+### Changed
+- Subgraph lockfile regenerated with security patches
+- Documentation version footer updated from v1.1.0 to v1.3.0
+- Test count documentation updated to 448 (accurate)
+
+---
+
 ## [1.3.0] - 2026-02-10
 
 EIP-7702 delegation system, AI agent guardrails pivot, and smart contract security exercise.
