@@ -62,6 +62,12 @@ interface IOptimisticDisputeModule {
     /// @notice Emitted when evidence is submitted
     event EvidenceSubmitted(bytes32 indexed disputeId, address indexed submitter, bytes32 evidenceHash);
 
+    /// @notice Emitted when ETH is credited to pending withdrawals (pull pattern)
+    event WithdrawalPending(address indexed recipient, uint256 amount);
+
+    /// @notice Emitted when pending ETH is withdrawn
+    event WithdrawalCompleted(address indexed recipient, uint256 amount);
+
     // ============ Errors ============
 
     /// @notice Caller not authorized

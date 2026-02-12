@@ -62,7 +62,7 @@ contract DisputeModuleTest is Test {
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
 
         vm.prank(operator1);
-        receiptId = receiptHub.postReceipt(receipt);
+        receiptId = receiptHub.postReceipt(receipt, 0);
 
         // Open subjective dispute
         vm.prank(challenger);
@@ -128,7 +128,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -161,7 +161,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -189,7 +189,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -213,7 +213,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -240,7 +240,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -268,7 +268,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         // Open non-subjective dispute
         vm.prank(challenger);
@@ -289,7 +289,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -311,7 +311,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -338,7 +338,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -372,7 +372,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -401,7 +401,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -426,7 +426,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -453,7 +453,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -491,7 +491,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -515,7 +515,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -546,7 +546,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -603,7 +603,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -631,7 +631,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(
@@ -659,7 +659,7 @@ contract DisputeModuleTest is Test {
 
         Types.IntentReceipt memory receipt = _createValidReceipt(solverId);
         vm.prank(realOperator);
-        bytes32 receiptId = receiptHub.postReceipt(receipt);
+        bytes32 receiptId = receiptHub.postReceipt(receipt, 0);
 
         vm.prank(challenger);
         receiptHub.openDispute{ value: CHALLENGER_BOND }(

@@ -158,7 +158,7 @@ contract DisputeHandler is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, ethSignedHash);
         receipt.solverSig = abi.encodePacked(r, s, v);
 
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
 
         bytes32 receiptId = Types.computeReceiptId(receipt);
         receiptIds.push(receiptId);

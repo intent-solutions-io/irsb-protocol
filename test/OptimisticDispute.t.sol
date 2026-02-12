@@ -361,8 +361,11 @@ contract OptimisticDisputeTest is Test {
         IOptimisticDisputeModule.OptimisticDispute memory dispute = disputeModule.getDispute(disputeId);
         assertEq(uint256(dispute.status), uint256(IOptimisticDisputeModule.OptimisticDisputeStatus.SolverWins));
 
-        // Solver should get their counter-bond back + challenger's forfeited bond
-        assertTrue(solver.balance > solverBalanceBefore + requiredBond);
+        // Challenger's forfeited bond is sent directly via transferChallengerBondTo
+        assertTrue(solver.balance > solverBalanceBefore);
+
+        // Solver's counter-bond is in pendingWithdrawals (pull pattern - PM-SC-023)
+        assertEq(disputeModule.pendingWithdrawals(solver), requiredBond);
     }
 
     function test_ResolveByArbitration_RevertNotArbitrator() public {
@@ -571,5 +574,145 @@ contract OptimisticDisputeTest is Test {
 
     function test_GetEvidenceWindow() public view {
         assertEq(disputeModule.getEvidenceWindow(), 48 hours);
+    }
+
+    // ============ Change 3: Arbitrator Flat Fee & Slash Distribution Tests ============
+
+    function test_ResolveByArbitration_ArbitratorGetsFlatFee() public {
+        (, bytes32 disputeId) = _createDisputedReceipt();
+        uint256 requiredBond = disputeModule.getRequiredCounterBond(disputeId);
+
+        // Solver posts counter-bond
+        vm.prank(solver);
+        disputeModule.postCounterBond{ value: requiredBond }(disputeId);
+
+        // Fund the dispute module with 1 ETH so it can pay the flat fee
+        vm.deal(address(disputeModule), 1 ether);
+
+        // Arbitrator resolves in favor of challenger
+        vm.prank(arbitrator);
+        disputeModule.resolveByArbitration(disputeId, true, 50, "Service not delivered");
+
+        // Arbitrator should have the default flat fee (0.005 ether) in pending withdrawals
+        assertEq(disputeModule.pendingWithdrawals(arbitrator), 0.005 ether);
+    }
+
+    function test_ResolveByArbitration_SlashDistribution_75_25() public {
+        // Verify the slash distribution constants: 75% user / 25% treasury
+        assertEq(disputeModule.SLASH_USER_BPS(), 7500);
+        assertEq(disputeModule.SLASH_TREASURY_BPS(), 2500);
+
+        (, bytes32 disputeId) = _createDisputedReceipt();
+        uint256 requiredBond = disputeModule.getRequiredCounterBond(disputeId);
+
+        // Solver posts counter-bond
+        vm.prank(solver);
+        disputeModule.postCounterBond{ value: requiredBond }(disputeId);
+
+        // Arbitrator resolves with solver fault, 50% slash
+        vm.prank(arbitrator);
+        disputeModule.resolveByArbitration(disputeId, true, 50, "Solver at fault");
+
+        // Verify dispute resolved as ChallengerWins
+        IOptimisticDisputeModule.OptimisticDispute memory dispute = disputeModule.getDispute(disputeId);
+        assertEq(uint256(dispute.status), uint256(IOptimisticDisputeModule.OptimisticDisputeStatus.ChallengerWins));
+    }
+
+    function test_SetArbitrationFlatFee_OnlyOwner() public {
+        // Owner can set the fee
+        disputeModule.setArbitrationFlatFee(0.01 ether);
+        assertEq(disputeModule.arbitrationFlatFee(), 0.01 ether);
+
+        // Non-owner should revert
+        vm.prank(challenger);
+        vm.expectRevert();
+        disputeModule.setArbitrationFlatFee(0.01 ether);
+    }
+
+    function test_SetArbitrationFlatFee_Updates() public {
+        disputeModule.setArbitrationFlatFee(0.01 ether);
+        assertEq(disputeModule.arbitrationFlatFee(), 0.01 ether);
+    }
+
+    // ============ Change 4: Pull Pattern Withdrawal Tests ============
+
+    function test_WithdrawPending_AfterResolution() public {
+        (, bytes32 disputeId) = _createDisputedReceipt();
+        uint256 requiredBond = disputeModule.getRequiredCounterBond(disputeId);
+
+        // Solver posts counter-bond
+        vm.prank(solver);
+        disputeModule.postCounterBond{ value: requiredBond }(disputeId);
+
+        // Arbitrator resolves in favor of solver (solver wins)
+        vm.prank(arbitrator);
+        disputeModule.resolveByArbitration(disputeId, false, 0, "Challenger claim invalid");
+
+        // Solver's counter-bond should be in pendingWithdrawals
+        assertGt(disputeModule.pendingWithdrawals(solver), 0);
+
+        uint256 solverBalanceBefore = solver.balance;
+
+        // Solver withdraws pending balance
+        vm.prank(solver);
+        disputeModule.withdrawPending();
+
+        // Pending balance should be zero after withdrawal
+        assertEq(disputeModule.pendingWithdrawals(solver), 0);
+
+        // Solver balance should have increased
+        assertGt(solver.balance, solverBalanceBefore);
+    }
+
+    function test_WithdrawPending_DoubleWithdrawReverts() public {
+        (, bytes32 disputeId) = _createDisputedReceipt();
+        uint256 requiredBond = disputeModule.getRequiredCounterBond(disputeId);
+
+        // Solver posts counter-bond
+        vm.prank(solver);
+        disputeModule.postCounterBond{ value: requiredBond }(disputeId);
+
+        // Arbitrator resolves in favor of solver (solver wins)
+        vm.prank(arbitrator);
+        disputeModule.resolveByArbitration(disputeId, false, 0, "Challenger claim invalid");
+
+        // First withdrawal should succeed
+        vm.prank(solver);
+        disputeModule.withdrawPending();
+
+        // Second withdrawal should revert (amount is 0)
+        vm.prank(solver);
+        vm.expectRevert(IOptimisticDisputeModule.TransferFailed.selector);
+        disputeModule.withdrawPending();
+    }
+
+    function test_PendingWithdrawals_ArbitratorCanClaim() public {
+        (, bytes32 disputeId) = _createDisputedReceipt();
+        uint256 requiredBond = disputeModule.getRequiredCounterBond(disputeId);
+
+        // Solver posts counter-bond
+        vm.prank(solver);
+        disputeModule.postCounterBond{ value: requiredBond }(disputeId);
+
+        // Fund the dispute module with 1 ETH so it can pay the flat fee
+        vm.deal(address(disputeModule), 1 ether);
+
+        uint256 arbitratorBalanceBefore = arbitrator.balance;
+
+        // Arbitrator resolves the dispute (challenger wins)
+        vm.prank(arbitrator);
+        disputeModule.resolveByArbitration(disputeId, true, 50, "Service not delivered");
+
+        // Arbitrator should have pending balance (the flat fee)
+        uint256 pendingAmount = disputeModule.pendingWithdrawals(arbitrator);
+        assertEq(pendingAmount, 0.005 ether);
+
+        // Arbitrator withdraws
+        vm.prank(arbitrator);
+        disputeModule.withdrawPending();
+
+        // Verify arbitrator received the flat fee
+        assertEq(arbitrator.balance, arbitratorBalanceBefore + 0.005 ether);
+        assertEq(disputeModule.pendingWithdrawals(arbitrator), 0);
     }
 }
