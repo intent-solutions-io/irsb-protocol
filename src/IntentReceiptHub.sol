@@ -81,6 +81,9 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     /// @notice IRSB-SEC-006: Nonce used for each receipt (for signature re-verification)
     mapping(bytes32 => uint256) private _receiptNonces;
 
+    /// @notice Declared volume per receipt for bond validation (PM-EC-001)
+    mapping(bytes32 => uint256) private _receiptVolumes;
+
     /// @notice ERC-8004 adapter for publishing credibility signals (optional)
     address public erc8004Adapter;
 
@@ -115,7 +118,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     // ============ External Functions ============
 
     /// @inheritdoc IIntentReceiptHub
-    function postReceipt(Types.IntentReceipt calldata receipt)
+    function postReceipt(Types.IntentReceipt calldata receipt, uint256 declaredVolume)
         external
         whenNotPaused
         nonReentrant
@@ -125,6 +128,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
         if (solver.status != Types.SolverStatus.Active) revert InvalidSolver();
         if (solver.operator != msg.sender) revert InvalidSolver();
+
+        // PM-EC-001: Validate solver has sufficient bond for declared volume
+        uint256 requiredBond = solverRegistry.requiredBondForVolume(declaredVolume);
+        if (solver.bondBalance < requiredBond) revert InsufficientBondForVolume();
 
         // Compute receipt ID
         receiptId = computeReceiptId(receipt);
@@ -160,6 +167,9 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
         // Store receipt
         _receipts[receiptId] = receipt;
         _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
+
+        // PM-EC-001: Store declared volume for dispute reference and finalization
+        _receiptVolumes[receiptId] = declaredVolume;
 
         // Index by solver and intent
         _solverReceipts[receipt.solverId].push(receiptId);
@@ -331,8 +341,8 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
         _receiptStatus[receiptId] = Types.ReceiptStatus.Finalized;
 
-        // Update solver score
-        solverRegistry.updateScore(receipt.solverId, true, 0); // TODO: calculate volume
+        // Update solver score with declared volume (PM-EC-001: fixes volume=0 TODO)
+        solverRegistry.updateScore(receipt.solverId, true, _receiptVolumes[receiptId]);
 
         // Publish to ERC-8004 adapter if configured (non-reverting)
         _publishToERC8004(receiptId, receipt.solverId, true, 0);
@@ -355,7 +365,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
 
     /// @inheritdoc IIntentReceiptHub
     /// @dev IRSB-SEC-009: Full validation including signature verification for each receipt
-    function batchPostReceipts(Types.IntentReceipt[] calldata receipts)
+    function batchPostReceipts(Types.IntentReceipt[] calldata receipts, uint256[] calldata declaredVolumes)
         external
         whenNotPaused
         nonReentrant
@@ -363,6 +373,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
     {
         require(receipts.length <= MAX_BATCH_SIZE, "Batch too large");
         require(receipts.length > 0, "Empty batch");
+        require(receipts.length == declaredVolumes.length, "Volume array length mismatch");
 
         receiptIds = new bytes32[](receipts.length);
 
@@ -374,6 +385,10 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             Types.Solver memory solver = solverRegistry.getSolver(receipt.solverId);
             if (solver.status != Types.SolverStatus.Active) revert InvalidSolver();
             if (solver.operator != msg.sender) revert InvalidSolver();
+
+            // PM-EC-001: Validate solver has sufficient bond for declared volume
+            uint256 requiredBond = solverRegistry.requiredBondForVolume(declaredVolumes[i]);
+            if (solver.bondBalance < requiredBond) revert InsufficientBondForVolume();
 
             // Compute receipt ID
             bytes32 receiptId = computeReceiptId(receipt);
@@ -411,6 +426,7 @@ contract IntentReceiptHub is IIntentReceiptHub, Ownable, ReentrancyGuard, Pausab
             // Store receipt
             _receipts[receiptId] = receipt;
             _receiptStatus[receiptId] = Types.ReceiptStatus.Pending;
+            _receiptVolumes[receiptId] = declaredVolumes[i];
             _solverReceipts[receipt.solverId].push(receiptId);
             _intentReceipts[receipt.intentHash].push(receiptId);
 

@@ -220,7 +220,7 @@ contract HubHandler is Test {
         receipt.solverSig = abi.encodePacked(r, s, v);
 
         // Post receipt
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
 
         bytes32 receiptId = Types.computeReceiptId(receipt);
         if (!receiptExists[receiptId]) {

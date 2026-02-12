@@ -81,7 +81,7 @@ contract SeedTestData is Script {
             });
 
             console.log("Posting receipt", i + 1);
-            hub.postReceipt(receipt);
+            hub.postReceipt(receipt, 0);
         }
 
         console.log("Posted 3 test receipts");

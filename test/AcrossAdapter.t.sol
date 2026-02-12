@@ -138,7 +138,7 @@ contract AcrossAdapterTest is Test {
 
         // Post to hub as relayer
         vm.prank(relayer);
-        receiptId = hub.postReceipt(receipt);
+        receiptId = hub.postReceipt(receipt, 0);
     }
 
     // ============ Register Receipt Tests ============

@@ -128,6 +128,11 @@ interface ISolverRegistry {
     /// @return minBond Minimum bond in wei
     function getMinimumBond() external view returns (uint256 minBond);
 
+    /// @notice Calculate required bond for a given declared volume (PM-EC-001)
+    /// @param volume Declared transaction volume in wei
+    /// @return required The required bond amount
+    function requiredBondForVolume(uint256 volume) external view returns (uint256 required);
+
     /// @notice Increment disputes opened counter for solver
     /// @param solverId Solver to update
     function incrementDisputes(bytes32 solverId) external;

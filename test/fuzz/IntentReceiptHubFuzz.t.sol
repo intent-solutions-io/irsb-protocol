@@ -219,12 +219,12 @@ contract IntentReceiptHubFuzz is Test {
         // Post receipt
         Types.IntentReceipt memory receipt = _createSignedReceipt(intentHash, expiry);
         vm.prank(operator);
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
 
         // Try to post again - should fail
         vm.prank(operator);
         vm.expectRevert(abi.encodeWithSignature("ReceiptAlreadyExists()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     /// @notice Invariant: status transitions follow state machine
@@ -330,6 +330,6 @@ contract IntentReceiptHubFuzz is Test {
     function _postReceipt(bytes32 intentHash, uint64 expiry) internal returns (bytes32 receiptId) {
         Types.IntentReceipt memory receipt = _createSignedReceipt(intentHash, expiry);
         vm.prank(operator);
-        receiptId = hub.postReceipt(receipt);
+        receiptId = hub.postReceipt(receipt, 0);
     }
 }

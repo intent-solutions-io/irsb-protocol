@@ -99,7 +99,7 @@ contract IntentReceiptHubTest is Test {
         Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
 
         vm.prank(operator);
-        receiptId = hub.postReceipt(receipt);
+        receiptId = hub.postReceipt(receipt, 0);
     }
 
     // ============ Post Receipt Tests ============
@@ -111,7 +111,7 @@ contract IntentReceiptHubTest is Test {
         Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
 
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         assertTrue(receiptId != bytes32(0));
         assertEq(hub.totalReceipts(), 1);
@@ -139,7 +139,7 @@ contract IntentReceiptHubTest is Test {
         });
 
         vm.expectRevert(abi.encodeWithSignature("InvalidSolver()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     function test_PostReceipt_RevertDuplicate() public {
@@ -149,10 +149,10 @@ contract IntentReceiptHubTest is Test {
         Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
 
         vm.startPrank(operator);
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
 
         vm.expectRevert(abi.encodeWithSignature("ReceiptAlreadyExists()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
         vm.stopPrank();
     }
 
@@ -195,7 +195,7 @@ contract IntentReceiptHubTest is Test {
 
         vm.prank(operator);
         vm.expectRevert(abi.encodeWithSignature("InvalidReceiptSignature()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     // ============ Open Dispute Tests ============
@@ -430,8 +430,10 @@ contract IntentReceiptHubTest is Test {
             receipts[i].solverSig = abi.encodePacked(r, s, v);
         }
 
+        uint256[] memory volumes = new uint256[](receipts.length);
+
         vm.prank(operator);
-        bytes32[] memory receiptIds = hub.batchPostReceipts(receipts);
+        bytes32[] memory receiptIds = hub.batchPostReceipts(receipts, volumes);
 
         assertEq(receiptIds.length, 3);
         assertEq(hub.totalReceipts(), 3);
@@ -444,8 +446,10 @@ contract IntentReceiptHubTest is Test {
         receipts[0] = receipt;
         receipts[1] = receipt; // Duplicate
 
+        uint256[] memory volumes = new uint256[](receipts.length);
+
         vm.prank(operator);
-        bytes32[] memory receiptIds = hub.batchPostReceipts(receipts);
+        bytes32[] memory receiptIds = hub.batchPostReceipts(receipts, volumes);
 
         // Second one should be bytes32(0) since it's a duplicate
         assertTrue(receiptIds[0] != bytes32(0));
@@ -522,12 +526,12 @@ contract IntentReceiptHubTest is Test {
 
         vm.prank(operator);
         vm.expectRevert();
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
 
         hub.unpause();
 
         vm.prank(operator);
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     // ============ Challenger Bond Tests ============
@@ -710,7 +714,7 @@ contract IntentReceiptHubTest is Test {
         // Should fail because chainId doesn't match
         vm.prank(operator);
         vm.expectRevert(abi.encodeWithSignature("InvalidReceiptSignature()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     /// @notice IRSB-SEC-001: Verify wrong contract address is rejected
@@ -753,7 +757,7 @@ contract IntentReceiptHubTest is Test {
         // Should fail because contract address doesn't match
         vm.prank(operator);
         vm.expectRevert(abi.encodeWithSignature("InvalidReceiptSignature()"));
-        hub.postReceipt(receipt);
+        hub.postReceipt(receipt, 0);
     }
 
     /// @notice IRSB-SEC-003: Verify rejected dispute finalizes receipt and prevents re-challenge
@@ -784,5 +788,99 @@ contract IntentReceiptHubTest is Test {
         hub.openDispute{ value: CHALLENGER_BOND }(
             receiptId, Types.DisputeReason.MinOutViolation, keccak256("evidence2")
         );
+    }
+
+    // ============ Volume-Proportional Bond Tests (PM-EC-001) ============
+
+    function test_PostReceipt_WithDeclaredVolume() public {
+        bytes32 intentHash = keccak256("intent-vol");
+        uint64 expiry = uint64(block.timestamp + 1 hours);
+
+        Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
+
+        // 1 ETH volume with 0.1 ETH bond (at 5% ratio, needs max(0.1, 0.05) = 0.1) — passes
+        vm.prank(operator);
+        bytes32 receiptId = hub.postReceipt(receipt, 1 ether);
+        assertTrue(receiptId != bytes32(0));
+    }
+
+    function test_PostReceipt_RevertInsufficientBondForVolume() public {
+        // Deposit more bond to make solver active but test volume check
+        // Current bond: 0.1 ETH. At 5% ratio, 0.1 ETH covers up to 2 ETH volume.
+        // 10 ETH volume requires 0.5 ETH bond — should revert
+        bytes32 intentHash = keccak256("intent-bigvol");
+        uint64 expiry = uint64(block.timestamp + 1 hours);
+
+        Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
+
+        vm.prank(operator);
+        vm.expectRevert(abi.encodeWithSignature("InsufficientBondForVolume()"));
+        hub.postReceipt(receipt, 10 ether);
+    }
+
+    function test_PostReceipt_HighBondAllowsHighVolume() public {
+        // Deposit additional bond to cover high volume
+        registry.depositBond{ value: 0.9 ether }(solverId); // Now 1.0 ETH total
+
+        bytes32 intentHash = keccak256("intent-highvol");
+        uint64 expiry = uint64(block.timestamp + 1 hours);
+
+        Types.IntentReceipt memory receipt = _createReceipt(intentHash, expiry);
+
+        // 1.0 ETH bond at 5% covers up to 20 ETH volume
+        vm.prank(operator);
+        bytes32 receiptId = hub.postReceipt(receipt, 20 ether);
+        assertTrue(receiptId != bytes32(0));
+    }
+
+    function test_BatchPostReceipts_WithVolumes() public {
+        // Deposit more bond
+        registry.depositBond{ value: 0.9 ether }(solverId); // 1.0 ETH total
+
+        Types.IntentReceipt[] memory receipts = new Types.IntentReceipt[](2);
+        uint256 baseNonce = hub.solverNonces(solverId);
+
+        for (uint256 i = 0; i < 2; i++) {
+            receipts[i] = Types.IntentReceipt({
+                intentHash: keccak256(abi.encodePacked("batch-vol-intent", i)),
+                constraintsHash: keccak256("constraints"),
+                routeHash: keccak256("route"),
+                outcomeHash: keccak256("outcome"),
+                evidenceHash: keccak256("evidence"),
+                createdAt: uint64(block.timestamp + i),
+                expiry: uint64(block.timestamp + 1 hours),
+                solverId: solverId,
+                solverSig: ""
+            });
+
+            bytes32 messageHash = keccak256(
+                abi.encode(
+                    block.chainid,
+                    address(hub),
+                    baseNonce + i,
+                    receipts[i].intentHash,
+                    receipts[i].constraintsHash,
+                    receipts[i].routeHash,
+                    receipts[i].outcomeHash,
+                    receipts[i].evidenceHash,
+                    receipts[i].createdAt,
+                    receipts[i].expiry,
+                    receipts[i].solverId
+                )
+            );
+            bytes32 ethSignedHash = messageHash.toEthSignedMessageHash();
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(operatorPrivateKey, ethSignedHash);
+            receipts[i].solverSig = abi.encodePacked(r, s, v);
+        }
+
+        uint256[] memory volumes = new uint256[](2);
+        volumes[0] = 5 ether; // Needs 0.25 ETH bond
+        volumes[1] = 5 ether; // Needs 0.25 ETH bond
+
+        vm.prank(operator);
+        bytes32[] memory ids = hub.batchPostReceipts(receipts, volumes);
+        assertEq(ids.length, 2);
+        assertTrue(ids[0] != bytes32(0));
+        assertTrue(ids[1] != bytes32(0));
     }
 }

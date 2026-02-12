@@ -75,7 +75,7 @@ contract SeedReceiptsOnly is Script {
             });
 
             console.log("Posting receipt", i + 1);
-            hub.postReceipt(receipt);
+            hub.postReceipt(receipt, 0);
         }
 
         vm.stopBroadcast();

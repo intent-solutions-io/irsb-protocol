@@ -82,7 +82,7 @@ contract ERC8004IntegrationTest is Test {
         // Post a receipt
         Types.IntentReceipt memory receipt = _createSignedReceipt(keccak256("intent1"));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         // Warp past challenge window
         vm.warp(block.timestamp + 1 hours + 1);
@@ -107,7 +107,7 @@ contract ERC8004IntegrationTest is Test {
         Types.IntentReceipt memory receipt =
             _createSignedReceiptWithExpiry(keccak256("intent_slash"), uint64(block.timestamp + 30 minutes));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         // Open a timeout dispute
         vm.prank(challenger);
@@ -137,7 +137,7 @@ contract ERC8004IntegrationTest is Test {
         // Post a receipt
         Types.IntentReceipt memory receipt = _createSignedReceipt(keccak256("intent_fail"));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         vm.warp(block.timestamp + 1 hours + 1);
 
@@ -160,7 +160,7 @@ contract ERC8004IntegrationTest is Test {
         // Post and finalize
         Types.IntentReceipt memory receipt = _createSignedReceipt(keccak256("no_signal"));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         vm.warp(block.timestamp + 1 hours + 1);
         hub.finalize(receiptId);
@@ -174,7 +174,7 @@ contract ERC8004IntegrationTest is Test {
         // Finalize a receipt
         Types.IntentReceipt memory receipt = _createSignedReceipt(keccak256("track"));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         vm.warp(block.timestamp + 1 hours + 1);
         hub.finalize(receiptId);
@@ -194,7 +194,7 @@ contract ERC8004IntegrationTest is Test {
         // Finalize a receipt
         Types.IntentReceipt memory receipt = _createSignedReceipt(keccak256("stats"));
         vm.prank(operator);
-        bytes32 receiptId = hub.postReceipt(receipt);
+        bytes32 receiptId = hub.postReceipt(receipt, 0);
 
         vm.warp(block.timestamp + 1 hours + 1);
         hub.finalize(receiptId);
