@@ -552,6 +552,28 @@ contract ReceiptV2ExtensionTest is Test {
         assertTrue(receiptId != bytes32(0));
     }
 
+    // ============ PM-SC-022: address(0) Check After tryRecover ============
+
+    function test_PostReceiptV2_RevertZeroAddressRecovery() public {
+        // Create a receipt where the solver signature would produce address(0)
+        // In OZ ECDSA.tryRecover, invalid signatures that don't produce an error
+        // but recover to address(0) are now explicitly caught.
+        // We test this by crafting a signature that reverts due to the address(0) check.
+        bytes32 intentHash = keccak256("intent_zero_addr");
+        uint64 expiry = uint64(block.timestamp + 1 hours);
+
+        TypesV2.IntentReceiptV2 memory receipt = _createReceiptV2(intentHash, expiry);
+
+        // Corrupt solver signature to an invalid but parseable form
+        // This tests that even if tryRecover returns NoError but address(0),
+        // our explicit check catches it
+        receipt.solverSig = abi.encodePacked(bytes32(0), bytes32(0), uint8(27));
+
+        vm.prank(operator);
+        vm.expectRevert(abi.encodeWithSignature("InvalidSolverSignature()"));
+        extension.postReceiptV2(receipt);
+    }
+
     // ============ Replay Protection Tests ============
 
     function test_ReplayProtection_DifferentChain() public {
