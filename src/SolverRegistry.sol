@@ -57,6 +57,10 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @notice Total value bonded
     uint256 public totalBonded;
 
+    /// @notice Bond-to-volume ratio in basis points (PM-EC-001 fix)
+    /// @dev 500 = 5%, meaning 1 ETH bond covers 20 ETH declared volume
+    uint256 public bondRatioBps = 500;
+
     /// @notice ERC-8004 adapter for publishing validation signals
     address public erc8004Adapter;
 
@@ -416,6 +420,14 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
         return MINIMUM_BOND;
     }
 
+    /// @notice Calculate required bond for a given declared volume (PM-EC-001)
+    /// @param volume Declared transaction volume in wei
+    /// @return required The required bond amount (max of MINIMUM_BOND and volume * bondRatioBps / BPS)
+    function requiredBondForVolume(uint256 volume) public view returns (uint256) {
+        uint256 volumeRequired = (volume * bondRatioBps) / BPS;
+        return volumeRequired > MINIMUM_BOND ? volumeRequired : MINIMUM_BOND;
+    }
+
     // ============ Admin Functions ============
 
     /// @notice Set authorized caller (IntentReceiptHub, DisputeModule)
@@ -451,6 +463,14 @@ contract SolverRegistry is ISolverRegistry, Ownable, ReentrancyGuard, Pausable {
     /// @notice Unpause
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    /// @notice Set bond-to-volume ratio (PM-EC-001, governable via timelock)
+    /// @param _bps New ratio in basis points (e.g. 500 = 5%)
+    function setBondRatioBps(uint256 _bps) external onlyOwner {
+        require(_bps > 0, "Ratio must be > 0");
+        require(_bps <= BPS, "Ratio exceeds 100%");
+        bondRatioBps = _bps;
     }
 
     /// @notice Set ERC-8004 adapter for validation signals

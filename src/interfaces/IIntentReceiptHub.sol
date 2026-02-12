@@ -45,6 +45,7 @@ interface IIntentReceiptHub {
     error ChallengerBondTransferFailed();
     error NoForfeitedBonds();
     error SweepTransferFailed();
+    error InsufficientBondForVolume();
 
     // ============ Events (Additional) ============
 
@@ -56,10 +57,13 @@ interface IIntentReceiptHub {
 
     // ============ External Functions ============
 
-    /// @notice Post a new intent receipt
+    /// @notice Post a new intent receipt with declared volume
     /// @param receipt The receipt to post
+    /// @param declaredVolume The declared transaction volume for bond validation (PM-EC-001)
     /// @return receiptId Unique receipt identifier
-    function postReceipt(Types.IntentReceipt calldata receipt) external returns (bytes32 receiptId);
+    function postReceipt(Types.IntentReceipt calldata receipt, uint256 declaredVolume)
+        external
+        returns (bytes32 receiptId);
 
     /// @notice Open a dispute against a receipt
     /// @param receiptId Receipt to dispute
@@ -81,10 +85,13 @@ interface IIntentReceiptHub {
     /// @param proofHash Hash of settlement proof
     function submitSettlementProof(bytes32 receiptId, bytes32 proofHash) external;
 
-    /// @notice Batch post multiple receipts
+    /// @notice Batch post multiple receipts with declared volumes
     /// @param receipts Array of receipts to post
+    /// @param declaredVolumes Array of declared volumes per receipt (PM-EC-001)
     /// @return receiptIds Array of receipt IDs
-    function batchPostReceipts(Types.IntentReceipt[] calldata receipts) external returns (bytes32[] memory receiptIds);
+    function batchPostReceipts(Types.IntentReceipt[] calldata receipts, uint256[] calldata declaredVolumes)
+        external
+        returns (bytes32[] memory receiptIds);
 
     // ============ View Functions ============
 

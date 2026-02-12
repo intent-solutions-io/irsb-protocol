@@ -29,14 +29,11 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
     /// @notice Counter-bond multiplier (100% of challenger bond)
     uint256 public constant COUNTER_BOND_MULTIPLIER = 100;
 
-    /// @notice Slash distribution: user share (70%)
-    uint256 public constant SLASH_USER_BPS = 7000;
+    /// @notice Slash distribution: user share (75%)
+    uint256 public constant SLASH_USER_BPS = 7500;
 
-    /// @notice Slash distribution: treasury share (20%)
-    uint256 public constant SLASH_TREASURY_BPS = 2000;
-
-    /// @notice Slash distribution: arbitrator share (10%)
-    uint256 public constant SLASH_ARBITRATOR_BPS = 1000;
+    /// @notice Slash distribution: treasury share (25%)
+    uint256 public constant SLASH_TREASURY_BPS = 2500;
 
     /// @notice Basis points denominator
     uint256 public constant BPS = 10000;
@@ -72,6 +69,12 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
     }
 
     mapping(bytes32 => Evidence[]) private _evidenceHistory;
+
+    /// @notice Flat fee paid to arbitrator per resolved dispute (from contract balance, not from slash)
+    uint256 public arbitrationFlatFee = 0.005 ether;
+
+    /// @notice Pending withdrawals for pull-pattern ETH transfers (PM-SC-023 fix)
+    mapping(address => uint256) public pendingWithdrawals;
 
     /// @notice Total disputes created
     uint256 public totalDisputes;
@@ -248,10 +251,9 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
             totalSlashAmount = (availableBond * slashPercentage) / 100;
 
             if (totalSlashAmount > 0) {
-                // Distribute slash: 70% user, 20% treasury, 10% arbitrator
+                // Distribute slash: 75% user, 25% treasury, 0% arbitrator (PM-EC-002 fix)
                 uint256 userShare = (totalSlashAmount * SLASH_USER_BPS) / BPS;
-                uint256 treasuryShare = (totalSlashAmount * SLASH_TREASURY_BPS) / BPS;
-                uint256 arbitratorShare = totalSlashAmount - userShare - treasuryShare;
+                uint256 treasuryShare = totalSlashAmount - userShare;
 
                 if (userShare > 0) {
                     solverRegistry.slash(
@@ -267,19 +269,15 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
                         dispute.solverId, treasuryShare, dispute.receiptId, Types.DisputeReason.Subjective, treasury
                     );
                 }
-                if (arbitratorShare > 0) {
-                    solverRegistry.slash(
-                        dispute.solverId, arbitratorShare, dispute.receiptId, Types.DisputeReason.Subjective, arbitrator
-                    );
-                }
             }
 
             // Return challenger bond (held by ReceiptV2Extension)
             receiptV2Extension.returnChallengerBond(dispute.receiptId);
 
-            // Award solver's counter-bond to challenger (held by this module)
+            // Award solver's counter-bond to challenger via pull pattern (PM-SC-023 fix)
             if (dispute.counterBond > 0) {
-                _transferETH(dispute.challenger, dispute.counterBond);
+                pendingWithdrawals[dispute.challenger] += dispute.counterBond;
+                emit WithdrawalPending(dispute.challenger, dispute.counterBond);
             }
 
             // Handle escrow refund
@@ -295,9 +293,10 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
 
             address solverOperator = _getSolverOperator(dispute.solverId);
 
-            // Return solver's counter-bond (held by this module)
+            // Return solver's counter-bond via pull pattern (PM-SC-023 fix)
             if (dispute.counterBond > 0) {
-                _transferETH(solverOperator, dispute.counterBond);
+                pendingWithdrawals[solverOperator] += dispute.counterBond;
+                emit WithdrawalPending(solverOperator, dispute.counterBond);
             }
 
             // Challenger loses bond - goes to solver as anti-griefing (held by ReceiptV2Extension)
@@ -305,6 +304,12 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
 
             // Handle escrow release to solver
             _handleEscrowOutcome(dispute.receiptId, true); // Release to solver
+        }
+
+        // Pay arbitrator flat fee from contract balance (PM-EC-002 fix)
+        if (arbitrationFlatFee > 0 && address(this).balance >= arbitrationFlatFee) {
+            pendingWithdrawals[arbitrator] += arbitrationFlatFee;
+            emit WithdrawalPending(arbitrator, arbitrationFlatFee);
         }
 
         totalResolved++;
@@ -374,9 +379,10 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
         // Return challenger bond (held by ReceiptV2Extension)
         receiptV2Extension.returnChallengerBond(dispute.receiptId);
 
-        // Return solver's counter-bond to challenger too (held by this module) - arbitrator failed to act
+        // Return solver's counter-bond to challenger via pull pattern (PM-SC-023 fix) - arbitrator failed to act
         if (dispute.counterBond > 0) {
-            _transferETH(dispute.challenger, dispute.counterBond);
+            pendingWithdrawals[dispute.challenger] += dispute.counterBond;
+            emit WithdrawalPending(dispute.challenger, dispute.counterBond);
         }
 
         // Handle escrow refund
@@ -468,7 +474,29 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
         return _receiptToDispute[receiptId];
     }
 
+    // ============ Pull-Pattern Withdrawal (PM-SC-023) ============
+
+    /// @notice Withdraw pending ETH balance (pull pattern)
+    /// @dev Replaces push-based _transferETH for counter-bond returns
+    function withdrawPending() external nonReentrant {
+        uint256 amount = pendingWithdrawals[msg.sender];
+        if (amount == 0) revert TransferFailed();
+
+        pendingWithdrawals[msg.sender] = 0;
+
+        (bool success,) = payable(msg.sender).call{ value: amount }("");
+        if (!success) revert TransferFailed();
+
+        emit WithdrawalCompleted(msg.sender, amount);
+    }
+
     // ============ Admin Functions ============
+
+    /// @notice Set arbitration flat fee (PM-EC-002: decoupled from slash)
+    /// @param _fee New flat fee in wei
+    function setArbitrationFlatFee(uint256 _fee) external onlyOwner {
+        arbitrationFlatFee = _fee;
+    }
 
     /// @notice Set arbitrator address
     /// @param _arbitrator New arbitrator address
@@ -511,6 +539,7 @@ contract OptimisticDisputeModule is IOptimisticDisputeModule, Ownable, Reentranc
     // ============ Internal Functions ============
 
     /// @notice Transfer ETH safely
+    /// @dev DEPRECATED: Use pendingWithdrawals + withdrawPending() pull pattern instead (PM-SC-023)
     function _transferETH(address to, uint256 amount) internal {
         if (to == address(0) || amount == 0) return;
         (bool success,) = payable(to).call{ value: amount }("");

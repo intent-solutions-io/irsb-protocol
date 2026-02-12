@@ -4,8 +4,8 @@ pragma solidity ^0.8.25;
 import { ICaveatEnforcer } from "../interfaces/ICaveatEnforcer.sol";
 
 /// @title NonceEnforcer
-/// @notice Prevents replay of delegated executions via monotonically increasing nonces
-/// @dev Terms: abi.encode(uint256 startNonce)
+/// @notice Prevents replay of delegated executions via validated nonce increments
+/// @dev Terms: abi.encode(uint256 expectedNonce) — caller must specify the exact nonce they expect
 contract NonceEnforcer is ICaveatEnforcer {
     // ============ State ============
 
@@ -30,16 +30,15 @@ contract NonceEnforcer is ICaveatEnforcer {
         external
         override
     {
-        uint256 startNonce = abi.decode(terms, (uint256));
-
+        uint256 expectedNonce = abi.decode(terms, (uint256));
         uint256 currentNonce = nonces[delegationHash];
 
-        // Initialize nonce on first use
-        if (currentNonce == 0 && startNonce > 0) {
-            currentNonce = startNonce;
+        // Revert if nonce doesn't match expected value (prevents replay)
+        if (currentNonce != expectedNonce) {
+            revert CaveatViolation("Nonce mismatch");
         }
 
-        // Increment nonce (must be sequential)
+        // Increment nonce
         nonces[delegationHash] = currentNonce + 1;
 
         emit NonceUsed(delegationHash, currentNonce);

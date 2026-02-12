@@ -604,4 +604,55 @@ contract SolverRegistryTest is Test {
         vm.expectRevert(abi.encodeWithSignature("ZeroSlashAmount()"));
         registry.slash(solverId, 0, receiptId, Types.DisputeReason.Timeout, recipient);
     }
+
+    // ============ Bond Ratio Tests (PM-EC-001) ============
+
+    function test_RequiredBondForVolume_DefaultRatio() public view {
+        // Default bondRatioBps = 500 (5%), so 2 ETH volume requires max(0.1 ETH, 2 * 500/10000) = max(0.1, 0.1) = 0.1
+        uint256 required = registry.requiredBondForVolume(2 ether);
+        assertEq(required, MINIMUM_BOND);
+
+        // 10 ETH volume: max(0.1, 10 * 500/10000) = max(0.1, 0.5) = 0.5
+        uint256 requiredHigh = registry.requiredBondForVolume(10 ether);
+        assertEq(requiredHigh, 0.5 ether);
+    }
+
+    function test_RequiredBondForVolume_FloorAtMinimum() public view {
+        // Small volume: max(0.1 ETH, 0.01 * 500/10000) = max(0.1, 0.0005) = 0.1
+        uint256 required = registry.requiredBondForVolume(0.01 ether);
+        assertEq(required, MINIMUM_BOND);
+    }
+
+    function test_RequiredBondForVolume_ZeroVolume() public view {
+        // Zero volume: max(0.1, 0) = 0.1
+        assertEq(registry.requiredBondForVolume(0), MINIMUM_BOND);
+    }
+
+    function test_SetBondRatioBps_OnlyOwner() public {
+        registry.setBondRatioBps(1000); // 10%
+        assertEq(registry.bondRatioBps(), 1000);
+
+        vm.prank(operator1);
+        vm.expectRevert();
+        registry.setBondRatioBps(2000);
+    }
+
+    function test_SetBondRatioBps_RevertZero() public {
+        vm.expectRevert("Ratio must be > 0");
+        registry.setBondRatioBps(0);
+    }
+
+    function test_SetBondRatioBps_RevertExceedsBps() public {
+        vm.expectRevert("Ratio exceeds 100%");
+        registry.setBondRatioBps(10001);
+    }
+
+    function test_SetBondRatioBps_AffectsRequiredBond() public {
+        // Set to 10% (1000 bps)
+        registry.setBondRatioBps(1000);
+
+        // 10 ETH volume: max(0.1, 10 * 1000/10000) = max(0.1, 1.0) = 1.0
+        uint256 required = registry.requiredBondForVolume(10 ether);
+        assertEq(required, 1 ether);
+    }
 }

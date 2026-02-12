@@ -127,13 +127,13 @@ contract ReceiptV2Extension is IReceiptV2Extension, Ownable, ReentrancyGuard, Pa
 
         // Verify solver signature (use tryRecover to get custom error)
         (address solverSigner, ECDSA.RecoverError solverErr,) = ECDSA.tryRecover(digest, receipt.solverSig);
-        if (solverErr != ECDSA.RecoverError.NoError || solverSigner != solver.operator) {
+        if (solverErr != ECDSA.RecoverError.NoError || solverSigner == address(0) || solverSigner != solver.operator) {
             revert InvalidSolverSignature();
         }
 
         // Verify client signature (use tryRecover to get custom error)
         (address clientSigner, ECDSA.RecoverError clientErr,) = ECDSA.tryRecover(digest, receipt.clientSig);
-        if (clientErr != ECDSA.RecoverError.NoError || clientSigner != receipt.client) {
+        if (clientErr != ECDSA.RecoverError.NoError || clientSigner == address(0) || clientSigner != receipt.client) {
             revert InvalidClientSignature();
         }
 
