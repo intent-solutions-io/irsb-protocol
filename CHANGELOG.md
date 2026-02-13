@@ -9,6 +9,34 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.4.0] - 2026-02-12
+
+Pre-mortem security hardening and Moloch DAO-style test suite adoption.
+
+### Added
+
+#### Security Hardening (Pre-Mortem Response)
+- **TimelockController deployment script** (PM-GV-001) — 48-hour delay for governance actions
+- **Volume-proportional bond requirements** (PM-EC-001) — bonds scale with solver throughput to prevent undercollateralization
+- **Moloch DAO-style systematic test suite** — 104 new tests using invariant-based methodology
+
+### Fixed
+
+#### Smart Contract Security (Pre-Mortem Findings)
+- **Arbitrator fee decoupling** (PM-EC-002, PM-SC-023) — arbitrator compensation now uses pull-pattern withdrawals, preventing economic circular dependency
+- **NonceEnforcer nonce validation** (PM-SC-002) — validates expected nonce to prevent replay attacks
+- **ECDSA.tryRecover address(0) check** (PM-SC-022) — returns failure on signature recovery to zero address
+
+### Documentation
+- Catastrophic failure pre-mortem analysis (039-AA-AUDT) — 83 findings across 8 categories, 4 CRITICAL
+- Multi-chain feasibility analysis (040-DR-RSRC) — hub-and-spoke architecture recommendation
+
+### Technical
+- 552 tests passing (up from 448, +104 Moloch tests)
+- All 4 CRITICAL pre-mortem findings addressed in Phase 0
+
+---
+
 ## [1.3.1] - 2026-02-11
 
 Maintenance release: automated security audit report and dependency fixes.
@@ -274,7 +302,9 @@ Project initialization.
 
 ---
 
-[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.3.1...v1.4.0
+[1.3.1]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/intent-solutions-io/irsb-protocol/compare/v1.0.0...v1.1.0
